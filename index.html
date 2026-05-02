@@ -3,12 +3,37 @@
 <head>
 <meta charset="UTF-8">
 <title>○</title>
-<link rel="stylesheet" href="style.css">
+
+<style>
+body {
+    background: black;
+    color: white;
+    font-family: monospace;
+    text-align: center;
+    overflow: hidden;
+}
+
+#container {
+    position: absolute;
+    top: 40%;
+    width: 100%;
+}
+
+button {
+    background: none;
+    border: 1px solid white;
+    color: white;
+    padding: 10px;
+    cursor: pointer;
+}
+</style>
+
 </head>
 <body>
 
 <div id="container">
-    <div id="text" onclick="secret()">ты уже видел это видео</div>
+    <div id="text">ты уже видел это видео</div>
+    <br><br>
     <button id="btn">смотреть дальше</button>
 </div>
 
