@@ -1,30 +1,30 @@
-const text = document.getElementById("text");
-const btn = document.getElementById("btn");
+window.onload = function() {
 
-// проверка первого захода
-if (localStorage.getItem("visited")) {
-    text.innerText = "ты уже возвращался";
-} else {
-    localStorage.setItem("visited", true);
-}
+    const text = document.getElementById("text");
+    const btn = document.getElementById("btn");
 
-btn.onclick = function() {
-    let chance = Math.random();
+    if (!text || !btn) {
+        alert("ошибка: не найден text или btn");
+        return;
+    }
 
-    if (chance > 0.7) {
-        window.location.href = "observe.html";
-    } else if (chance > 0.4) {
-        window.location.href = "log.html";
+    // проверка первого захода
+    if (localStorage.getItem("visited")) {
+        text.innerText = "ты уже возвращался";
     } else {
+        localStorage.setItem("visited", true);
+    }
+
+    btn.onclick = function() {
         text.innerText = "она смотрит через тебя";
-    }
-};
 
-// лёгкое мигание
-setInterval(function() {
-    if (Math.random() > 0.98) {
-        document.body.style.background = "white";
-    } else {
-        document.body.style.background = "black";
-    }
-}, 100);
+        let chance = Math.random();
+
+        if (chance > 0.6) {
+            window.location.href = "observe.html";
+        } else if (chance > 0.3) {
+            window.location.href = "log.html";
+        }
+    };
+
+};
