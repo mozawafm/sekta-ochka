@@ -1,0 +1,29 @@
+body {
+    background: black;
+    color: white;
+    font-family: monospace;
+    text-align: center;
+    overflow: hidden;
+}
+
+#container {
+    position: absolute;
+    top: 40%;
+    width: 100%;
+}
+
+button {
+    background: none;
+    border: 1px solid white;
+    color: white;
+    padding: 10px;
+    cursor: pointer;
+}
+
+video {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    opacity: 0.05;
+}
