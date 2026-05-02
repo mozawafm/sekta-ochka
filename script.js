@@ -57,3 +57,9 @@ setInterval(() => {
 setTimeout(() => {
     alert("не закрывай вкладку");
 }, 15000);
+
+function secret() {
+    if (Math.random() > 0.8) {
+        window.location.href = "loop.html";
+    }
+}
