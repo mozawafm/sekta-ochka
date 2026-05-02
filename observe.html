@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
-<body style="background:black;color:white;text-align:center;">
+<body style="background:black;color:white;text-align:center;font-family:monospace;">
 
 <p>не двигайся</p>
 <p>мы проверяем</p>
 
 <script>
-setTimeout(() => {
+setTimeout(function() {
     document.body.innerHTML = "<h1>мы видим тебя</h1>";
 }, 4000);
 </script>
