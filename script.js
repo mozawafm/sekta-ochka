@@ -21,6 +21,19 @@ btn.onclick = () => {
     let random = Math.floor(Math.random() * phrases.length);
     text.innerText = phrases[random];
 
+    let chance = Math.random();
+
+    if (chance > 0.7) {
+        window.location.href = "observe.html";
+    } else if (chance > 0.5) {
+        window.location.href = "log.html";
+    } else if (chance > 0.3) {
+        window.location.href = "enter.html";
+    } else if (chance > 0.1) {
+        window.location.href = "video.html";
+    }
+};
+
     // иногда перекидывает на другую страницу
     if (Math.random() > 0.7) {
         window.location.href = "observe.html";
