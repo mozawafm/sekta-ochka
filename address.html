@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<body style="background:black;color:white;text-align:center;font-family:monospace;">
+
+<p id="a1">...</p>
+<p id="a2"></p>
+
+<script>
+
+// "почти адрес"
+let part1 = "ул.";
+let part2 = "ты знаешь";
+let part3 = "где это";
+
+document.getElementById("a1").innerText = part1;
+
+// постепенное появление
+setTimeout(() => {
+    document.getElementById("a2").innerText = part2;
+}, 1500);
+
+setTimeout(() => {
+    document.getElementById("a2").innerText = part3;
+}, 3000);
+
+// потом сброс
+setTimeout(() => {
+    document.body.innerHTML = "<h1>не нужно искать</h1>";
+}, 4500);
+
+// возврат
+setTimeout(() => {
+    window.location.href = "index.html";
+}, 6500);
+
+</script>
+
+</body>
+</html>
