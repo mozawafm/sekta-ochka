@@ -31,16 +31,16 @@ window.onload = function() {
     } 
     else if (visits == 3) {
         messages = [
-            "ты идёшь",
-            "никого не будет",
-            "ты нажмёшь play"
+            "ты пришла",
+            "никого не было",
+            "ты нажала play"
         ];
     } 
     else {
         messages = [
-            "зачем ты проверяешь",
-            "ты уже была там",
-            "ты уже снимала маску"
+            "мы уже записали",
+            "ты была в кадре",
+            "ты не помнишь"
         ];
     }
 
@@ -68,16 +68,16 @@ window.onload = function() {
 
             let r = Math.random();
 
-            if (r > 0.7) {
+            if (r > 0.75) {
+                window.location.href = "final.html";
+            } else if (r > 0.6) {
                 window.location.href = "glitch.html";
-            } else if (r > 0.5) {
+            } else if (r > 0.4) {
                 window.location.href = "observe.html";
-            } else if (r > 0.3) {
+            } else if (r > 0.2) {
                 window.location.href = "address.html";
-            } else if (r > 0.1) {
-                window.location.href = "invite.html";
             } else {
-                window.location.href = "time.html";
+                window.location.href = "invite.html";
             }
 
         }, 2000);
