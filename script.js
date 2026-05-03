@@ -3,12 +3,6 @@ window.onload = function() {
     const text = document.getElementById("text");
     const btn = document.getElementById("btn");
 
-    if (!text || !btn) {
-        alert("ошибка: не найден text или btn");
-        return;
-    }
-
-    // проверка первого захода
     if (localStorage.getItem("visited")) {
         text.innerText = "ты уже возвращался";
     } else {
@@ -16,14 +10,19 @@ window.onload = function() {
     }
 
     btn.onclick = function() {
-        text.innerText = "она смотрит через тебя";
 
         let chance = Math.random();
 
-        if (chance > 0.6) {
+        if (chance > 0.75) {
             window.location.href = "observe.html";
-        } else if (chance > 0.3) {
+        } else if (chance > 0.5) {
             window.location.href = "log.html";
+        } else if (chance > 0.3) {
+            window.location.href = "enter.html";
+        } else if (chance > 0.1) {
+            window.location.href = "video.html";
+        } else {
+            window.location.href = "loop.html";
         }
     };
 
