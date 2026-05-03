@@ -3,27 +3,48 @@ window.onload = function() {
     const text = document.getElementById("text");
     const btn = document.getElementById("btn");
 
-    if (localStorage.getItem("visited")) {
-        text.innerText = "ты уже возвращался";
-    } else {
-        localStorage.setItem("visited", true);
+    let firstVisit = !localStorage.getItem("visited");
+
+    localStorage.setItem("visited", true);
+
+    let messagesFirst = [
+        "ты уже видел это видео",
+        "ты просто не помнишь",
+        "это нормально",
+        "пока"
+    ];
+
+    let messagesReturn = [
+        "ты вернулся",
+        "мы ждали",
+        "ты не должен был возвращаться",
+        "но ты вернулся"
+    ];
+
+    let messages = firstVisit ? messagesFirst : messagesReturn;
+
+    let i = 0;
+
+    function showNext() {
+        if (i < messages.length) {
+            text.innerText = messages[i];
+            i++;
+            setTimeout(showNext, 2000);
+        } else {
+            btn.style.display = "inline-block";
+        }
     }
 
+    showNext();
+
     btn.onclick = function() {
+        text.innerText = "подожди...";
 
-        let chance = Math.random();
+        btn.style.display = "none";
 
-        if (chance > 0.75) {
+        setTimeout(() => {
             window.location.href = "observe.html";
-        } else if (chance > 0.5) {
-            window.location.href = "log.html";
-        } else if (chance > 0.3) {
-            window.location.href = "enter.html";
-        } else if (chance > 0.1) {
-            window.location.href = "video.html";
-        } else {
-            window.location.href = "loop.html";
-        }
+        }, 2000);
     };
 
 };
