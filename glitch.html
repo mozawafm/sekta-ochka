@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<body style="background:black;color:white;text-align:center;font-family:monospace;">
+
+<p id="t">загрузка...</p>
+
+<script>
+
+// шаг 1 — обычное ожидание
+setTimeout(() => {
+    document.getElementById("t").innerText = "подожди";
+}, 2000);
+
+// шаг 2 — "зависло"
+setTimeout(() => {
+    document.getElementById("t").innerText = "подожди.";
+}, 4000);
+
+setTimeout(() => {
+    document.getElementById("t").innerText = "подожди..";
+}, 6000);
+
+setTimeout(() => {
+    document.getElementById("t").innerText = "подожди...";
+}, 8000);
+
+// шаг 3 — долго ничего не происходит (ВАЖНО)
+// создаёт ощущение, что сайт сломался
+
+setTimeout(() => {
+
+    // резкий "пробой"
+    document.body.innerHTML = `
+        <h1>почему ты сняла маску</h1>
+        <p>мы не просили</p>
+    `;
+
+}, 12000);
+
+// возврат
+setTimeout(() => {
+    window.location.href = "index.html";
+}, 16000);
+
+</script>
+
+</body>
+</html>
