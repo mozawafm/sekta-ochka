@@ -2,12 +2,16 @@
 <html>
 <body style="background:black;color:white;text-align:center;font-family:monospace;">
 
-<p>это уже было</p>
+<p>подожди</p>
 
 <script>
 setTimeout(function() {
-    window.location.href = "index.html";
+    document.body.innerHTML = "<h1>ты уже нажимал это</h1>";
 }, 2000);
+
+setTimeout(function() {
+    window.location.href = "index.html";
+}, 4000);
 </script>
 
 </body>
