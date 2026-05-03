@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<body style="background:black;color:white;text-align:center;font-family:monospace;">
+
+<p id="t">загрузка записи...</p>
+
+<script>
+
+// шаг 1
+setTimeout(() => {
+    document.getElementById("t").innerText = "воспроизведение";
+}, 2000);
+
+// шаг 2
+setTimeout(() => {
+    document.getElementById("t").innerText = "файл найден";
+}, 4000);
+
+// шаг 3
+setTimeout(() => {
+    document.getElementById("t").innerText = "она уже здесь";
+}, 6000);
+
+// шаг 4 — главный удар
+setTimeout(() => {
+    document.body.innerHTML = `
+        <h1>это ты</h1>
+        <p>ты уже нажала play</p>
+        <p>мы просто смотрим</p>
+    `;
+}, 9000);
+
+// шаг 5 — исчезновение
+setTimeout(() => {
+    document.body.innerHTML = "<h1>○</h1>";
+}, 13000);
+
+// возврат (как будто ничего не было)
+setTimeout(() => {
+    window.location.href = "index.html";
+}, 16000);
+
+</script>
+
+</body>
+</html>
