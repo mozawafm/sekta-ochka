@@ -19,19 +19,19 @@ window.onload = function() {
         messages = [
             "ты уже видела это видео",
             "ты просто не помнишь",
-            "это нормально"
+            "это часть процесса"
         ];
     } else if (visits == 2) {
         messages = [
-            "ты вернулась",
-            "ты закрывала вкладку",
-            "но это не помогло"
+            "ты согласилась",
+            "мы отправили тебе ссылку",
+            "ты перешла"
         ];
     } else {
         messages = [
-            "зачем ты снова здесь",
-            "мы уже говорили с тобой",
-            "ты уже нажимала кнопку"
+            "ты придешь",
+            "адрес уже у тебя",
+            "ты нажмешь play"
         ];
     }
 
@@ -62,7 +62,7 @@ window.onload = function() {
             if (r > 0.6) {
                 window.location.href = "observe.html";
             } else if (r > 0.3) {
-                window.location.href = "log.html";
+                window.location.href = "invite.html";
             } else {
                 window.location.href = "time.html";
             }
