@@ -3,25 +3,37 @@ window.onload = function() {
     const text = document.getElementById("text");
     const btn = document.getElementById("btn");
 
-    let firstVisit = !localStorage.getItem("visited");
+    let visits = localStorage.getItem("visits");
 
-    localStorage.setItem("visited", true);
+    if (!visits) {
+        visits = 1;
+    } else {
+        visits = parseInt(visits) + 1;
+    }
 
-    let messagesFirst = [
-        "ты уже видел это видео",
-        "ты просто не помнишь",
-        "это нормально",
-        "пока"
-    ];
+    localStorage.setItem("visits", visits);
 
-    let messagesReturn = [
-        "ты вернулся",
-        "мы ждали",
-        "ты не должен был возвращаться",
-        "но ты вернулся"
-    ];
+    let messages;
 
-    let messages = firstVisit ? messagesFirst : messagesReturn;
+    if (visits == 1) {
+        messages = [
+            "ты уже видел это видео",
+            "ты просто не помнишь",
+            "это нормально"
+        ];
+    } else if (visits == 2) {
+        messages = [
+            "ты вернулся",
+            "ты закрыл вкладку",
+            "но это не помогло"
+        ];
+    } else {
+        messages = [
+            "почему ты продолжаешь",
+            "мы уже говорили с тобой",
+            "ты нажимал кнопку"
+        ];
+    }
 
     let i = 0;
 
@@ -38,12 +50,23 @@ window.onload = function() {
     showNext();
 
     btn.onclick = function() {
+
         text.innerText = "подожди...";
 
         btn.style.display = "none";
 
         setTimeout(() => {
-            window.location.href = "observe.html";
+
+            let r = Math.random();
+
+            if (r > 0.6) {
+                window.location.href = "observe.html";
+            } else if (r > 0.3) {
+                window.location.href = "log.html";
+            } else {
+                window.location.href = "loop.html";
+            }
+
         }, 2000);
     };
 
