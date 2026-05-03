@@ -38,9 +38,9 @@ window.onload = function() {
     } 
     else {
         messages = [
-            "зачем ты снова проверяешь",
-            "ты уже там была",
-            "ты уже нажимала"
+            "зачем ты проверяешь",
+            "ты уже была там",
+            "ты уже снимала маску"
         ];
     }
 
@@ -68,11 +68,13 @@ window.onload = function() {
 
             let r = Math.random();
 
-            if (r > 0.65) {
+            if (r > 0.7) {
+                window.location.href = "glitch.html";
+            } else if (r > 0.5) {
                 window.location.href = "observe.html";
-            } else if (r > 0.4) {
+            } else if (r > 0.3) {
                 window.location.href = "address.html";
-            } else if (r > 0.2) {
+            } else if (r > 0.1) {
                 window.location.href = "invite.html";
             } else {
                 window.location.href = "time.html";
