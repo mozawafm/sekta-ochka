@@ -17,21 +17,21 @@ window.onload = function() {
 
     if (visits == 1) {
         messages = [
-            "ты уже видел это видео",
+            "ты уже видела это видео",
             "ты просто не помнишь",
             "это нормально"
         ];
     } else if (visits == 2) {
         messages = [
-            "ты вернулся",
-            "ты закрыл вкладку",
+            "ты вернулась",
+            "ты закрывала вкладку",
             "но это не помогло"
         ];
     } else {
         messages = [
-            "почему ты продолжаешь",
+            "зачем ты снова здесь",
             "мы уже говорили с тобой",
-            "ты нажимал кнопку"
+            "ты уже нажимала кнопку"
         ];
     }
 
@@ -64,7 +64,7 @@ window.onload = function() {
             } else if (r > 0.3) {
                 window.location.href = "log.html";
             } else {
-                window.location.href = "loop.html";
+                window.location.href = "time.html";
             }
 
         }, 2000);
