@@ -2,13 +2,51 @@
 <html>
 <body style="background:black;color:white;font-family:monospace;">
 
-<pre>
-[01:12] пользователь нажал кнопку
+<pre id="log">
+[01:12] пользователь открыл страницу
 [01:13] пользователь вернулся
 [01:15] пользователь не понимает
-[01:20] пользователь всё ещё здесь
-[??:??] ты
 </pre>
+
+<script>
+
+let log = document.getElementById("log");
+
+// новые строки добавляются
+setTimeout(() => {
+    log.innerText += "\n[01:16] пользователь продолжает";
+}, 2000);
+
+setTimeout(() => {
+    log.innerText += "\n[01:17] пользователь игнорирует";
+}, 4000);
+
+// ключевой момент
+setTimeout(() => {
+    log.innerText += "\n[??:??] она пришла";
+}, 6000);
+
+// ещё сильнее
+setTimeout(() => {
+    log.innerText += "\n[??:??] она нажала play";
+}, 8000);
+
+// удар
+setTimeout(() => {
+    log.innerText += "\n[??:??] запись началась";
+}, 10000);
+
+// финал
+setTimeout(() => {
+    log.innerText += "\n[??:??] она не помнит";
+}, 12000);
+
+// резкий возврат
+setTimeout(() => {
+    window.location.href = "index.html";
+}, 15000);
+
+</script>
 
 </body>
 </html>
