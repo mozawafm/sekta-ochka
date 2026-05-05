@@ -50,7 +50,7 @@ window.onload = function() {
         if (i < messages.length) {
             text.innerText = messages[i];
             i++;
-            setTimeout(showNext, 2000);
+            setTimeout(showNext, 2500);
         } else {
             btn.style.display = "inline-block";
         }
@@ -58,51 +58,55 @@ window.onload = function() {
 
     showNext();
 
+    // счётчик кликов (гарантированный переход в log)
+    let clicks = 0;
+
     btn.onclick = function() {
+
+        clicks++;
 
         text.innerText = "подожди...";
         btn.style.display = "none";
 
         setTimeout(() => {
 
+            // гарантированный лог
+            if (clicks % 3 === 0) {
+                window.location.href = "log.html";
+                return;
+            }
+
             let r = Math.random();
 
-            if (r > 0.8) {
+            if (r > 0.7) {
                 window.location.href = "final.html";
-            } else if (r > 0.6) {
+            } else if (r > 0.5) {
                 window.location.href = "glitch.html";
-            } else if (r > 0.4) {
+            } else if (r > 0.3) {
                 window.location.href = "observe.html";
-            } else if (r > 0.2) {
+            } else if (r > 0.1) {
                 window.location.href = "address.html";
             } else {
                 window.location.href = "invite.html";
             }
 
-        }, 2000);
+        }, 2500);
     };
 
-    // 🔥 первый секрет (одна клавиша)
+    // 🔥 НОВЫЙ СЕКРЕТ
+    let secretCode = "teo867102";
+    let input = "";
+
     document.addEventListener("keydown", function(e) {
-        if (e.key === "3") {
+
+        input += e.key.toLowerCase();
+
+        if (input.length > secretCode.length) {
+            input = input.slice(-secretCode.length);
+        }
+
+        if (input === secretCode) {
             window.location.href = "secret.html";
-        }
-    });
-
-    // 🔥 ВТОРОЙ СЕКРЕТ (последовательность)
-    let code = ["3","1","0","2"];
-    let input = [];
-
-    document.addEventListener("keydown", function(e) {
-
-        input.push(e.key);
-
-        if (input.length > code.length) {
-            input.shift();
-        }
-
-        if (input.join("") === code.join("")) {
-            window.location.href = "deeper.html";
         }
 
     });
