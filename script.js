@@ -61,14 +61,13 @@ window.onload = function() {
     btn.onclick = function() {
 
         text.innerText = "подожди...";
-
         btn.style.display = "none";
 
         setTimeout(() => {
 
             let r = Math.random();
 
-            if (r > 0.75) {
+            if (r > 0.8) {
                 window.location.href = "final.html";
             } else if (r > 0.6) {
                 window.location.href = "glitch.html";
@@ -82,5 +81,13 @@ window.onload = function() {
 
         }, 2000);
     };
+
+    // 🔥 СКРЫТЫЙ ПЕРЕХОД (главное)
+
+    document.addEventListener("keydown", function(e) {
+        if (e.key === "3") {
+            window.location.href = "secret.html";
+        }
+    });
 
 };
