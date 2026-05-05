@@ -2,18 +2,22 @@
 <html>
 <body style="background:black;color:white;text-align:center;font-family:monospace;">
 
-<p>ты подтвердила участие</p>
-<p>мы отправили адрес</p>
-
-<br>
-
-<p>просто приди</p>
-<p>и нажми play</p>
+<p>ты уже здесь</p>
+<p>мы готовы</p>
 
 <br><br>
 
-<p>никого не будет</p>
-<p>это нормально</p>
+<button onclick="play()">play</button>
+
+<script>
+function play() {
+    document.body.innerHTML = "<h1>запуск</h1>";
+
+    setTimeout(() => {
+        window.location.href = "video.html";
+    }, 2000);
+}
+</script>
 
 </body>
 </html>
