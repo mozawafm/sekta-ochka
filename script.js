@@ -82,12 +82,29 @@ window.onload = function() {
         }, 2000);
     };
 
-    // 🔥 СКРЫТЫЙ ПЕРЕХОД (главное)
-
+    // 🔥 первый секрет (одна клавиша)
     document.addEventListener("keydown", function(e) {
         if (e.key === "3") {
             window.location.href = "secret.html";
         }
+    });
+
+    // 🔥 ВТОРОЙ СЕКРЕТ (последовательность)
+    let code = ["3","1","0","2"];
+    let input = [];
+
+    document.addEventListener("keydown", function(e) {
+
+        input.push(e.key);
+
+        if (input.length > code.length) {
+            input.shift();
+        }
+
+        if (input.join("") === code.join("")) {
+            window.location.href = "deeper.html";
+        }
+
     });
 
 };
