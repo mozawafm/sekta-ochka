@@ -2,13 +2,45 @@
 <html>
 <body style="background:black;color:white;text-align:center;font-family:monospace;">
 
-<p>не двигайся</p>
-<p>мы проверяем</p>
+<p id="t">не двигайся</p>
 
 <script>
-setTimeout(function() {
-    document.body.innerHTML = "<h1>мы видим тебя</h1>";
-}, 3000);
+
+// шаг 1
+setTimeout(() => {
+    document.getElementById("t").innerText = "мы проверяем";
+}, 2000);
+
+// шаг 2
+setTimeout(() => {
+    document.getElementById("t").innerText = "мы видим тебя";
+}, 4000);
+
+// шаг 3 — сбой
+setTimeout(() => {
+    document.getElementById("t").innerText = "...";
+}, 6000);
+
+// шаг 4 — тревожный поворот
+setTimeout(() => {
+    document.getElementById("t").innerText = "что-то не так";
+}, 8000);
+
+// шаг 5 — обвинение
+setTimeout(() => {
+    document.getElementById("t").innerText = "ты лишняя";
+}, 10000);
+
+// шаг 6 — «исправление»
+setTimeout(() => {
+    document.body.innerHTML = "<h1>исправляем</h1>";
+}, 12000);
+
+// шаг 7 — резкий возврат
+setTimeout(() => {
+    window.location.href = "index.html";
+}, 14000);
+
 </script>
 
 </body>
