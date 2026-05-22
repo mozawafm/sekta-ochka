@@ -3,96 +3,193 @@
 <head>
 <meta charset="UTF-8">
 <title>video</title>
+
+<style>
+
+body{
+    margin:0;
+    background:black;
+    overflow:hidden;
+    font-family:monospace;
+    color:white;
+}
+
+#video{
+    position:absolute;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    filter:contrast(1.1) brightness(0.8);
+}
+
+#overlay{
+    position:absolute;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.15);
+    pointer-events:none;
+}
+
+#noise{
+    position:absolute;
+    width:100%;
+    height:100%;
+    background-image:url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
+    opacity:0.05;
+    mix-blend-mode:screen;
+    pointer-events:none;
+}
+
+#rec{
+    position:absolute;
+    top:20px;
+    left:20px;
+    color:red;
+    font-size:18px;
+    letter-spacing:3px;
+    animation:blink 1s infinite;
+}
+
+#time{
+    position:absolute;
+    top:20px;
+    right:20px;
+    font-size:18px;
+}
+
+#text{
+    position:absolute;
+    bottom:40px;
+    width:100%;
+    text-align:center;
+    opacity:0.5;
+}
+
+@keyframes blink{
+    50%{
+        opacity:0;
+    }
+}
+
+.flash{
+    animation:flash 0.2s;
+}
+
+@keyframes flash{
+    0%{opacity:1;}
+    50%{opacity:0;}
+    100%{opacity:1;}
+}
+
+</style>
 </head>
 
-<body style="background:black;color:white;text-align:center;font-family:monospace;overflow:hidden;">
+<body>
 
-<video id="vid" autoplay muted playsinline style="width:80%;margin-top:40px;">
+<video 
+    id="video"
+    autoplay
+    muted
+    playsinline
+>
+
     <source src="video.mp4" type="video/mp4">
+
 </video>
 
-<p id="text">воспроизведение</p>
+<div id="overlay"></div>
+<div id="noise"></div>
+
+<div id="rec">● REC</div>
+<div id="time">00:01:12</div>
+
+<div id="text">
+    воспроизведение
+</div>
 
 <script>
 
-// STATE
 let state = JSON.parse(localStorage.getItem("state"));
 
-if (!state) {
+if(!state){
 
     state = {
-        visits: 0,
-        trust: 0,
-        path: "",
-        mask: true,
-        watchedVideo: false
+        trust:0,
+        watched:0,
+        unlocked:false
     };
 
 }
 
-// отмечаем просмотр
-state.watchedVideo = true;
-
-// усиливаем trust
+state.watched = (state.watched || 0) + 1;
 state.trust += 5;
 
 localStorage.setItem("state", JSON.stringify(state));
 
+const video = document.getElementById("video");
 const text = document.getElementById("text");
-const video = document.getElementById("vid");
 
-// ЭТАПЫ
-setTimeout(() => {
-    text.innerText = "она уже в кадре";
-}, 4000);
+// СТРАННЫЕ ФРАЗЫ ВО ВРЕМЯ ПРОСМОТРА
+setTimeout(()=>{
 
-setTimeout(() => {
     text.innerText = "не выключай";
-}, 8000);
 
-setTimeout(() => {
+},5000);
+
+setTimeout(()=>{
+
     text.innerText = "...";
-}, 12000);
 
-// ФИНАЛЬНАЯ РЕАКЦИЯ СИСТЕМЫ
-setTimeout(() => {
+},10000);
 
-    let currentState = JSON.parse(localStorage.getItem("state"));
+setTimeout(()=>{
 
-    // если trust высокий → secret
-    if (currentState.trust >= 15) {
+    document.body.classList.add("flash");
 
-        window.location.href = "secret.html";
-        return;
+},13000);
 
-    }
+// 🔥 ГЛАВНОЕ
+// КОНЕЦ ВИДЕО
+video.onended = () => {
 
-    // если маска снята
-    if (currentState.mask === false) {
+    text.innerText = "запись завершена";
 
-        window.location.href = "glitch.html";
-        return;
+    setTimeout(()=>{
 
-    }
+        let current = JSON.parse(localStorage.getItem("state"));
 
-    // рандом реакций
-    let r = Math.random();
+        let r = Math.random();
 
-    if (r > 0.66) {
+        // если открыта система
+        if(current.unlocked && r > 0.7){
 
-        window.location.href = "final.html";
+            window.location.href = "enter.html";
+            return;
 
-    } else if (r > 0.33) {
+        }
 
-        window.location.href = "observe.html";
+        // редкий final
+        if(current.watched >= 3 && r > 0.82){
 
-    } else {
+            window.location.href = "final.html";
+            return;
 
-        window.location.href = "log.html";
+        }
 
-    }
+        // loop
+        if(r > 0.55){
 
-}, 17000);
+            window.location.href = "loop.html";
+
+        }else{
+
+            window.location.href = "index.html";
+
+        }
+
+    },3000);
+
+};
 
 </script>
 
