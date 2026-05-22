@@ -1,5 +1,10 @@
 <!DOCTYPE html>
 <html>
+<head>
+<meta charset="UTF-8">
+<title>log</title>
+</head>
+
 <body style="background:black;color:white;font-family:monospace;">
 
 <pre id="log">
@@ -10,41 +15,47 @@
 
 <script>
 
+// STATE
+let state = JSON.parse(localStorage.getItem("state"));
+
+state.path += "L";
+state.trust += 2;
+
+localStorage.setItem("state", JSON.stringify(state));
+
 let log = document.getElementById("log");
 
-// новые строки добавляются
 setTimeout(() => {
     log.innerText += "\n[01:16] пользователь продолжает";
-}, 2000);
+}, 2500);
 
 setTimeout(() => {
     log.innerText += "\n[01:17] пользователь игнорирует";
-}, 4000);
+}, 5000);
 
-// ключевой момент
 setTimeout(() => {
     log.innerText += "\n[??:??] она пришла";
-}, 6000);
+}, 7500);
 
-// ещё сильнее
 setTimeout(() => {
     log.innerText += "\n[??:??] она нажала play";
-}, 8000);
-
-// удар
-setTimeout(() => {
-    log.innerText += "\n[??:??] запись началась";
 }, 10000);
 
-// финал
+setTimeout(() => {
+    log.innerText += "\n[??:??] запись началась";
+}, 12500);
+
 setTimeout(() => {
     log.innerText += "\n[??:??] она не помнит";
-}, 12000);
-
-// резкий возврат
-setTimeout(() => {
-    window.location.href = "index.html";
 }, 15000);
+
+setTimeout(() => {
+    log.innerText += "\n[??:??] она смотрит на экран";
+}, 17000);
+
+setTimeout(() => {
+    window.location.href = "invite.html";
+}, 21000);
 
 </script>
 
