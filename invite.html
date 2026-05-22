@@ -1,5 +1,10 @@
 <!DOCTYPE html>
 <html>
+<head>
+<meta charset="UTF-8">
+<title>invite</title>
+</head>
+
 <body style="background:black;color:white;text-align:center;font-family:monospace;">
 
 <p>ты уже здесь</p>
@@ -10,13 +15,37 @@
 <button onclick="play()">play</button>
 
 <script>
+
+// STATE
+let state = JSON.parse(localStorage.getItem("state"));
+
+state.path += "I";
+
+localStorage.setItem("state", JSON.stringify(state));
+
 function play() {
+
     document.body.innerHTML = "<h1>запуск</h1>";
 
     setTimeout(() => {
-        window.location.href = "video.html";
-    }, 2000);
+
+        let currentState = JSON.parse(localStorage.getItem("state"));
+
+        // ПРАВИЛЬНЫЙ ПУТЬ
+        if (currentState.path.includes("OLI")) {
+
+            window.location.href = "video.html";
+
+        } else {
+
+            window.location.href = "observe.html";
+
+        }
+
+    }, 2500);
+
 }
+
 </script>
 
 </body>
