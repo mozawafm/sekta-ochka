@@ -3,17 +3,17 @@ window.onload = function() {
     const text = document.getElementById("text");
     const btn = document.getElementById("btn");
 
-    // СОСТОЯНИЕ САЙТА
+    // STATE
     let state = JSON.parse(localStorage.getItem("state"));
 
-    // если state нет
     if (!state) {
 
         state = {
             visits: 0,
             trust: 0,
             path: "",
-            mask: true
+            mask: true,
+            watchedVideo: false
         };
 
     }
@@ -22,7 +22,7 @@ window.onload = function() {
 
     localStorage.setItem("state", JSON.stringify(state));
 
-    // СООБЩЕНИЯ
+    // ТЕКСТЫ
     let messages;
 
     if (state.visits === 1) {
@@ -33,19 +33,19 @@ window.onload = function() {
             "не бойся"
         ];
 
-    } else if (state.path.includes("OL")) {
+    } else if (state.trust >= 10) {
 
         messages = [
-            "мы наблюдали за тобой",
-            "ты почти готова",
+            "мы тебя помним",
+            "ты подходишь",
             "не снимай маску"
         ];
 
     } else {
 
         messages = [
-            "ты вернулась",
-            "мы помним тебя",
+            "ты снова здесь",
+            "мы наблюдаем",
             "всё идёт правильно"
         ];
 
@@ -73,7 +73,7 @@ window.onload = function() {
 
     nextMessage();
 
-    // КНОПКА
+    // ГЛАВНАЯ КНОПКА
     btn.onclick = function() {
 
         btn.style.display = "none";
@@ -82,45 +82,63 @@ window.onload = function() {
 
         setTimeout(() => {
 
-            // обновляем state
-            let currentState = JSON.parse(localStorage.getItem("state"));
-
-            // ПРАВИЛЬНЫЙ ПУТЬ
-            if (currentState.path.includes("OLI")) {
-
-                window.location.href = "video.html";
-                return;
-
-            }
-
-            // ЕСЛИ СНЯТА МАСКА
-            if (currentState.mask === false) {
-
-                window.location.href = "glitch.html";
-                return;
-
-            }
-
-            // РАНДОМНЫЕ МАРШРУТЫ
-            let r = Math.random();
-
-            if (r > 0.66) {
-
-                window.location.href = "observe.html";
-
-            } else if (r > 0.33) {
-
-                window.location.href = "log.html";
-
-            } else {
-
-                window.location.href = "invite.html";
-
-            }
+            route();
 
         }, 2500);
 
     };
+
+    // РОУТИНГ
+    function route() {
+
+        let state = JSON.parse(localStorage.getItem("state"));
+
+        let r = Math.random();
+
+        // 🔥 СЕКРЕТ
+        if (state.trust >= 20 && r > 0.7) {
+
+            window.location.href = "secret.html";
+            return;
+
+        }
+
+        // 🔥 РЕДКИЙ FINAL
+        if (state.path.includes("OLI") && r > 0.85) {
+
+            window.location.href = "final.html";
+            return;
+
+        }
+
+        // 🔥 GLITCH
+        if (state.mask === false && r > 0.5) {
+
+            window.location.href = "glitch.html";
+            return;
+
+        }
+
+        // ОБЫЧНЫЕ МАРШРУТЫ
+        if (r > 0.75) {
+
+            window.location.href = "observe.html";
+
+        } else if (r > 0.5) {
+
+            window.location.href = "log.html";
+
+        } else if (r > 0.25) {
+
+            window.location.href = "invite.html";
+
+        } else {
+
+            window.location.href = "video.html";
+
+        }
+
+    }
 
     // СЕКРЕТНЫЙ КОД
     let secret = "teo867102";
@@ -139,11 +157,11 @@ window.onload = function() {
 
         if (input === secret) {
 
-            let currentState = JSON.parse(localStorage.getItem("state"));
+            let state = JSON.parse(localStorage.getItem("state"));
 
-            currentState.trust += 10;
+            state.trust += 20;
 
-            localStorage.setItem("state", JSON.stringify(currentState));
+            localStorage.setItem("state", JSON.stringify(state));
 
             window.location.href = "secret.html";
 
