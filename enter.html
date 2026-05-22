@@ -1,20 +1,186 @@
 <!DOCTYPE html>
 <html>
-<body style="background:black;color:white;text-align:center;font-family:monospace;">
+<head>
+<meta charset="UTF-8">
+<title>enter</title>
 
-<p>ты уверен?</p>
+<style>
 
-<button onclick="enter()">да</button>
-<button onclick="leave()">нет</button>
+body{
+    margin:0;
+    background:black;
+    overflow:hidden;
+    color:white;
+    font-family:monospace;
+}
+
+#bg{
+    position:absolute;
+    width:100%;
+    height:100%;
+    background:url("garage.jpg") center center/cover no-repeat;
+    opacity:0.18;
+    filter:blur(2px) grayscale(1);
+}
+
+#noise{
+    position:absolute;
+    width:100%;
+    height:100%;
+    background-image:url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
+    opacity:0.05;
+    mix-blend-mode:screen;
+}
+
+#container{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    text-align:center;
+    width:80%;
+}
+
+#line{
+    font-size:24px;
+    letter-spacing:2px;
+}
+
+button{
+    margin-top:30px;
+    background:black;
+    color:white;
+    border:1px solid white;
+    padding:12px 22px;
+    cursor:pointer;
+    font-family:monospace;
+}
+
+button:hover{
+    background:white;
+    color:black;
+}
+
+.fade{
+    animation:fade 2s forwards;
+}
+
+@keyframes fade{
+    to{
+        opacity:0;
+    }
+}
+
+.flash{
+    animation:flash 0.15s;
+}
+
+@keyframes flash{
+    0%{opacity:1;}
+    50%{opacity:0;}
+    100%{opacity:1;}
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="bg"></div>
+<div id="noise"></div>
+
+<div id="container">
+
+    <div id="line">
+        ты действительно хочешь войти?
+    </div>
+
+    <button id="yesBtn">
+        войти
+    </button>
+
+</div>
 
 <script>
-function enter() {
-    document.body.innerHTML = "<h1>поздно</h1>";
+
+let state = JSON.parse(localStorage.getItem("state"));
+
+if(!state){
+
+    state = {
+        trust:0,
+        unlocked:false,
+        entered:false
+    };
+
 }
 
-function leave() {
-    window.location.href = "index.html";
-}
+const line = document.getElementById("line");
+const btn = document.getElementById("yesBtn");
+
+// КНОПКА
+btn.onclick = () => {
+
+    btn.style.display = "none";
+
+    // сайт принимает её
+    state.entered = true;
+    state.trust += 25;
+
+    localStorage.setItem("state", JSON.stringify(state));
+
+    line.innerText = "подтверждение...";
+    
+    setTimeout(()=>{
+
+        document.body.classList.add("flash");
+
+    },2000);
+
+    setTimeout(()=>{
+
+        line.innerText = "мы ждали тебя";
+
+    },4000);
+
+    setTimeout(()=>{
+
+        line.innerText = "не оборачивайся";
+
+    },7000);
+
+    setTimeout(()=>{
+
+        line.innerText = "запись продолжается";
+
+    },10000);
+
+    // 🔥 ПЕРЕХОД ДАЛЬШЕ
+    setTimeout(()=>{
+
+        let r = Math.random();
+
+        // редкий final
+        if(r > 0.82){
+
+            window.location.href = "final.html";
+
+        // редкий loop
+        }else if(r > 0.55){
+
+            window.location.href = "loop.html";
+
+        // обычный путь
+        }else{
+
+            window.location.href = "video.html";
+
+        }
+
+    },14000);
+
+};
+
 </script>
 
 </body>
