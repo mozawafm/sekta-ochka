@@ -36,7 +36,7 @@ body{
     position:absolute;
     width:100%;
     height:100%;
-    background:rgba(0,0,0,0.25);
+    background:rgba(0,0,0,0.3);
 }
 
 #rec{
@@ -61,10 +61,16 @@ body{
     left:50%;
     transform:translate(-50%,-50%);
     text-align:center;
+    width:80%;
+}
+
+#message{
+    font-size:22px;
+    letter-spacing:2px;
 }
 
 button{
-    margin-top:20px;
+    margin-top:25px;
     background:black;
     color:white;
     border:1px solid white;
@@ -79,9 +85,9 @@ button:hover{
 }
 
 #secretInput{
-    margin-top:20px;
+    margin-top:25px;
     background:black;
-    border:1px solid #444;
+    border:1px solid #333;
     color:white;
     padding:10px;
     width:220px;
@@ -105,7 +111,7 @@ button:hover{
 <div id="overlay"></div>
 
 <div id="rec">● REC</div>
-<div id="time">00:13:47</div>
+<div id="time"></div>
 
 <div id="center">
 
@@ -119,10 +125,10 @@ button:hover{
 
     <br>
 
-    <input 
+    <input
         type="text"
         id="secretInput"
-        placeholder="код"
+        placeholder="..."
         autocomplete="off"
     >
 
@@ -130,6 +136,7 @@ button:hover{
 
 <script>
 
+// STATE
 let state = JSON.parse(localStorage.getItem("state"));
 
 if(!state){
@@ -137,8 +144,9 @@ if(!state){
     state = {
         visits:0,
         trust:0,
-        path:"",
-        secrets:0
+        secrets:0,
+        unlocked:false,
+        codeUsed:false
     };
 
 }
@@ -150,24 +158,43 @@ localStorage.setItem("state", JSON.stringify(state));
 const msg = document.getElementById("message");
 const btn = document.getElementById("playBtn");
 const input = document.getElementById("secretInput");
+const time = document.getElementById("time");
 
-// спустя несколько посещений появляется поле
-if(state.visits >= 3){
-    input.style.display = "inline-block";
-}
+// СЛУЧАЙНОЕ ВРЕМЯ
+let h = Math.floor(Math.random()*24).toString().padStart(2,"0");
+let m = Math.floor(Math.random()*60).toString().padStart(2,"0");
+let s = Math.floor(Math.random()*60).toString().padStart(2,"0");
 
-// странные изменения текста
-if(state.visits == 1){
+time.innerText = `${h}:${m}:${s}`;
 
-    msg.innerText = "восстановление записи...";
+// ТЕКСТЫ
+if(state.unlocked){
 
-}else if(state.visits < 4){
+    msg.innerText = "сигнал восстановлен";
 
-    msg.innerText = "обнаружены пропущенные кадры";
+}else if(state.visits > 4){
+
+    msg.innerText = "обнаружены поврежденные фрагменты";
 
 }else{
 
-    msg.innerText = "она уже внутри записи";
+    msg.innerText = "восстановление записи...";
+
+}
+
+// 🔥 ПОЛЕ КОДА ТОЛЬКО ОДИН РАЗ
+if(
+    state.visits >= 3 &&
+    !state.codeUsed &&
+    !state.unlocked
+){
+
+    // появляется не всегда
+    if(Math.random() > 0.45){
+
+        input.style.display = "inline-block";
+
+    }
 
 }
 
@@ -178,19 +205,20 @@ btn.onclick = () => {
 
     msg.innerText = "загрузка...";
 
-    setTimeout(() => {
+    setTimeout(()=>{
 
         let r = Math.random();
 
-        if(r > 0.7){
+        // меньше возвратов в observe
+        if(r > 0.82){
 
             window.location.href = "observe.html";
 
-        }else if(r > 0.45){
+        }else if(r > 0.58){
 
             window.location.href = "log.html";
 
-        }else if(r > 0.2){
+        }else if(r > 0.28){
 
             window.location.href = "invite.html";
 
@@ -204,15 +232,22 @@ btn.onclick = () => {
 
 };
 
-// SECRET CODE
+// КОД
 input.addEventListener("keydown",(e)=>{
 
     if(e.key === "Enter"){
 
-        if(input.value.toLowerCase().trim() === "teo867102"){
+        let value = input.value.toLowerCase().trim();
 
-            state.trust += 20;
-            state.secrets += 1;
+        // ПРАВИЛЬНЫЙ КОД
+        if(value === "teo867102"){
+
+            state.trust += 30;
+
+            state.unlocked = true;
+
+            // 🔥 ГЛАВНОЕ
+            state.codeUsed = true;
 
             localStorage.setItem("state", JSON.stringify(state));
 
@@ -223,7 +258,9 @@ input.addEventListener("keydown",(e)=>{
             msg.innerText = "код не распознан";
 
             setTimeout(()=>{
-                msg.innerText = "она уже внутри записи";
+
+                msg.innerText = "восстановление записи...";
+
             },2000);
 
         }
