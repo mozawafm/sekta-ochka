@@ -9,13 +9,10 @@
 
 <pre id="log">
 [01:12] пользователь открыл страницу
-[01:13] пользователь вернулся
-[01:15] пользователь не понимает
 </pre>
 
 <script>
 
-// STATE
 let state = JSON.parse(localStorage.getItem("state"));
 
 state.path += "L";
@@ -26,36 +23,25 @@ localStorage.setItem("state", JSON.stringify(state));
 let log = document.getElementById("log");
 
 setTimeout(() => {
-    log.innerText += "\n[01:16] пользователь продолжает";
+    log.innerText += "\n[01:13] пользователь вернулся";
 }, 2500);
 
 setTimeout(() => {
-    log.innerText += "\n[01:17] пользователь игнорирует";
+    log.innerText += "\n[01:15] пользователь продолжает";
 }, 5000);
 
 setTimeout(() => {
     log.innerText += "\n[??:??] она пришла";
-}, 7500);
-
-setTimeout(() => {
-    log.innerText += "\n[??:??] она нажала play";
-}, 10000);
+}, 8000);
 
 setTimeout(() => {
     log.innerText += "\n[??:??] запись началась";
-}, 12500);
+}, 12000);
 
+// 🔥 ВОЗВРАТ В СИСТЕМУ
 setTimeout(() => {
-    log.innerText += "\n[??:??] она не помнит";
-}, 15000);
-
-setTimeout(() => {
-    log.innerText += "\n[??:??] она смотрит на экран";
+    window.location.href = "index.html";
 }, 17000);
-
-setTimeout(() => {
-    window.location.href = "invite.html";
-}, 21000);
 
 </script>
 
