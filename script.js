@@ -3,6 +3,9 @@ window.onload = function() {
     const text = document.getElementById("text");
     const btn = document.getElementById("btn");
 
+    const secretBox = document.getElementById("secretBox");
+    const secretInput = document.getElementById("secretInput");
+
     // STATE
     let state = JSON.parse(localStorage.getItem("state"));
 
@@ -21,6 +24,13 @@ window.onload = function() {
     state.visits++;
 
     localStorage.setItem("state", JSON.stringify(state));
+
+    // ПОКАЗАТЬ ВВОД ПОСЛЕ НЕСКОЛЬКИХ ПОСЕЩЕНИЙ
+    if (state.visits >= 4) {
+
+        secretBox.style.display = "block";
+
+    }
 
     // ТЕКСТЫ
     let messages;
@@ -73,7 +83,7 @@ window.onload = function() {
 
     nextMessage();
 
-    // ГЛАВНАЯ КНОПКА
+    // КНОПКА
     btn.onclick = function() {
 
         btn.style.display = "none";
@@ -91,35 +101,35 @@ window.onload = function() {
     // РОУТИНГ
     function route() {
 
-        let state = JSON.parse(localStorage.getItem("state"));
+        let current = JSON.parse(localStorage.getItem("state"));
 
         let r = Math.random();
 
-        // 🔥 СЕКРЕТ
-        if (state.trust >= 20 && r > 0.7) {
+        // SECRET
+        if (current.trust >= 20 && r > 0.8) {
 
             window.location.href = "secret.html";
             return;
 
         }
 
-        // 🔥 РЕДКИЙ FINAL
-        if (state.path.includes("OLI") && r > 0.85) {
+        // FINAL
+        if (current.path.includes("OLI") && r > 0.9) {
 
             window.location.href = "final.html";
             return;
 
         }
 
-        // 🔥 GLITCH
-        if (state.mask === false && r > 0.5) {
+        // LOOP
+        if (current.path.includes("OLO")) {
 
-            window.location.href = "glitch.html";
+            window.location.href = "loop.html";
             return;
 
         }
 
-        // ОБЫЧНЫЕ МАРШРУТЫ
+        // ОБЫЧНЫЕ ПЕРЕХОДЫ
         if (r > 0.75) {
 
             window.location.href = "observe.html";
@@ -140,30 +150,32 @@ window.onload = function() {
 
     }
 
-    // СЕКРЕТНЫЙ КОД
-    let secret = "teo867102";
+    // 🔥 ВВОД КОДА
+    secretInput.addEventListener("keydown", function(e) {
 
-    let input = "";
+        if (e.key === "Enter") {
 
-    document.addEventListener("keydown", function(e) {
+            let value = secretInput.value.toLowerCase().trim();
 
-        input += e.key.toLowerCase();
+            if (value === "teo867102") {
 
-        if (input.length > secret.length) {
+                let current = JSON.parse(localStorage.getItem("state"));
 
-            input = input.slice(-secret.length);
+                current.trust += 20;
 
-        }
+                localStorage.setItem("state", JSON.stringify(current));
 
-        if (input === secret) {
+                window.location.href = "secret.html";
 
-            let state = JSON.parse(localStorage.getItem("state"));
+            } else {
 
-            state.trust += 20;
+                text.innerText = "неправильно";
 
-            localStorage.setItem("state", JSON.stringify(state));
+                setTimeout(() => {
+                    text.innerText = "...";
+                }, 2000);
 
-            window.location.href = "secret.html";
+            }
 
         }
 
