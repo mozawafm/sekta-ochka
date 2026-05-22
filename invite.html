@@ -16,10 +16,10 @@
 
 <script>
 
-// STATE
 let state = JSON.parse(localStorage.getItem("state"));
 
 state.path += "I";
+state.trust += 3;
 
 localStorage.setItem("state", JSON.stringify(state));
 
@@ -29,10 +29,9 @@ function play() {
 
     setTimeout(() => {
 
-        let currentState = JSON.parse(localStorage.getItem("state"));
+        let r = Math.random();
 
-        // ПРАВИЛЬНЫЙ ПУТЬ
-        if (currentState.path.includes("OLI")) {
+        if (r > 0.5) {
 
             window.location.href = "video.html";
 
@@ -42,7 +41,7 @@ function play() {
 
         }
 
-    }, 2500);
+    }, 3000);
 
 }
 
