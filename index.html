@@ -1,37 +1,38 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>○</title>
-
-<style>
-body {
-    background: black;
-    color: white;
-    font-family: monospace;
-    text-align: center;
-}
-
-#container {
-    margin-top: 20%;
-}
-
-button {
-    margin-top: 20px;
-    padding: 10px;
-    background: none;
-    border: 1px solid white;
-    color: white;
-    cursor: pointer;
-}
-</style>
-
+<title>SEKTA OCHKA</title>
+<link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
 <div id="container">
-    <div id="text">...</div>
+
+    <p id="text">...</p>
+
     <button id="btn" style="display:none;">смотреть дальше</button>
+
+    <!-- СКРЫТЫЙ ВВОД -->
+    <div id="secretBox" style="display:none; margin-top:40px;">
+
+        <input 
+            type="text" 
+            id="secretInput"
+            placeholder="..."
+            autocomplete="off"
+            style="
+                background:black;
+                border:1px solid white;
+                color:white;
+                padding:10px;
+                font-family:monospace;
+            "
+        >
+
+    </div>
+
 </div>
 
 <script src="script.js"></script>
