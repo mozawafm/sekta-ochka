@@ -3,110 +3,150 @@ window.onload = function() {
     const text = document.getElementById("text");
     const btn = document.getElementById("btn");
 
-    let visits = localStorage.getItem("visits");
+    // СОСТОЯНИЕ САЙТА
+    let state = JSON.parse(localStorage.getItem("state"));
 
-    if (!visits) {
-        visits = 1;
-    } else {
-        visits = parseInt(visits) + 1;
+    // если state нет
+    if (!state) {
+
+        state = {
+            visits: 0,
+            trust: 0,
+            path: "",
+            mask: true
+        };
+
     }
 
-    localStorage.setItem("visits", visits);
+    state.visits++;
 
+    localStorage.setItem("state", JSON.stringify(state));
+
+    // СООБЩЕНИЯ
     let messages;
 
-    if (visits == 1) {
+    if (state.visits === 1) {
+
         messages = [
             "ты уже видела это видео",
             "это часть процесса",
+            "не бойся"
+        ];
+
+    } else if (state.path.includes("OL")) {
+
+        messages = [
+            "мы наблюдали за тобой",
+            "ты почти готова",
+            "не снимай маску"
+        ];
+
+    } else {
+
+        messages = [
+            "ты вернулась",
+            "мы помним тебя",
             "всё идёт правильно"
         ];
-    } 
-    else if (visits == 2) {
-        messages = [
-            "ты согласилась",
-            "мы отправили тебе адрес",
-            "ты его видела"
-        ];
-    } 
-    else if (visits == 3) {
-        messages = [
-            "ты пришла",
-            "никого не было",
-            "ты нажала play"
-        ];
-    } 
-    else {
-        messages = [
-            "мы уже записали",
-            "ты была в кадре",
-            "ты не помнишь"
-        ];
+
     }
 
     let i = 0;
 
-    function showNext() {
+    function nextMessage() {
+
         if (i < messages.length) {
+
             text.innerText = messages[i];
+
             i++;
-            setTimeout(showNext, 2500);
+
+            setTimeout(nextMessage, 2500);
+
         } else {
+
             btn.style.display = "inline-block";
+
         }
+
     }
 
-    showNext();
+    nextMessage();
 
-    // счётчик кликов (гарантированный переход в log)
-    let clicks = 0;
-
+    // КНОПКА
     btn.onclick = function() {
 
-        clicks++;
+        btn.style.display = "none";
 
         text.innerText = "подожди...";
-        btn.style.display = "none";
 
         setTimeout(() => {
 
-            // гарантированный лог
-            if (clicks % 3 === 0) {
-                window.location.href = "log.html";
+            // обновляем state
+            let currentState = JSON.parse(localStorage.getItem("state"));
+
+            // ПРАВИЛЬНЫЙ ПУТЬ
+            if (currentState.path.includes("OLI")) {
+
+                window.location.href = "video.html";
                 return;
+
             }
 
+            // ЕСЛИ СНЯТА МАСКА
+            if (currentState.mask === false) {
+
+                window.location.href = "glitch.html";
+                return;
+
+            }
+
+            // РАНДОМНЫЕ МАРШРУТЫ
             let r = Math.random();
 
-            if (r > 0.7) {
-                window.location.href = "final.html";
-            } else if (r > 0.5) {
-                window.location.href = "glitch.html";
-            } else if (r > 0.3) {
+            if (r > 0.66) {
+
                 window.location.href = "observe.html";
-            } else if (r > 0.1) {
-                window.location.href = "address.html";
+
+            } else if (r > 0.33) {
+
+                window.location.href = "log.html";
+
             } else {
+
                 window.location.href = "invite.html";
+
             }
 
         }, 2500);
+
     };
 
-    // 🔥 НОВЫЙ СЕКРЕТ
-    let secretCode = "teo867102";
+    // СЕКРЕТНЫЙ КОД
+    let secret = "teo867102";
+
     let input = "";
 
     document.addEventListener("keydown", function(e) {
 
         input += e.key.toLowerCase();
 
-        if (input.length > secretCode.length) {
-            input = input.slice(-secretCode.length);
+        if (input.length > secret.length) {
+
+            input = input.slice(-secret.length);
+
         }
 
-        if (input === secretCode) {
+        if (input === secret) {
+
+            let currentState = JSON.parse(localStorage.getItem("state"));
+
+            currentState.trust += 10;
+
+            localStorage.setItem("state", JSON.stringify(currentState));
+
             window.location.href = "secret.html";
+
         }
 
     });
