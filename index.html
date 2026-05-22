@@ -3,39 +3,236 @@
 <head>
 <meta charset="UTF-8">
 <title>SEKTA OCHKA</title>
-<link rel="stylesheet" href="style.css">
+
+<style>
+
+body{
+    margin:0;
+    background:black;
+    overflow:hidden;
+    font-family:monospace;
+    color:white;
+}
+
+#screen{
+    position:absolute;
+    width:100%;
+    height:100%;
+    background:url("garage.jpg") center center/cover no-repeat;
+    filter:contrast(1.2) brightness(0.7);
+}
+
+#noise{
+    position:absolute;
+    width:100%;
+    height:100%;
+    background-image:url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
+    opacity:0.08;
+    mix-blend-mode:screen;
+    pointer-events:none;
+}
+
+#overlay{
+    position:absolute;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.25);
+}
+
+#rec{
+    position:absolute;
+    top:20px;
+    left:20px;
+    font-size:18px;
+    letter-spacing:3px;
+    animation:blink 1s infinite;
+}
+
+#time{
+    position:absolute;
+    top:20px;
+    right:20px;
+    font-size:18px;
+}
+
+#center{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    text-align:center;
+}
+
+button{
+    margin-top:20px;
+    background:black;
+    color:white;
+    border:1px solid white;
+    padding:12px 20px;
+    font-family:monospace;
+    cursor:pointer;
+}
+
+button:hover{
+    background:white;
+    color:black;
+}
+
+#secretInput{
+    margin-top:20px;
+    background:black;
+    border:1px solid #444;
+    color:white;
+    padding:10px;
+    width:220px;
+    text-align:center;
+    display:none;
+}
+
+@keyframes blink{
+    50%{
+        opacity:0;
+    }
+}
+
+</style>
 </head>
 
 <body>
 
-<div id="container">
+<div id="screen"></div>
+<div id="noise"></div>
+<div id="overlay"></div>
 
-    <p id="text">...</p>
+<div id="rec">● REC</div>
+<div id="time">00:13:47</div>
 
-    <button id="btn" style="display:none;">смотреть дальше</button>
+<div id="center">
 
-    <!-- СКРЫТЫЙ ВВОД -->
-    <div id="secretBox" style="display:none; margin-top:40px;">
-
-        <input 
-            type="text" 
-            id="secretInput"
-            placeholder="..."
-            autocomplete="off"
-            style="
-                background:black;
-                border:1px solid white;
-                color:white;
-                padding:10px;
-                font-family:monospace;
-            "
-        >
-
+    <div id="message">
+        восстановление записи...
     </div>
+
+    <button id="playBtn">
+        продолжить
+    </button>
+
+    <br>
+
+    <input 
+        type="text"
+        id="secretInput"
+        placeholder="код"
+        autocomplete="off"
+    >
 
 </div>
 
-<script src="script.js"></script>
+<script>
+
+let state = JSON.parse(localStorage.getItem("state"));
+
+if(!state){
+
+    state = {
+        visits:0,
+        trust:0,
+        path:"",
+        secrets:0
+    };
+
+}
+
+state.visits++;
+
+localStorage.setItem("state", JSON.stringify(state));
+
+const msg = document.getElementById("message");
+const btn = document.getElementById("playBtn");
+const input = document.getElementById("secretInput");
+
+// спустя несколько посещений появляется поле
+if(state.visits >= 3){
+    input.style.display = "inline-block";
+}
+
+// странные изменения текста
+if(state.visits == 1){
+
+    msg.innerText = "восстановление записи...";
+
+}else if(state.visits < 4){
+
+    msg.innerText = "обнаружены пропущенные кадры";
+
+}else{
+
+    msg.innerText = "она уже внутри записи";
+
+}
+
+// PLAY
+btn.onclick = () => {
+
+    btn.style.display = "none";
+
+    msg.innerText = "загрузка...";
+
+    setTimeout(() => {
+
+        let r = Math.random();
+
+        if(r > 0.7){
+
+            window.location.href = "observe.html";
+
+        }else if(r > 0.45){
+
+            window.location.href = "log.html";
+
+        }else if(r > 0.2){
+
+            window.location.href = "invite.html";
+
+        }else{
+
+            window.location.href = "video.html";
+
+        }
+
+    },2000);
+
+};
+
+// SECRET CODE
+input.addEventListener("keydown",(e)=>{
+
+    if(e.key === "Enter"){
+
+        if(input.value.toLowerCase().trim() === "teo867102"){
+
+            state.trust += 20;
+            state.secrets += 1;
+
+            localStorage.setItem("state", JSON.stringify(state));
+
+            window.location.href = "secret.html";
+
+        }else{
+
+            msg.innerText = "код не распознан";
+
+            setTimeout(()=>{
+                msg.innerText = "она уже внутри записи";
+            },2000);
+
+        }
+
+    }
+
+});
+
+</script>
 
 </body>
 </html>
