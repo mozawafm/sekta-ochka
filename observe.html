@@ -1,45 +1,52 @@
 <!DOCTYPE html>
 <html>
+<head>
+<meta charset="UTF-8">
+<title>observe</title>
+</head>
+
 <body style="background:black;color:white;text-align:center;font-family:monospace;">
 
-<p id="t">не двигайся</p>
+<p id="text">не двигайся</p>
 
 <script>
 
-// шаг 1
-setTimeout(() => {
-    document.getElementById("t").innerText = "мы проверяем";
-}, 2000);
+// STATE
+let state = JSON.parse(localStorage.getItem("state"));
 
-// шаг 2
-setTimeout(() => {
-    document.getElementById("t").innerText = "мы видим тебя";
-}, 4000);
+state.path += "O";
+state.trust += 1;
 
-// шаг 3 — сбой
-setTimeout(() => {
-    document.getElementById("t").innerText = "...";
-}, 6000);
+localStorage.setItem("state", JSON.stringify(state));
 
-// шаг 4 — тревожный поворот
+// СЦЕНА
 setTimeout(() => {
-    document.getElementById("t").innerText = "что-то не так";
-}, 8000);
+    document.getElementById("text").innerText = "мы проверяем";
+}, 2500);
 
-// шаг 5 — обвинение
 setTimeout(() => {
-    document.getElementById("t").innerText = "ты лишняя";
+    document.getElementById("text").innerText = "мы видим тебя";
+}, 5000);
+
+setTimeout(() => {
+    document.getElementById("text").innerText = "...";
+}, 7500);
+
+setTimeout(() => {
+    document.getElementById("text").innerText = "что-то не так";
 }, 10000);
 
-// шаг 6 — «исправление»
+setTimeout(() => {
+    document.getElementById("text").innerText = "ты лишняя";
+}, 12500);
+
 setTimeout(() => {
     document.body.innerHTML = "<h1>исправляем</h1>";
-}, 12000);
+}, 15000);
 
-// шаг 7 — резкий возврат
 setTimeout(() => {
-    window.location.href = "index.html";
-}, 20000);
+    window.location.href = "log.html";
+}, 19000);
 
 </script>
 
