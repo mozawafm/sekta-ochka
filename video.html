@@ -1,12 +1,100 @@
 <!DOCTYPE html>
 <html>
-<body style="background:black;text-align:center;">
+<head>
+<meta charset="UTF-8">
+<title>video</title>
+</head>
 
-<video autoplay muted loop playsinline style="width:80%;">
+<body style="background:black;color:white;text-align:center;font-family:monospace;overflow:hidden;">
+
+<video id="vid" autoplay muted playsinline style="width:80%;margin-top:40px;">
     <source src="video.mp4" type="video/mp4">
 </video>
 
-<p style="color:white;">она уже в кадре</p>
+<p id="text">воспроизведение</p>
+
+<script>
+
+// STATE
+let state = JSON.parse(localStorage.getItem("state"));
+
+if (!state) {
+
+    state = {
+        visits: 0,
+        trust: 0,
+        path: "",
+        mask: true,
+        watchedVideo: false
+    };
+
+}
+
+// отмечаем просмотр
+state.watchedVideo = true;
+
+// усиливаем trust
+state.trust += 5;
+
+localStorage.setItem("state", JSON.stringify(state));
+
+const text = document.getElementById("text");
+const video = document.getElementById("vid");
+
+// ЭТАПЫ
+setTimeout(() => {
+    text.innerText = "она уже в кадре";
+}, 4000);
+
+setTimeout(() => {
+    text.innerText = "не выключай";
+}, 8000);
+
+setTimeout(() => {
+    text.innerText = "...";
+}, 12000);
+
+// ФИНАЛЬНАЯ РЕАКЦИЯ СИСТЕМЫ
+setTimeout(() => {
+
+    let currentState = JSON.parse(localStorage.getItem("state"));
+
+    // если trust высокий → secret
+    if (currentState.trust >= 15) {
+
+        window.location.href = "secret.html";
+        return;
+
+    }
+
+    // если маска снята
+    if (currentState.mask === false) {
+
+        window.location.href = "glitch.html";
+        return;
+
+    }
+
+    // рандом реакций
+    let r = Math.random();
+
+    if (r > 0.66) {
+
+        window.location.href = "final.html";
+
+    } else if (r > 0.33) {
+
+        window.location.href = "observe.html";
+
+    } else {
+
+        window.location.href = "log.html";
+
+    }
+
+}, 17000);
+
+</script>
 
 </body>
 </html>
