@@ -3,47 +3,333 @@
 <head>
 <meta charset="UTF-8">
 <title>invite</title>
+
+<style>
+
+body{
+    margin:0;
+    overflow:hidden;
+    background:black;
+    color:white;
+    font-family:monospace;
+}
+
+#bg{
+
+    position:absolute;
+    width:100%;
+    height:100%;
+
+    background:url("garage.jpg") center center/cover no-repeat;
+
+    filter:
+    brightness(0.28)
+    contrast(1.2)
+    grayscale(0.4);
+
+    transform:scale(1.04);
+
+}
+
+#noise{
+
+    position:absolute;
+    width:100%;
+    height:100%;
+
+    background-image:url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
+
+    opacity:0.05;
+
+    mix-blend-mode:screen;
+
+}
+
+#chat{
+
+    position:absolute;
+
+    top:50%;
+    left:50%;
+
+    transform:translate(-50%,-50%);
+
+    width:90%;
+    max-width:700px;
+
+}
+
+.msg{
+
+    margin-bottom:18px;
+
+    padding:14px;
+
+    background:rgba(255,255,255,0.04);
+
+    border-left:1px solid rgba(255,255,255,0.18);
+
+    opacity:0;
+
+    animation:fade 1s forwards;
+
+    line-height:1.7;
+
+}
+
+.you{
+
+    border-left:1px solid rgba(255,255,255,0.45);
+
+}
+
+.system{
+
+    opacity:0.45;
+
+    font-size:13px;
+
+}
+
+#playLine{
+
+    margin-top:30px;
+
+    text-align:center;
+
+    opacity:0;
+
+    transition:1s;
+
+}
+
+#playBtn{
+
+    display:inline-block;
+
+    padding:16px 28px;
+
+    border:1px solid rgba(255,255,255,0.4);
+
+    cursor:pointer;
+
+    transition:0.25s;
+
+    letter-spacing:3px;
+
+    background:rgba(0,0,0,0.5);
+
+}
+
+#playBtn:hover{
+
+    background:white;
+    color:black;
+
+}
+
+#hidden{
+
+    position:absolute;
+    bottom:18px;
+    left:20px;
+
+    opacity:0.06;
+
+    font-size:11px;
+
+}
+
+.flash{
+    animation:flash 0.1s;
+}
+
+@keyframes fade{
+
+    to{
+        opacity:1;
+    }
+
+}
+
+@keyframes flash{
+
+    50%{
+        opacity:0;
+    }
+
+}
+
+</style>
 </head>
 
-<body style="background:black;color:white;text-align:center;font-family:monospace;">
+<body>
 
-<p>ты уже здесь</p>
-<p>мы готовы</p>
+<div id="bg"></div>
+<div id="noise"></div>
 
-<br><br>
+<div id="chat"></div>
 
-<button onclick="play()">play</button>
+<div id="playLine">
+
+    <div id="playBtn">
+        ВОСПРОИЗВЕСТИ ЗАПИСЬ
+    </div>
+
+</div>
+
+<div id="hidden">
+    MAX_attachments(1)
+</div>
 
 <script>
 
 let state = JSON.parse(localStorage.getItem("state"));
 
-state.path += "I";
-state.trust += 3;
+if(!state){
+
+    state = {
+
+        trust:0,
+        invited:0
+
+    };
+
+}
+
+state.invited = (state.invited || 0) + 1;
+state.trust += 4;
 
 localStorage.setItem("state", JSON.stringify(state));
 
-function play() {
+const chat = document.getElementById("chat");
 
-    document.body.innerHTML = "<h1>запуск</h1>";
+const messages = [
 
-    setTimeout(() => {
+{
+    text:"[MAX] привет. нашел тебя через знакомых. нужна девушка для странного клипа.",
+    class:"msg"
+},
 
-        let r = Math.random();
+{
+    text:"что за клип?",
+    class:"msg you"
+},
 
-        if (r > 0.5) {
+{
+    text:"что то между линчем, кассетой и плохим сном.",
+    class:"msg"
+},
+
+{
+    text:"звучит как хуйня если честно",
+    class:"msg you"
+},
+
+{
+    text:"возможно.",
+    class:"msg"
+},
+
+{
+    text:"но тебе подойдет.",
+    class:"msg"
+},
+
+{
+    text:"что делать нужно?",
+    class:"msg you"
+},
+
+{
+    text:"просто приехать в гараж и нажать play.",
+    class:"msg"
+},
+
+{
+    text:"и все?",
+    class:"msg you"
+},
+
+{
+    text:"главное не выключать запись.",
+    class:"msg"
+},
+
+{
+    text:"📎 VIDEO_ATTACH_01.mp4",
+    class:"msg system"
+}
+
+];
+
+let i = 0;
+
+function addMessage(){
+
+    if(i >= messages.length){
+
+        setTimeout(()=>{
+
+            document.getElementById("playLine").style.opacity = "1";
+
+        },1200);
+
+        return;
+
+    }
+
+    let div = document.createElement("div");
+
+    div.className = messages[i].class;
+
+    div.innerText = messages[i].text;
+
+    chat.appendChild(div);
+
+    if(Math.random() > 0.8){
+
+        document.body.classList.add("flash");
+
+        setTimeout(()=>{
+
+            document.body.classList.remove("flash");
+
+        },100);
+
+    }
+
+    i++;
+
+    setTimeout(addMessage,2200);
+
+}
+
+addMessage();
+
+// PLAY
+
+document.getElementById("playBtn").onclick = () => {
+
+    let btn = document.getElementById("playBtn");
+
+    btn.innerText = "ЗАГРУЗКА...";
+
+    setTimeout(()=>{
+
+        if(Math.random() > 0.82){
+
+            window.location.href = "secret.html";
+
+        }else{
 
             window.location.href = "video.html";
 
-        } else {
-
-            window.location.href = "observe.html";
-
         }
 
-    }, 3000);
+    },2200);
 
-}
+};
 
 </script>
 
