@@ -43,6 +43,8 @@ body{
 
     mix-blend-mode:screen;
 
+    pointer-events:none;
+
 }
 
 #chat{
@@ -93,7 +95,7 @@ body{
 
 #playLine{
 
-    margin-top:30px;
+    margin-top:40px;
 
     text-align:center;
 
@@ -118,6 +120,8 @@ body{
     letter-spacing:3px;
 
     background:rgba(0,0,0,0.5);
+
+    user-select:none;
 
 }
 
@@ -169,14 +173,6 @@ body{
 <div id="noise"></div>
 
 <div id="chat"></div>
-
-<div id="playLine">
-
-    <div id="playBtn">
-        ВОСПРОИЗВЕСТИ ЗАПИСЬ
-    </div>
-
-</div>
 
 <div id="hidden">
     MAX_attachments(1)
@@ -269,11 +265,7 @@ function addMessage(){
 
     if(i >= messages.length){
 
-        setTimeout(()=>{
-
-            document.getElementById("playLine").style.opacity = "1";
-
-        },1200);
+        setTimeout(showPlayButton,1500);
 
         return;
 
@@ -287,7 +279,7 @@ function addMessage(){
 
     chat.appendChild(div);
 
-    if(Math.random() > 0.8){
+    if(Math.random() > 0.82){
 
         document.body.classList.add("flash");
 
@@ -307,29 +299,67 @@ function addMessage(){
 
 addMessage();
 
-// PLAY
+// КНОПКА СОЗДАЕТСЯ ТОЛЬКО В КОНЦЕ
 
-document.getElementById("playBtn").onclick = () => {
+function showPlayButton(){
 
-    let btn = document.getElementById("playBtn");
+    let playLine = document.createElement("div");
 
-    btn.innerText = "ЗАГРУЗКА...";
+    playLine.id = "playLine";
+
+    playLine.innerHTML = `
+
+        <div id="playBtn">
+            ВОСПРОИЗВЕСТИ ЗАПИСЬ
+        </div>
+
+    `;
+
+    chat.appendChild(playLine);
 
     setTimeout(()=>{
 
-        if(Math.random() > 0.82){
+        playLine.style.opacity = "1";
 
-            window.location.href = "secret.html";
+    },100);
 
-        }else{
+    // PLAY
 
-            window.location.href = "video.html";
+    document.getElementById("playBtn").onclick = () => {
 
-        }
+        let btn = document.getElementById("playBtn");
 
-    },2200);
+        btn.innerText = "ЗАГРУЗКА...";
 
-};
+        btn.style.pointerEvents = "none";
+
+        state.trust += 5;
+
+        localStorage.setItem("state", JSON.stringify(state));
+
+        setTimeout(()=>{
+
+            let r = Math.random();
+
+            if(r > 0.88){
+
+                window.location.href = "secret.html";
+
+            }else if(r > 0.65){
+
+                window.location.href = "observe.html";
+
+            }else{
+
+                window.location.href = "video.html";
+
+            }
+
+        },2200);
+
+    };
+
+}
 
 </script>
 
