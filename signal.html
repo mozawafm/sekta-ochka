@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>signal</title>
+
+<style>
+
+body{
+    margin:0;
+    background:black;
+    overflow:hidden;
+    font-family:monospace;
+    color:white;
+}
+
+#noise{
+
+    position:absolute;
+    width:100%;
+    height:100%;
+
+    background-image:url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
+
+    opacity:0.06;
+
+    mix-blend-mode:screen;
+
+}
+
+#center{
+
+    position:absolute;
+
+    top:50%;
+    left:50%;
+
+    transform:translate(-50%,-50%);
+
+    width:80%;
+    max-width:600px;
+
+    text-align:center;
+
+}
+
+#label{
+
+    margin-bottom:25px;
+
+    opacity:0.45;
+
+    letter-spacing:4px;
+
+    font-size:13px;
+
+}
+
+#input{
+
+    width:100%;
+
+    background:none;
+
+    border:none;
+
+    border-bottom:1px solid rgba(255,255,255,0.2);
+
+    color:white;
+
+    font-size:18px;
+
+    padding:14px 0;
+
+    outline:none;
+
+    font-family:monospace;
+
+    text-align:center;
+
+}
+
+#send{
+
+    margin-top:30px;
+
+    display:inline-block;
+
+    padding:12px 24px;
+
+    border:1px solid rgba(255,255,255,0.2);
+
+    cursor:pointer;
+
+    opacity:0.5;
+
+    transition:0.2s;
+
+}
+
+#send:hover{
+
+    opacity:1;
+
+    background:white;
+    color:black;
+
+}
+
+.flash{
+
+    animation:flash 0.08s;
+
+}
+
+.shake{
+
+    animation:shake 0.08s infinite;
+
+}
+
+@keyframes flash{
+
+    50%{
+        opacity:0;
+    }
+
+}
+
+@keyframes shake{
+
+    0%{transform:translate(0);}
+    25%{transform:translate(-6px,2px);}
+    50%{transform:translate(6px,-2px);}
+    100%{transform:translate(0);}
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="noise"></div>
+
+<div id="center">
+
+    <div id="label">
+        оставь сигнал
+    </div>
+
+    <input
+    id="input"
+    autocomplete="off"
+    >
+
+    <div id="send">
+        отправить
+    </div>
+
+</div>
+
+<script>
+
+const send = document.getElementById("send");
+
+send.onclick = () => {
+
+    document.body.classList.add("shake");
+
+    let flashes = 0;
+
+    let fx = setInterval(()=>{
+
+        document.body.classList.add("flash");
+
+        setTimeout(()=>{
+
+            document.body.classList.remove("flash");
+
+        },60);
+
+        flashes++;
+
+        if(flashes > 12){
+
+            clearInterval(fx);
+
+            let r = Math.random();
+
+            if(r > 0.7){
+
+                window.location.href = "glitch.html";
+
+            }else if(r > 0.45){
+
+                window.location.href = "final.html";
+
+            }else{
+
+                window.location.href = "hub.html";
+
+            }
+
+        }
+
+    },120);
+
+};
+
+</script>
+
+<script src="audio.js"></script>
+
+</body>
+</html>
