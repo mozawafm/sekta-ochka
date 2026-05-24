@@ -19,7 +19,8 @@ body{
     width:100%;
     height:100%;
     background:url("garage.jpg") center center/cover no-repeat;
-    filter:contrast(1.2) brightness(0.7);
+    filter:contrast(1.15) brightness(0.7) grayscale(0.2);
+    transform:scale(1.03);
 }
 
 #noise{
@@ -27,16 +28,16 @@ body{
     width:100%;
     height:100%;
     background-image:url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
-    opacity:0.08;
+    opacity:0.06;
     mix-blend-mode:screen;
     pointer-events:none;
 }
 
-#overlay{
+#dark{
     position:absolute;
     width:100%;
     height:100%;
-    background:rgba(0,0,0,0.3);
+    background:rgba(0,0,0,0.35);
 }
 
 #rec{
@@ -44,6 +45,8 @@ body{
     top:20px;
     left:20px;
     color:red;
+    font-size:18px;
+    letter-spacing:3px;
     animation:blink 1s infinite;
 }
 
@@ -51,6 +54,7 @@ body{
     position:absolute;
     top:20px;
     right:20px;
+    opacity:0.7;
 }
 
 #center{
@@ -63,24 +67,20 @@ body{
 }
 
 #message{
-    font-size:24px;
+    font-size:22px;
     letter-spacing:2px;
-}
-
-#phrase{
-    margin-top:30px;
-    opacity:0.45;
-    font-size:14px;
+    opacity:0.92;
 }
 
 button{
     margin-top:30px;
     background:black;
     color:white;
-    border:1px solid white;
-    padding:12px 22px;
+    border:1px solid rgba(255,255,255,0.5);
+    padding:12px 24px;
     font-family:monospace;
     cursor:pointer;
+    transition:0.2s;
 }
 
 button:hover{
@@ -89,14 +89,36 @@ button:hover{
 }
 
 #secretInput{
-    margin-top:25px;
-    background:black;
-    border:1px solid #333;
-    color:white;
-    padding:10px;
-    width:220px;
-    text-align:center;
-    display:none;
+
+    position:absolute;
+    bottom:18px;
+    right:18px;
+
+    width:90px;
+
+    background:transparent;
+    border:none;
+
+    color:rgba(255,255,255,0.08);
+
+    font-size:11px;
+    font-family:monospace;
+
+    outline:none;
+
+    opacity:0;
+
+    transition:0.5s;
+
+}
+
+#secretInput:focus{
+    opacity:1;
+    color:rgba(255,255,255,0.5);
+}
+
+.glitch{
+    animation:glitch 0.12s;
 }
 
 @keyframes blink{
@@ -105,14 +127,12 @@ button:hover{
     }
 }
 
-.flash{
-    animation:flash 0.15s;
-}
-
-@keyframes flash{
-    0%{opacity:1;}
-    50%{opacity:0;}
-    100%{opacity:1;}
+@keyframes glitch{
+    0%{transform:translateX(0);}
+    25%{transform:translateX(-5px);}
+    50%{transform:translateX(5px);}
+    75%{transform:translateX(-2px);}
+    100%{transform:translateX(0);}
 }
 
 </style>
@@ -122,7 +142,7 @@ button:hover{
 
 <div id="screen"></div>
 <div id="noise"></div>
-<div id="overlay"></div>
+<div id="dark"></div>
 
 <div id="rec">● REC</div>
 <div id="time"></div>
@@ -133,24 +153,17 @@ button:hover{
         восстановление записи...
     </div>
 
-    <div id="phrase"></div>
-
     <button id="playBtn">
         продолжить
     </button>
 
-    <br>
-
-    <input
-        type="text"
-        id="secretInput"
-        placeholder="..."
-        autocomplete="off"
-    >
-
 </div>
 
-<script src="phrases.js"></script>
+<input
+type="text"
+id="secretInput"
+autocomplete="off"
+>
 
 <script>
 
@@ -159,12 +172,15 @@ let state = JSON.parse(localStorage.getItem("state"));
 if(!state){
 
     state = {
+
         visits:0,
         trust:0,
         unlocked:false,
         codeUsed:false,
         observed:0,
-        watched:0
+        watched:0,
+        infected:0
+
     };
 
 }
@@ -173,25 +189,26 @@ state.visits++;
 
 localStorage.setItem("state", JSON.stringify(state));
 
-const msg = document.getElementById("message");
-const phrase = document.getElementById("phrase");
 const btn = document.getElementById("playBtn");
+const msg = document.getElementById("message");
 const input = document.getElementById("secretInput");
 const time = document.getElementById("time");
 
 // ВРЕМЯ
-const specialTimes = [
 
-"22:22",
-"11:11",
-"21:11"
+const strangeTimes = [
+
+    "22:22",
+    "11:11",
+    "03:11",
+    "21:11"
 
 ];
 
-if(Math.random() > 0.7){
+if(Math.random() > 0.72){
 
     time.innerText =
-    specialTimes[Math.floor(Math.random()*specialTimes.length)];
+    strangeTimes[Math.floor(Math.random()*strangeTimes.length)];
 
 }else{
 
@@ -203,46 +220,75 @@ if(Math.random() > 0.7){
 
 }
 
-// ФРАЗА
-phrase.innerText =
-phrases[Math.floor(Math.random()*phrases.length)];
-
 // СООБЩЕНИЯ
-if(state.unlocked){
 
-    msg.innerText = "сигнал восстановлен";
+const normalMessages = [
 
-}else if(state.watched >= 3){
+    "восстановление записи...",
+    "обнаружены поврежденные фрагменты",
+    "загрузка сигнала",
+    "видеофайл нестабилен"
 
-    msg.innerText = "она снова включила запись";
+];
 
-}else if(state.observed >= 4){
+const infectedMessages = [
 
-    msg.innerText = "наблюдение продолжается";
+    "она снова включила запись",
+    "наблюдение продолжается",
+    "сигнал восстановлен",
+    "она уже была здесь"
+
+];
+
+if(state.infected >= 5){
+
+    msg.innerText =
+    infectedMessages[Math.floor(Math.random()*infectedMessages.length)];
 
 }else{
 
-    msg.innerText = "восстановление записи...";
+    msg.innerText =
+    normalMessages[Math.floor(Math.random()*normalMessages.length)];
 
 }
 
-// КОД ТОЛЬКО ОДИН РАЗ
+// РЕДКИЙ ГЛИТЧ
+
+if(Math.random() > 0.93){
+
+    setTimeout(()=>{
+
+        document.body.classList.add("glitch");
+
+        msg.innerText = "не выключай";
+
+    },3000);
+
+}
+
+// СКРЫТОЕ ПОЛЕ
+
 if(
-    state.visits >= 3 &&
+    state.visits > 2 &&
     !state.codeUsed &&
     !state.unlocked
 ){
 
-    if(Math.random() > 0.55){
+    setTimeout(()=>{
 
-        input.style.display = "inline-block";
+        input.style.opacity = "0.06";
 
-    }
+    },7000);
 
 }
 
 // PLAY
+
 btn.onclick = () => {
+
+    state.infected++;
+
+    localStorage.setItem("state", JSON.stringify(state));
 
     btn.style.display = "none";
 
@@ -252,23 +298,28 @@ btn.onclick = () => {
 
         let r = Math.random();
 
-        // RARE FINAL
-        if(state.trust > 60 && r > 0.94){
+        // FINAL
+        if(state.trust > 60 && r > 0.95){
 
             window.location.href = "final.html";
 
+        // TIME
+        }else if(r > 0.86){
+
+            window.location.href = "time.html";
+
         // OBSERVE
-        }else if(r > 0.82){
+        }else if(r > 0.66){
 
             window.location.href = "observe.html";
 
         // LOG
-        }else if(r > 0.52){
+        }else if(r > 0.42){
 
             window.location.href = "log.html";
 
         // INVITE
-        }else if(r > 0.24){
+        }else if(r > 0.22){
 
             window.location.href = "invite.html";
 
@@ -279,11 +330,12 @@ btn.onclick = () => {
 
         }
 
-    },2000);
+    },1800);
 
 };
 
-// КОД
+// CODE
+
 input.addEventListener("keydown",(e)=>{
 
     if(e.key === "Enter"){
@@ -294,11 +346,11 @@ input.addEventListener("keydown",(e)=>{
 
             state.unlocked = true;
             state.codeUsed = true;
-            state.trust += 30;
+            state.trust += 50;
 
             localStorage.setItem("state", JSON.stringify(state));
 
-            document.body.classList.add("flash");
+            document.body.classList.add("glitch");
 
             setTimeout(()=>{
 
