@@ -1,50 +1,68 @@
-let audio = document.getElementById("globalAudio");
+const AUDIO_KEY = "sekta_audio_time";
+const AUDIO_STARTED = "sekta_audio_started";
 
-if(!audio){
+let audio = new Audio("audio/ambient.mp3");
 
-    audio = document.createElement("audio");
+audio.loop = true;
 
-    audio.id = "globalAudio";
+audio.volume = 0.16;
 
-    audio.src = "audio/ambient.mp3";
+audio.preload = "auto";
 
-    audio.loop = true;
+// ВОССТАНОВЛЕНИЕ ВРЕМЕНИ
 
-    audio.volume = 0.18;
-
-    document.body.appendChild(audio);
-
-}
-
-// СОХРАНЯЕМ ВРЕМЯ
-
-const savedTime = localStorage.getItem("audioTime");
+const savedTime = localStorage.getItem(AUDIO_KEY);
 
 if(savedTime){
 
-    audio.currentTime = savedTime;
+    audio.currentTime = parseFloat(savedTime);
 
 }
 
-// АВТОСОХРАНЕНИЕ ПОЗИЦИИ
+// СОХРАНЕНИЕ ВРЕМЕНИ
 
 setInterval(()=>{
 
-    localStorage.setItem(
-        "audioTime",
-        audio.currentTime
-    );
+    if(!audio.paused){
+
+        localStorage.setItem(
+            AUDIO_KEY,
+            audio.currentTime
+        );
+
+    }
 
 },1000);
 
-// ЗАПУСК ПОСЛЕ КЛИКА
+// ЗАПУСК
 
-function startAudio(){
+function startAmbient(){
 
-    audio.play();
+    audio.play().then(()=>{
 
-    document.removeEventListener("click", startAudio);
+        localStorage.setItem(
+            AUDIO_STARTED,
+            "true"
+        );
+
+    }).catch(()=>{});
+
+    document.removeEventListener(
+        "click",
+        startAmbient
+    );
 
 }
 
-document.addEventListener("click", startAudio);
+document.addEventListener(
+    "click",
+    startAmbient
+);
+
+// АВТОЗАПУСК ЕСЛИ УЖЕ БЫЛ КЛИК
+
+if(localStorage.getItem(AUDIO_STARTED)){
+
+    audio.play().catch(()=>{});
+
+}
