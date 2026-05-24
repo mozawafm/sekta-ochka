@@ -15,36 +15,22 @@ body{
 }
 
 #bg{
-
     position:absolute;
     width:100%;
     height:100%;
-
     background:url("garage.jpg") center center/cover no-repeat;
-
-    filter:
-    brightness(0.28)
-    contrast(1.2)
-    grayscale(0.4);
-
+    filter:brightness(0.28) contrast(1.2) grayscale(0.4);
     transform:scale(1.04);
-
 }
 
 #noise{
-
     position:absolute;
     width:100%;
     height:100%;
-
     background-image:url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
-
     opacity:0.05;
-
     mix-blend-mode:screen;
-
     pointer-events:none;
-
 }
 
 #chat{
@@ -59,49 +45,50 @@ body{
     width:90%;
     max-width:700px;
 
+    max-height:85vh;
+
+    overflow-y:auto;
+
+    padding-right:10px;
+
+}
+
+#chat::-webkit-scrollbar{
+    width:4px;
+}
+
+#chat::-webkit-scrollbar-thumb{
+    background:rgba(255,255,255,0.15);
 }
 
 .msg{
-
     margin-bottom:18px;
-
     padding:14px;
-
     background:rgba(255,255,255,0.04);
-
     border-left:1px solid rgba(255,255,255,0.18);
-
     opacity:0;
-
     animation:fade 1s forwards;
-
     line-height:1.7;
-
 }
 
 .you{
-
     border-left:1px solid rgba(255,255,255,0.45);
-
 }
 
 .system{
-
     opacity:0.45;
-
     font-size:13px;
-
 }
 
-#playLine{
+#playWrap{
 
     margin-top:40px;
 
+    margin-bottom:80px;
+
     text-align:center;
 
-    opacity:0;
-
-    transition:1s;
+    display:none;
 
 }
 
@@ -126,22 +113,16 @@ body{
 }
 
 #playBtn:hover{
-
     background:white;
     color:black;
-
 }
 
 #hidden{
-
     position:absolute;
     bottom:18px;
     left:20px;
-
     opacity:0.06;
-
     font-size:11px;
-
 }
 
 .flash{
@@ -149,19 +130,15 @@ body{
 }
 
 @keyframes fade{
-
     to{
         opacity:1;
     }
-
 }
 
 @keyframes flash{
-
     50%{
         opacity:0;
     }
-
 }
 
 </style>
@@ -175,7 +152,7 @@ body{
 <div id="chat"></div>
 
 <div id="hidden">
-    MAX_attachments(1)
+MAX_attachments(1)
 </div>
 
 <script>
@@ -261,11 +238,17 @@ const messages = [
 
 let i = 0;
 
+function scrollDown(){
+
+    chat.scrollTop = chat.scrollHeight;
+
+}
+
 function addMessage(){
 
     if(i >= messages.length){
 
-        setTimeout(showPlayButton,1500);
+        showButton();
 
         return;
 
@@ -278,6 +261,8 @@ function addMessage(){
     div.innerText = messages[i].text;
 
     chat.appendChild(div);
+
+    scrollDown();
 
     if(Math.random() > 0.82){
 
@@ -297,17 +282,13 @@ function addMessage(){
 
 }
 
-addMessage();
+function showButton(){
 
-// КНОПКА СОЗДАЕТСЯ ТОЛЬКО В КОНЦЕ
+    let wrap = document.createElement("div");
 
-function showPlayButton(){
+    wrap.id = "playWrap";
 
-    let playLine = document.createElement("div");
-
-    playLine.id = "playLine";
-
-    playLine.innerHTML = `
+    wrap.innerHTML = `
 
         <div id="playBtn">
             ВОСПРОИЗВЕСТИ ЗАПИСЬ
@@ -315,15 +296,11 @@ function showPlayButton(){
 
     `;
 
-    chat.appendChild(playLine);
+    chat.appendChild(wrap);
 
-    setTimeout(()=>{
+    wrap.style.display = "block";
 
-        playLine.style.opacity = "1";
-
-    },100);
-
-    // PLAY
+    scrollDown();
 
     document.getElementById("playBtn").onclick = () => {
 
@@ -360,6 +337,8 @@ function showPlayButton(){
     };
 
 }
+
+addMessage();
 
 </script>
 
