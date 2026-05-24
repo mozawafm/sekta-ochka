@@ -14,13 +14,13 @@ body{
     color:white;
 }
 
-#screen{
+#bg{
     position:absolute;
     width:100%;
     height:100%;
     background:url("garage.jpg") center center/cover no-repeat;
-    filter:contrast(1.15) brightness(0.7) grayscale(0.2);
-    transform:scale(1.03);
+    filter:brightness(0.38) contrast(1.2) grayscale(0.3);
+    transform:scale(1.04);
 }
 
 #noise{
@@ -28,111 +28,133 @@ body{
     width:100%;
     height:100%;
     background-image:url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
-    opacity:0.06;
+    opacity:0.05;
     mix-blend-mode:screen;
     pointer-events:none;
 }
 
-#dark{
+#overlay{
     position:absolute;
     width:100%;
     height:100%;
-    background:rgba(0,0,0,0.35);
-}
-
-#rec{
-    position:absolute;
-    top:20px;
-    left:20px;
-    color:red;
-    font-size:18px;
-    letter-spacing:3px;
-    animation:blink 1s infinite;
-}
-
-#time{
-    position:absolute;
-    top:20px;
-    right:20px;
-    opacity:0.7;
+    background:rgba(0,0,0,0.28);
 }
 
 #center{
+
     position:absolute;
+
     top:50%;
     left:50%;
+
     transform:translate(-50%,-50%);
+
     text-align:center;
+
     width:80%;
+
 }
 
 #message{
-    font-size:22px;
-    letter-spacing:2px;
-    opacity:0.92;
+
+    font-size:24px;
+    letter-spacing:3px;
+    margin-bottom:30px;
+
 }
 
-button{
-    margin-top:30px;
-    background:black;
-    color:white;
-    border:1px solid rgba(255,255,255,0.5);
-    padding:12px 24px;
-    font-family:monospace;
+#play{
+
+    display:inline-block;
+
+    border:1px solid rgba(255,255,255,0.4);
+
+    padding:14px 26px;
+
     cursor:pointer;
-    transition:0.2s;
+
+    transition:0.25s;
+
 }
 
-button:hover{
+#play:hover{
+
     background:white;
     color:black;
+
 }
 
-#secretInput{
+#time{
 
     position:absolute;
-    bottom:18px;
-    right:18px;
 
-    width:90px;
+    top:20px;
+    right:20px;
 
-    background:transparent;
+    opacity:0.5;
+
+}
+
+#rec{
+
+    position:absolute;
+
+    top:20px;
+    left:20px;
+
+    color:red;
+
+    animation:blink 1s infinite;
+
+}
+
+#code{
+
+    position:absolute;
+
+    bottom:14px;
+    right:16px;
+
+    opacity:0;
+
+    transition:1s;
+
+    background:none;
+
     border:none;
 
-    color:rgba(255,255,255,0.08);
+    color:white;
 
-    font-size:11px;
     font-family:monospace;
 
     outline:none;
 
-    opacity:0;
+    font-size:11px;
 
-    transition:0.5s;
+    width:90px;
 
 }
 
-#secretInput:focus{
-    opacity:1;
-    color:rgba(255,255,255,0.5);
-}
+.flash{
 
-.glitch{
-    animation:glitch 0.12s;
+    animation:flash 0.12s;
+
 }
 
 @keyframes blink{
+
     50%{
         opacity:0;
     }
+
 }
 
-@keyframes glitch{
-    0%{transform:translateX(0);}
-    25%{transform:translateX(-5px);}
-    50%{transform:translateX(5px);}
-    75%{transform:translateX(-2px);}
-    100%{transform:translateX(0);}
+@keyframes flash{
+
+    50%{
+        opacity:0;
+    }
+
 }
 
 </style>
@@ -140,9 +162,9 @@ button:hover{
 
 <body>
 
-<div id="screen"></div>
+<div id="bg"></div>
 <div id="noise"></div>
-<div id="dark"></div>
+<div id="overlay"></div>
 
 <div id="rec">● REC</div>
 <div id="time"></div>
@@ -153,17 +175,23 @@ button:hover{
         восстановление записи...
     </div>
 
-    <button id="playBtn">
+    <div id="play">
         продолжить
-    </button>
+    </div>
 
 </div>
 
 <input
 type="text"
-id="secretInput"
+id="code"
 autocomplete="off"
 >
+
+<audio
+id="music"
+src="audio/ambient.mp3"
+loop
+></audio>
 
 <script>
 
@@ -175,11 +203,9 @@ if(!state){
 
         visits:0,
         trust:0,
+        infected:0,
         unlocked:false,
-        codeUsed:false,
-        observed:0,
-        watched:0,
-        infected:0
+        codeUsed:false
 
     };
 
@@ -189,141 +215,111 @@ state.visits++;
 
 localStorage.setItem("state", JSON.stringify(state));
 
-const btn = document.getElementById("playBtn");
 const msg = document.getElementById("message");
-const input = document.getElementById("secretInput");
+const play = document.getElementById("play");
 const time = document.getElementById("time");
+const code = document.getElementById("code");
+const music = document.getElementById("music");
 
-// ВРЕМЯ
+// MUSIC
 
-const strangeTimes = [
+document.body.addEventListener("click",()=>{
 
-    "22:22",
-    "11:11",
-    "03:11",
-    "21:11"
+    music.volume = 0.18;
+
+    music.play();
+
+},{once:true});
+
+// TIME
+
+const weirdTimes = [
+
+"22:22",
+"11:11",
+"03:11",
+"21:11"
 
 ];
 
-if(Math.random() > 0.72){
+if(Math.random() > 0.65){
 
     time.innerText =
-    strangeTimes[Math.floor(Math.random()*strangeTimes.length)];
+    weirdTimes[Math.floor(Math.random()*weirdTimes.length)];
 
 }else{
 
     let h = Math.floor(Math.random()*24).toString().padStart(2,"0");
     let m = Math.floor(Math.random()*60).toString().padStart(2,"0");
-    let s = Math.floor(Math.random()*60).toString().padStart(2,"0");
 
-    time.innerText = `${h}:${m}:${s}`;
+    time.innerText = `${h}:${m}`;
 
 }
 
-// СООБЩЕНИЯ
+// MESSAGES
 
-const normalMessages = [
+const texts = [
 
-    "восстановление записи...",
-    "обнаружены поврежденные фрагменты",
-    "загрузка сигнала",
-    "видеофайл нестабилен"
+"восстановление записи...",
+"обнаружены поврежденные фрагменты",
+"загрузка сигнала",
+"она уже была здесь",
+"наблюдение продолжается"
 
 ];
 
-const infectedMessages = [
+msg.innerText =
+texts[Math.floor(Math.random()*texts.length)];
 
-    "она снова включила запись",
-    "наблюдение продолжается",
-    "сигнал восстановлен",
-    "она уже была здесь"
-
-];
-
-if(state.infected >= 5){
-
-    msg.innerText =
-    infectedMessages[Math.floor(Math.random()*infectedMessages.length)];
-
-}else{
-
-    msg.innerText =
-    normalMessages[Math.floor(Math.random()*normalMessages.length)];
-
-}
-
-// РЕДКИЙ ГЛИТЧ
-
-if(Math.random() > 0.93){
-
-    setTimeout(()=>{
-
-        document.body.classList.add("glitch");
-
-        msg.innerText = "не выключай";
-
-    },3000);
-
-}
-
-// СКРЫТОЕ ПОЛЕ
+// CODE APPEAR
 
 if(
-    state.visits > 2 &&
-    !state.codeUsed &&
-    !state.unlocked
+    state.visits >= 3 &&
+    !state.codeUsed
 ){
 
     setTimeout(()=>{
 
-        input.style.opacity = "0.06";
+        code.style.opacity = "0.08";
 
-    },7000);
+    },6000);
 
 }
 
 // PLAY
 
-btn.onclick = () => {
+play.onclick = () => {
 
     state.infected++;
 
     localStorage.setItem("state", JSON.stringify(state));
 
-    btn.style.display = "none";
-
-    msg.innerText = "загрузка...";
+    play.innerText = "ЗАГРУЗКА...";
 
     setTimeout(()=>{
 
         let r = Math.random();
 
-        // FINAL
-        if(state.trust > 60 && r > 0.95){
-
-            window.location.href = "final.html";
-
-        // TIME
-        }else if(r > 0.86){
+        if(r > 0.88){
 
             window.location.href = "time.html";
 
-        // OBSERVE
-        }else if(r > 0.66){
+        }else if(r > 0.72){
+
+            window.location.href = "loop.html";
+
+        }else if(r > 0.54){
 
             window.location.href = "observe.html";
 
-        // LOG
-        }else if(r > 0.42){
+        }else if(r > 0.34){
 
             window.location.href = "log.html";
 
-        // INVITE
-        }else if(r > 0.22){
+        }else if(r > 0.16){
 
             window.location.href = "invite.html";
 
-        // VIDEO
         }else{
 
             window.location.href = "video.html";
@@ -336,13 +332,11 @@ btn.onclick = () => {
 
 // CODE
 
-input.addEventListener("keydown",(e)=>{
+code.addEventListener("keydown",(e)=>{
 
     if(e.key === "Enter"){
 
-        let value = input.value.toLowerCase().trim();
-
-        if(value === "teo867102"){
+        if(code.value.toLowerCase() === "teo867102"){
 
             state.unlocked = true;
             state.codeUsed = true;
@@ -350,7 +344,7 @@ input.addEventListener("keydown",(e)=>{
 
             localStorage.setItem("state", JSON.stringify(state));
 
-            document.body.classList.add("glitch");
+            document.body.classList.add("flash");
 
             setTimeout(()=>{
 
@@ -361,12 +355,6 @@ input.addEventListener("keydown",(e)=>{
         }else{
 
             msg.innerText = "код не распознан";
-
-            setTimeout(()=>{
-
-                msg.innerText = "восстановление записи...";
-
-            },2000);
 
         }
 
