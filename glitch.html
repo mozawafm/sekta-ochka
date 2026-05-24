@@ -1,48 +1,413 @@
 <!DOCTYPE html>
 <html>
-<body style="background:black;color:white;text-align:center;font-family:monospace;">
+<head>
+<meta charset="UTF-8">
+<title>glitch</title>
 
-<p id="t">загрузка...</p>
+<style>
+
+body{
+    margin:0;
+    overflow:hidden;
+    background:black;
+    color:white;
+    font-family:monospace;
+    cursor:none;
+}
+
+#bg{
+
+    position:absolute;
+    width:100%;
+    height:100%;
+
+    background:url("mask.jpg") center center/cover no-repeat;
+
+    filter:
+    brightness(0.2)
+    contrast(1.5)
+    grayscale(1);
+
+    transform:scale(1.08);
+
+}
+
+#noise{
+
+    position:absolute;
+    width:100%;
+    height:100%;
+
+    background-image:url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
+
+    opacity:0.12;
+
+    mix-blend-mode:screen;
+
+    pointer-events:none;
+
+}
+
+#scanlines{
+
+    position:absolute;
+    width:100%;
+    height:100%;
+
+    background:
+    repeating-linear-gradient(
+        to bottom,
+        rgba(255,255,255,0.03),
+        rgba(255,255,255,0.03) 1px,
+        transparent 1px,
+        transparent 3px
+    );
+
+    pointer-events:none;
+
+    opacity:0.25;
+
+}
+
+#vhs{
+
+    position:absolute;
+    width:100%;
+    height:100%;
+
+    background:linear-gradient(
+        rgba(255,255,255,0.02),
+        rgba(255,255,255,0)
+    );
+
+    mix-blend-mode:screen;
+
+    animation:vhsMove 6s linear infinite;
+
+    pointer-events:none;
+
+}
+
+#center{
+
+    position:absolute;
+
+    top:50%;
+    left:50%;
+
+    transform:translate(-50%,-50%);
+
+    text-align:center;
+
+    width:90%;
+
+}
+
+#line{
+
+    font-size:42px;
+
+    letter-spacing:6px;
+
+    text-transform:uppercase;
+
+    opacity:0.9;
+
+    position:relative;
+
+}
+
+#line::before,
+#line::after{
+
+    content:attr(data-text);
+
+    position:absolute;
+
+    left:0;
+    top:0;
+
+    width:100%;
+
+    overflow:hidden;
+
+}
+
+#line::before{
+
+    color:red;
+
+    transform:translateX(-3px);
+
+    opacity:0.6;
+
+    clip-path:inset(0 0 45% 0);
+
+}
+
+#line::after{
+
+    color:cyan;
+
+    transform:translateX(3px);
+
+    opacity:0.6;
+
+    clip-path:inset(55% 0 0 0);
+
+}
+
+#sub{
+
+    margin-top:35px;
+
+    opacity:0.4;
+
+    font-size:14px;
+
+    letter-spacing:3px;
+
+}
+
+#counter{
+
+    position:absolute;
+
+    bottom:20px;
+    right:20px;
+
+    opacity:0.2;
+
+    font-size:12px;
+
+}
+
+.flash{
+    animation:flash 0.08s;
+}
+
+.shake{
+    animation:shake 0.1s;
+}
+
+.invert{
+    filter:invert(1);
+}
+
+@keyframes flash{
+
+    50%{
+        opacity:0;
+    }
+
+}
+
+@keyframes shake{
+
+    0%{transform:translate(0);}
+    25%{transform:translate(-8px,3px);}
+    50%{transform:translate(8px,-3px);}
+    100%{transform:translate(0);}
+
+}
+
+@keyframes vhsMove{
+
+    0%{
+        transform:translateY(-100%);
+    }
+
+    100%{
+        transform:translateY(100%);
+    }
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="bg"></div>
+<div id="noise"></div>
+<div id="scanlines"></div>
+<div id="vhs"></div>
+
+<div id="center">
+
+    <div
+    id="line"
+    data-text="SIGNAL LOST"
+    >
+        SIGNAL LOST
+    </div>
+
+    <div id="sub">
+        наблюдение продолжается
+    </div>
+
+</div>
+
+<div id="counter">
+    REC_22:22:22
+</div>
 
 <script>
 
-// шаг 1 — обычное ожидание
-setTimeout(() => {
-    document.getElementById("t").innerText = "подожди";
-}, 2000);
+let state = JSON.parse(localStorage.getItem("state"));
 
-// шаг 2 — "зависло"
-setTimeout(() => {
-    document.getElementById("t").innerText = "подожди.";
-}, 4000);
+if(!state){
 
-setTimeout(() => {
-    document.getElementById("t").innerText = "подожди..";
-}, 6000);
+    state = {};
 
-setTimeout(() => {
-    document.getElementById("t").innerText = "подожди...";
-}, 8000);
+}
 
-// шаг 3 — долго ничего не происходит (ВАЖНО)
-// создаёт ощущение, что сайт сломался
+state.trust = (state.trust || 0) + 8;
 
-setTimeout(() => {
+localStorage.setItem("state", JSON.stringify(state));
 
-    // резкий "пробой"
-    document.body.innerHTML = `
-        <h1>почему ты сняла маску</h1>
-        <p>мы не просили</p>
-    `;
+const line = document.getElementById("line");
+const sub = document.getElementById("sub");
 
-}, 12000);
+const texts = [
 
-// возврат
-setTimeout(() => {
-    window.location.href = "index.html";
-}, 16000);
+"SIGNAL LOST",
+"НЕ ВЫКЛЮЧАЙ",
+"ОНА УЖЕ БЫЛА ЗДЕСЬ",
+"OBSERVATION ACTIVE",
+"RECORDING DAMAGED",
+"ПАМЯТЬ НЕ ЯВЛЯЕТСЯ ДОКАЗАТЕЛЬСТВОМ",
+"LOOK AWAY",
+"ЗАПИСЬ ПРОДОЛЖАЕТСЯ",
+"22:22"
+
+];
+
+const subs = [
+
+"наблюдение продолжается",
+"человек видит то что может видеть",
+"она снова включила запись",
+"не существует последнего уровня",
+"хаотичность можно понять"
+
+];
+
+// СМЕНА ТЕКСТА
+
+setInterval(()=>{
+
+    let t =
+    texts[Math.floor(Math.random()*texts.length)];
+
+    line.innerText = t;
+
+    line.setAttribute("data-text", t);
+
+    sub.innerText =
+    subs[Math.floor(Math.random()*subs.length)];
+
+},2600);
+
+// ФЛЕШИ
+
+setInterval(()=>{
+
+    if(Math.random() > 0.55){
+
+        document.body.classList.add("flash");
+
+        setTimeout(()=>{
+
+            document.body.classList.remove("flash");
+
+        },80);
+
+    }
+
+},1400);
+
+// SHAKE
+
+setInterval(()=>{
+
+    if(Math.random() > 0.72){
+
+        document.body.classList.add("shake");
+
+        setTimeout(()=>{
+
+            document.body.classList.remove("shake");
+
+        },100);
+
+    }
+
+},2200);
+
+// INVERT
+
+setInterval(()=>{
+
+    if(Math.random() > 0.88){
+
+        document.body.classList.add("invert");
+
+        setTimeout(()=>{
+
+            document.body.classList.remove("invert");
+
+        },180);
+
+    }
+
+},4000);
+
+// РЕДКИЙ СКРИМ-КАДР
+
+setInterval(()=>{
+
+    if(Math.random() > 0.94){
+
+        document.getElementById("bg").style.backgroundImage =
+        'url("girl.jpg")';
+
+        setTimeout(()=>{
+
+            document.getElementById("bg").style.backgroundImage =
+            'url("mask.jpg")';
+
+        },120);
+
+    }
+
+},5000);
+
+// ПЕРЕХОД
+
+setTimeout(()=>{
+
+    let r = Math.random();
+
+    if(r > 0.7){
+
+        window.location.href = "loop.html";
+
+    }else if(r > 0.45){
+
+        window.location.href = "observe.html";
+
+    }else{
+
+        window.location.href = "index.html";
+
+    }
+
+},24000);
 
 </script>
+
+<script src="audio.js"></script>
 
 </body>
 </html>
