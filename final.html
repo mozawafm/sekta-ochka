@@ -1,44 +1,161 @@
 <!DOCTYPE html>
 <html>
-<body style="background:black;color:white;text-align:center;font-family:monospace;">
+<head>
+<meta charset="UTF-8">
+<title>final</title>
 
-<p id="t">загрузка записи...</p>
+<style>
+
+body{
+    margin:0;
+    background:black;
+    overflow:hidden;
+    color:white;
+    font-family:monospace;
+}
+
+#bg{
+
+    position:absolute;
+    width:100%;
+    height:100%;
+
+    background:url("mask.jpg") center center/cover no-repeat;
+
+    filter:
+    brightness(0.18)
+    contrast(1.4)
+    grayscale(1);
+
+    transform:scale(1.05);
+
+}
+
+#noise{
+
+    position:absolute;
+    width:100%;
+    height:100%;
+
+    background-image:url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
+
+    opacity:0.07;
+
+}
+
+#center{
+
+    position:absolute;
+
+    top:50%;
+    left:50%;
+
+    transform:translate(-50%,-50%);
+
+    text-align:center;
+
+    width:90%;
+
+}
+
+#line{
+
+    font-size:30px;
+
+    letter-spacing:5px;
+
+    opacity:0;
+
+    transition:2s;
+
+}
+
+#sub{
+
+    margin-top:30px;
+
+    opacity:0;
+
+    transition:3s;
+
+    font-size:14px;
+
+    letter-spacing:2px;
+
+}
+
+.flash{
+
+    animation:flash 0.08s;
+
+}
+
+@keyframes flash{
+
+    50%{
+        opacity:0;
+    }
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="bg"></div>
+<div id="noise"></div>
+
+<div id="center">
+
+    <div id="line">
+        НАБЛЮДЕНИЕ ЗАВЕРШЕНО
+    </div>
+
+    <div id="sub">
+        теперь запись продолжается внутри тебя
+    </div>
+
+</div>
 
 <script>
 
-// шаг 1
-setTimeout(() => {
-    document.getElementById("t").innerText = "воспроизведение";
-}, 2000);
+const line = document.getElementById("line");
+const sub = document.getElementById("sub");
 
-// шаг 2
-setTimeout(() => {
-    document.getElementById("t").innerText = "файл найден";
-}, 4000);
+setTimeout(()=>{
 
-// шаг 3
-setTimeout(() => {
-    document.getElementById("t").innerText = "она уже здесь";
-}, 6000);
+    line.style.opacity = "1";
 
-// шаг 4 — главный удар
-setTimeout(() => {
-    document.body.innerHTML = `
-        <h1>это ты</h1>
-        <p>ты уже нажала play</p>
-        <p>мы просто смотрим</p>
-    `;
-}, 9000);
+},1200);
 
-// шаг 5 — исчезновение
-setTimeout(() => {
-    document.body.innerHTML = "<h1>○</h1>";
-}, 13000);
+setTimeout(()=>{
 
-// возврат (как будто ничего не было)
-setTimeout(() => {
+    sub.style.opacity = "0.5";
+
+},4200);
+
+setInterval(()=>{
+
+    if(Math.random() > 0.7){
+
+        document.body.classList.add("flash");
+
+        setTimeout(()=>{
+
+            document.body.classList.remove("flash");
+
+        },80);
+
+    }
+
+},2500);
+
+setTimeout(()=>{
+
     window.location.href = "index.html";
-}, 16000);
+
+},22000);
 
 </script>
 
