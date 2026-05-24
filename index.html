@@ -43,8 +43,7 @@ body{
     position:absolute;
     top:20px;
     left:20px;
-    font-size:18px;
-    letter-spacing:3px;
+    color:red;
     animation:blink 1s infinite;
 }
 
@@ -52,7 +51,6 @@ body{
     position:absolute;
     top:20px;
     right:20px;
-    font-size:18px;
 }
 
 #center{
@@ -65,16 +63,22 @@ body{
 }
 
 #message{
-    font-size:22px;
+    font-size:24px;
     letter-spacing:2px;
 }
 
+#phrase{
+    margin-top:30px;
+    opacity:0.45;
+    font-size:14px;
+}
+
 button{
-    margin-top:25px;
+    margin-top:30px;
     background:black;
     color:white;
     border:1px solid white;
-    padding:12px 20px;
+    padding:12px 22px;
     font-family:monospace;
     cursor:pointer;
 }
@@ -101,6 +105,16 @@ button:hover{
     }
 }
 
+.flash{
+    animation:flash 0.15s;
+}
+
+@keyframes flash{
+    0%{opacity:1;}
+    50%{opacity:0;}
+    100%{opacity:1;}
+}
+
 </style>
 </head>
 
@@ -119,6 +133,8 @@ button:hover{
         восстановление записи...
     </div>
 
+    <div id="phrase"></div>
+
     <button id="playBtn">
         продолжить
     </button>
@@ -134,9 +150,10 @@ button:hover{
 
 </div>
 
+<script src="phrases.js"></script>
+
 <script>
 
-// STATE
 let state = JSON.parse(localStorage.getItem("state"));
 
 if(!state){
@@ -144,9 +161,10 @@ if(!state){
     state = {
         visits:0,
         trust:0,
-        secrets:0,
         unlocked:false,
-        codeUsed:false
+        codeUsed:false,
+        observed:0,
+        watched:0
     };
 
 }
@@ -156,25 +174,51 @@ state.visits++;
 localStorage.setItem("state", JSON.stringify(state));
 
 const msg = document.getElementById("message");
+const phrase = document.getElementById("phrase");
 const btn = document.getElementById("playBtn");
 const input = document.getElementById("secretInput");
 const time = document.getElementById("time");
 
-// СЛУЧАЙНОЕ ВРЕМЯ
-let h = Math.floor(Math.random()*24).toString().padStart(2,"0");
-let m = Math.floor(Math.random()*60).toString().padStart(2,"0");
-let s = Math.floor(Math.random()*60).toString().padStart(2,"0");
+// ВРЕМЯ
+const specialTimes = [
 
-time.innerText = `${h}:${m}:${s}`;
+"22:22",
+"11:11",
+"21:11"
 
-// ТЕКСТЫ
+];
+
+if(Math.random() > 0.7){
+
+    time.innerText =
+    specialTimes[Math.floor(Math.random()*specialTimes.length)];
+
+}else{
+
+    let h = Math.floor(Math.random()*24).toString().padStart(2,"0");
+    let m = Math.floor(Math.random()*60).toString().padStart(2,"0");
+    let s = Math.floor(Math.random()*60).toString().padStart(2,"0");
+
+    time.innerText = `${h}:${m}:${s}`;
+
+}
+
+// ФРАЗА
+phrase.innerText =
+phrases[Math.floor(Math.random()*phrases.length)];
+
+// СООБЩЕНИЯ
 if(state.unlocked){
 
     msg.innerText = "сигнал восстановлен";
 
-}else if(state.visits > 4){
+}else if(state.watched >= 3){
 
-    msg.innerText = "обнаружены поврежденные фрагменты";
+    msg.innerText = "она снова включила запись";
+
+}else if(state.observed >= 4){
+
+    msg.innerText = "наблюдение продолжается";
 
 }else{
 
@@ -182,15 +226,14 @@ if(state.unlocked){
 
 }
 
-// 🔥 ПОЛЕ КОДА ТОЛЬКО ОДИН РАЗ
+// КОД ТОЛЬКО ОДИН РАЗ
 if(
     state.visits >= 3 &&
     !state.codeUsed &&
     !state.unlocked
 ){
 
-    // появляется не всегда
-    if(Math.random() > 0.45){
+    if(Math.random() > 0.55){
 
         input.style.display = "inline-block";
 
@@ -209,19 +252,27 @@ btn.onclick = () => {
 
         let r = Math.random();
 
-        // меньше возвратов в observe
-        if(r > 0.82){
+        // RARE FINAL
+        if(state.trust > 60 && r > 0.94){
+
+            window.location.href = "final.html";
+
+        // OBSERVE
+        }else if(r > 0.82){
 
             window.location.href = "observe.html";
 
-        }else if(r > 0.58){
+        // LOG
+        }else if(r > 0.52){
 
             window.location.href = "log.html";
 
-        }else if(r > 0.28){
+        // INVITE
+        }else if(r > 0.24){
 
             window.location.href = "invite.html";
 
+        // VIDEO
         }else{
 
             window.location.href = "video.html";
@@ -239,19 +290,21 @@ input.addEventListener("keydown",(e)=>{
 
         let value = input.value.toLowerCase().trim();
 
-        // ПРАВИЛЬНЫЙ КОД
         if(value === "teo867102"){
 
-            state.trust += 30;
-
             state.unlocked = true;
-
-            // 🔥 ГЛАВНОЕ
             state.codeUsed = true;
+            state.trust += 30;
 
             localStorage.setItem("state", JSON.stringify(state));
 
-            window.location.href = "secret.html";
+            document.body.classList.add("flash");
+
+            setTimeout(()=>{
+
+                window.location.href = "secret.html";
+
+            },500);
 
         }else{
 
