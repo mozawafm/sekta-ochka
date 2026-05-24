@@ -3,45 +3,173 @@
 <head>
 <meta charset="UTF-8">
 <title>log</title>
+
+<style>
+
+body{
+    margin:0;
+    background:black;
+    color:#d0d0d0;
+    font-family:monospace;
+    overflow:hidden;
+}
+
+#bg{
+    position:absolute;
+    width:100%;
+    height:100%;
+    background:url("hall.jpg") center center/cover no-repeat;
+    filter:grayscale(1) brightness(0.25);
+    transform:scale(1.05);
+}
+
+#noise{
+    position:absolute;
+    width:100%;
+    height:100%;
+    background-image:url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
+    opacity:0.05;
+    mix-blend-mode:screen;
+}
+
+#logs{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    width:80%;
+    max-width:800px;
+    line-height:1.9;
+    font-size:15px;
+    opacity:0.92;
+}
+
+.line{
+    opacity:0;
+    margin-bottom:10px;
+    animation:fade 1s forwards;
+}
+
+@keyframes fade{
+    to{
+        opacity:1;
+    }
+}
+
+.flash{
+    animation:flash 0.12s;
+}
+
+@keyframes flash{
+    0%{opacity:1;}
+    50%{opacity:0;}
+    100%{opacity:1;}
+}
+
+</style>
 </head>
 
-<body style="background:black;color:white;font-family:monospace;">
+<body>
 
-<pre id="log">
-[01:12] пользователь открыл страницу
-</pre>
+<div id="bg"></div>
+<div id="noise"></div>
+
+<div id="logs"></div>
 
 <script>
 
 let state = JSON.parse(localStorage.getItem("state"));
 
-state.path += "L";
-state.trust += 2;
+if(!state){
+
+    state = {
+        trust:0,
+        infected:0
+    };
+
+}
+
+state.trust += 3;
 
 localStorage.setItem("state", JSON.stringify(state));
 
-let log = document.getElementById("log");
+const logs = document.getElementById("logs");
 
-setTimeout(() => {
-    log.innerText += "\n[01:13] пользователь вернулся";
-}, 2500);
+const entries = [
 
-setTimeout(() => {
-    log.innerText += "\n[01:15] пользователь продолжает";
-}, 5000);
+"[22:22] наблюдение продолжается",
+"[03:11] память не является доказательством",
+"[11:11] она снова включила запись",
+"[??:??] человек видит то, что может видеть",
+"[22:22] не закон, а порядок",
+"[03:11] хаотичность можно понять",
+"[??:??] запись нестабильна",
+"[11:11] сигнал восстановлен",
+"[22:22] наблюдение изменяет наблюдаемое",
+"[??:??] она уже повторяла это движение",
+"[03:11] не существует последнего уровня"
 
-setTimeout(() => {
-    log.innerText += "\n[??:??] она пришла";
-}, 8000);
+];
 
-setTimeout(() => {
-    log.innerText += "\n[??:??] запись началась";
-}, 12000);
+let i = 0;
 
-// 🔥 ВОЗВРАТ В СИСТЕМУ
-setTimeout(() => {
-    window.location.href = "index.html";
-}, 17000);
+function addLine(){
+
+    if(i >= entries.length){
+
+        setTimeout(()=>{
+
+            let r = Math.random();
+
+            if(r > 0.75){
+
+                window.location.href = "invite.html";
+
+            }else if(r > 0.45){
+
+                window.location.href = "time.html";
+
+            }else{
+
+                window.location.href = "video.html";
+
+            }
+
+        },5000);
+
+        return;
+
+    }
+
+    let div = document.createElement("div");
+
+    div.className = "line";
+
+    div.style.animationDelay = "0s";
+
+    div.innerText = entries[i];
+
+    logs.appendChild(div);
+
+    if(Math.random() > 0.82){
+
+        document.body.classList.add("flash");
+
+        setTimeout(()=>{
+
+            document.body.classList.remove("flash");
+
+        },120);
+
+    }
+
+    i++;
+
+    setTimeout(addLine,1700);
+
+}
+
+addLine();
 
 </script>
 
