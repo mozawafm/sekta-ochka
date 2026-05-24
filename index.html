@@ -9,8 +9,6 @@
 
 <script>
 
-// ПРОВЕРКА ПЕРВОГО ВХОДА
-
 let state = JSON.parse(localStorage.getItem("state"));
 
 if(!state){
@@ -28,7 +26,7 @@ if(!state){
 
 }
 
-// ПЕРВЫЙ ВХОД
+// ПЕРВЫЙ ЗАХОД
 
 if(state.firstVisit){
 
@@ -40,7 +38,7 @@ if(state.firstVisit){
 
 }else{
 
-    // ОБЫЧНЫЙ INDEX
+    // ОБЫЧНЫЙ ЗАХОД
 
     window.location.href = "hub.html";
 
