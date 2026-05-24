@@ -1,17 +1,108 @@
 <!DOCTYPE html>
 <html>
-<body style="background:black;color:white;text-align:center;font-family:monospace;">
+<head>
+<meta charset="UTF-8">
+<title>loop</title>
 
-<p>подожди</p>
+<style>
+
+body{
+    margin:0;
+    background:black;
+    color:white;
+    overflow:hidden;
+    font-family:monospace;
+}
+
+#text{
+
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+
+    width:80%;
+
+    text-align:center;
+
+    font-size:28px;
+    line-height:2;
+
+}
+
+.glitch{
+    animation:glitch 0.1s;
+}
+
+@keyframes glitch{
+
+    0%{transform:translate(-50%,-50%) translateX(0);}
+    25%{transform:translate(-50%,-50%) translateX(-8px);}
+    50%{transform:translate(-50%,-50%) translateX(8px);}
+    100%{transform:translate(-50%,-50%) translateX(0);}
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="text">
+
+    ты уже была здесь
+
+</div>
 
 <script>
-setTimeout(function() {
-    document.body.innerHTML = "<h1>ты уже нажимала это</h1>";
-}, 2000);
 
-setTimeout(function() {
+let text = document.getElementById("text");
+
+const phrases = [
+
+"ты уже была здесь",
+"она уже повторяла это движение",
+"запись продолжается",
+"наблюдение продолжается",
+"не существует последнего уровня",
+"она снова включила запись"
+
+];
+
+let i = 0;
+
+setInterval(()=>{
+
+    i++;
+
+    if(i >= phrases.length){
+
+        i = 0;
+
+    }
+
+    text.innerText = phrases[i];
+
+    if(Math.random() > 0.5){
+
+        text.classList.add("glitch");
+
+        setTimeout(()=>{
+
+            text.classList.remove("glitch");
+
+        },100);
+
+    }
+
+},2500);
+
+setTimeout(()=>{
+
     window.location.href = "index.html";
-}, 4000);
+
+},18000);
+
 </script>
 
 </body>
