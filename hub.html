@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>SEKTA OCHKA</title>
+
+<style>
+
+body{
+    margin:0;
+    background:black;
+    overflow:hidden;
+    font-family:monospace;
+    color:white;
+}
+
+#bg{
+    position:absolute;
+    width:100%;
+    height:100%;
+    background:url("garage.jpg") center center/cover no-repeat;
+    filter:
+    brightness(0.35)
+    contrast(1.25)
+    grayscale(0.4);
+
+    transform:scale(1.04);
+}
+
+#noise{
+    position:absolute;
+    width:100%;
+    height:100%;
+    background-image:url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
+    opacity:0.05;
+    mix-blend-mode:screen;
+    pointer-events:none;
+}
+
+#overlay{
+    position:absolute;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.3);
+}
+
+#center{
+
+    position:absolute;
+
+    top:50%;
+    left:50%;
+
+    transform:translate(-50%,-50%);
+
+    text-align:center;
+
+    width:85%;
+
+}
+
+#message{
+
+    font-size:24px;
+    letter-spacing:4px;
+    margin-bottom:32px;
+
+    opacity:0.92;
+
+}
+
+#play{
+
+    display:inline-block;
+
+    border:1px solid rgba(255,255,255,0.45);
+
+    padding:14px 28px;
+
+    cursor:pointer;
+
+    transition:0.25s;
+
+    background:rgba(0,0,0,0.45);
+
+}
+
+#play:hover{
+
+    background:white;
+    color:black;
+
+}
+
+#time{
+
+    position:absolute;
+
+    top:20px;
+    right:20px;
+
+    opacity:0.45;
+
+    font-size:13px;
+
+}
+
+#rec{
+
+    position:absolute;
+
+    top:20px;
+    left:20px;
+
+    color:red;
+
+    animation:blink 1s infinite;
+
+}
+
+#code{
+
+    position:absolute;
+
+    bottom:16px;
+    right:18px;
+
+    opacity:0;
+
+    transition:2s;
+
+    background:none;
+
+    border:none;
+
+    color:white;
+
+    font-family:monospace;
+
+    outline:none;
+
+    font-size:11px;
+
+    width:110px;
+
+}
+
+#quote{
+
+    position:absolute;
+
+    bottom:20px;
+    left:20px;
+
+    opacity:0.1;
+
+    font-size:12px;
+
+    max-width:320px;
+
+    line-height:1.7;
+
+}
+
+.flash{
+
+    animation:flash 0.08s;
+
+}
+
+@keyframes blink{
+
+    50%{
+        opacity:0;
+    }
+
+}
+
+@keyframes flash{
+
+    50%{
+        opacity:0;
+    }
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="bg"></div>
+<div id="noise"></div>
+<div id="overlay"></div>
+
+<div id="rec">● REC</div>
+<div id="time"></div>
+
+<div id="center">
+
+    <div id="message">
+        восстановление записи...
+    </div>
+
+    <div id="play">
+        продолжить
+    </div>
+
+</div>
+
+<div id="quote"></div>
+
+<input
+type="text"
+id="code"
+autocomplete="off"
+>
+
+<script>
+
+let state = JSON.parse(localStorage.getItem("state"));
+
+if(!state){
+
+    state = {
+
+        visits:0,
+        trust:0,
+        infected:0,
+        unlocked:false,
+        codeUsed:false
+
+    };
+
+}
+
+state.visits++;
+
+localStorage.setItem("state", JSON.stringify(state));
+
+const msg = document.getElementById("message");
+const play = document.getElementById("play");
+const time = document.getElementById("time");
+const code = document.getElementById("code");
+const quote = document.getElementById("quote");
+
+// TIME
+
+const weirdTimes = [
+
+"22:22",
+"11:11",
+"03:11",
+"21:11",
+"00:00"
+
+];
+
+time.innerText =
+weirdTimes[Math.floor(Math.random()*weirdTimes.length)];
+
+// TEXTS
+
+const texts = [
+
+"восстановление записи...",
+"обнаружены поврежденные фрагменты",
+"наблюдение продолжается",
+"она уже была здесь",
+"сигнал нестабилен",
+"не выключай запись",
+"память не является доказательством"
+
+];
+
+msg.innerText =
+texts[Math.floor(Math.random()*texts.length)];
+
+// QUOTES
+
+const quotes = [
+
+"хаотичность можно понять",
+"человек видит то что может видеть",
+"запись продолжается внутри тебя",
+"не существует последнего уровня",
+"она уже повторяла это движение",
+"наблюдение изменяет наблюдаемое"
+
+];
+
+quote.innerText =
+quotes[Math.floor(Math.random()*quotes.length)];
+
+// CODE
+
+if(
+    state.visits >= 3 &&
+    !state.codeUsed
+){
+
+    setTimeout(()=>{
+
+        code.style.opacity = "0.08";
+
+    },7000);
+
+}
+
+// PLAY
+
+play.onclick = () => {
+
+    state.infected++;
+
+    localStorage.setItem("state", JSON.stringify(state));
+
+    play.innerText = "ЗАГРУЗКА...";
+
+    setTimeout(()=>{
+
+        let r = Math.random();
+
+        if(r > 0.9){
+
+            window.location.href = "final.html";
+
+        }else if(r > 0.8){
+
+            window.location.href = "time.html";
+
+        }else if(r > 0.67){
+
+            window.location.href = "loop.html";
+
+        }else if(r > 0.52){
+
+            window.location.href = "observe.html";
+
+        }else if(r > 0.38){
+
+            window.location.href = "glitch.html";
+
+        }else if(r > 0.24){
+
+            window.location.href = "log.html";
+
+        }else if(r > 0.12){
+
+            window.location.href = "invite.html";
+
+        }else{
+
+            window.location.href = "video.html";
+
+        }
+
+    },1800);
+
+};
+
+// CODE INPUT
+
+code.addEventListener("keydown",(e)=>{
+
+    if(e.key === "Enter"){
+
+        if(code.value.toLowerCase() === "teo867102"){
+
+            state.unlocked = true;
+            state.codeUsed = true;
+            state.trust += 50;
+
+            localStorage.setItem("state", JSON.stringify(state));
+
+            document.body.classList.add("flash");
+
+            setTimeout(()=>{
+
+                window.location.href = "secret.html";
+
+            },500);
+
+        }else{
+
+            msg.innerText = "код не распознан";
+
+        }
+
+    }
+
+});
+
+// RANDOM FLASHES
+
+setInterval(()=>{
+
+    if(Math.random() > 0.72){
+
+        document.body.classList.add("flash");
+
+        setTimeout(()=>{
+
+            document.body.classList.remove("flash");
+
+        },80);
+
+    }
+
+},2500);
+
+</script>
+
+<script src="audio.js"></script>
+
+</body>
+</html>
