@@ -168,6 +168,12 @@ body{
 
 }
 
+.glitch{
+
+    animation:glitch 0.08s;
+
+}
+
 @keyframes blink{
 
     50%{
@@ -180,6 +186,26 @@ body{
 
     50%{
         opacity:0;
+    }
+
+}
+
+@keyframes glitch{
+
+    0%{
+        transform:translate(-50%,-50%);
+    }
+
+    25%{
+        transform:translate(calc(-50% - 6px),calc(-50% + 2px));
+    }
+
+    50%{
+        transform:translate(calc(-50% + 6px),calc(-50% - 2px));
+    }
+
+    100%{
+        transform:translate(-50%,-50%);
     }
 
 }
@@ -224,11 +250,13 @@ if(!state){
 
     state = {
 
+        firstVisit:false,
         visits:0,
         trust:0,
         infected:0,
         unlocked:false,
-        codeUsed:false
+        codeUsed:false,
+        loops:0
 
     };
 
@@ -243,6 +271,7 @@ const play = document.getElementById("play");
 const time = document.getElementById("time");
 const code = document.getElementById("code");
 const quote = document.getElementById("quote");
+const center = document.getElementById("center");
 
 // TIME
 
@@ -256,8 +285,16 @@ const weirdTimes = [
 
 ];
 
-time.innerText =
-weirdTimes[Math.floor(Math.random()*weirdTimes.length)];
+if(state.loops >= 3){
+
+    time.innerText = "22:22";
+
+}else{
+
+    time.innerText =
+    weirdTimes[Math.floor(Math.random()*weirdTimes.length)];
+
+}
 
 // TEXTS
 
@@ -269,7 +306,8 @@ const texts = [
 "она уже была здесь",
 "сигнал нестабилен",
 "не выключай запись",
-"память не является доказательством"
+"память не является доказательством",
+"ты снова здесь"
 
 ];
 
@@ -292,7 +330,7 @@ const quotes = [
 quote.innerText =
 quotes[Math.floor(Math.random()*quotes.length)];
 
-// CODE
+// CODE APPEAR
 
 if(
     state.visits >= 3 &&
@@ -307,11 +345,59 @@ if(
 
 }
 
-// PLAY
+// RANDOM FX
+
+setInterval(()=>{
+
+    if(Math.random() > 0.74){
+
+        document.body.classList.add("flash");
+
+        setTimeout(()=>{
+
+            document.body.classList.remove("flash");
+
+        },80);
+
+    }
+
+},2600);
+
+setInterval(()=>{
+
+    if(Math.random() > 0.82){
+
+        center.classList.add("glitch");
+
+        setTimeout(()=>{
+
+            center.classList.remove("glitch");
+
+        },100);
+
+    }
+
+},3400);
+
+// RANDOM MESSAGE MUTATION
+
+setTimeout(()=>{
+
+    if(Math.random() > 0.7){
+
+        play.innerText = "не нажимай";
+
+    }
+
+},5000);
+
+// PLAY BUTTON
 
 play.onclick = () => {
 
     state.infected++;
+
+    state.loops++;
 
     localStorage.setItem("state", JSON.stringify(state));
 
@@ -321,31 +407,35 @@ play.onclick = () => {
 
         let r = Math.random();
 
-        if(r > 0.9){
+        if(r > 0.93){
+
+            window.location.href = "signal.html";
+
+        }else if(r > 0.84){
 
             window.location.href = "final.html";
 
-        }else if(r > 0.8){
+        }else if(r > 0.73){
 
             window.location.href = "time.html";
 
-        }else if(r > 0.67){
+        }else if(r > 0.60){
 
             window.location.href = "loop.html";
 
-        }else if(r > 0.52){
+        }else if(r > 0.46){
 
             window.location.href = "observe.html";
 
-        }else if(r > 0.38){
+        }else if(r > 0.32){
 
             window.location.href = "glitch.html";
 
-        }else if(r > 0.24){
+        }else if(r > 0.18){
 
             window.location.href = "log.html";
 
-        }else if(r > 0.12){
+        }else if(r > 0.08){
 
             window.location.href = "invite.html";
 
@@ -359,7 +449,7 @@ play.onclick = () => {
 
 };
 
-// CODE INPUT
+// CODE
 
 code.addEventListener("keydown",(e)=>{
 
@@ -391,23 +481,26 @@ code.addEventListener("keydown",(e)=>{
 
 });
 
-// RANDOM FLASHES
+// IDLE EFFECT
 
-setInterval(()=>{
+let idleTimer;
 
-    if(Math.random() > 0.72){
+document.addEventListener("mousemove",resetIdle);
+document.addEventListener("click",resetIdle);
 
-        document.body.classList.add("flash");
+function resetIdle(){
 
-        setTimeout(()=>{
+    clearTimeout(idleTimer);
 
-            document.body.classList.remove("flash");
+    idleTimer = setTimeout(()=>{
 
-        },80);
+        msg.innerText = "мы всё ещё ждём";
 
-    }
+    },30000);
 
-},2500);
+}
+
+resetIdle();
 
 </script>
 
