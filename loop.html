@@ -10,8 +10,8 @@ body{
     margin:0;
     overflow:hidden;
     background:black;
-    font-family:monospace;
     cursor:none;
+    font-family:monospace;
 }
 
 #bg{
@@ -23,46 +23,11 @@ body{
     background:url("mask.jpg") center center/cover no-repeat;
 
     filter:
-    brightness(0.2)
+    brightness(0.15)
     contrast(1.5)
     grayscale(1);
 
-    transform:scale(1.04);
-
-}
-
-#hiddenLayer{
-
-    position:absolute;
-    width:100%;
-    height:100%;
-
-    display:flex;
-
-    align-items:center;
-    justify-content:center;
-
-    color:white;
-
-    font-size:42px;
-
-    letter-spacing:10px;
-
-    opacity:0.9;
-
-    text-align:center;
-
-    pointer-events:none;
-
-}
-
-#cover{
-
-    position:absolute;
-    width:100%;
-    height:100%;
-
-    background:black;
+    transform:scale(1.05);
 
 }
 
@@ -91,66 +56,63 @@ body{
     background:
     repeating-linear-gradient(
         to bottom,
-        rgba(255,255,255,0.02),
-        rgba(255,255,255,0.02) 1px,
+        rgba(255,255,255,0.03),
+        rgba(255,255,255,0.03) 1px,
         transparent 1px,
-        transparent 3px
+        transparent 4px
     );
 
-    opacity:0.3;
+    opacity:0.24;
 
     pointer-events:none;
 
 }
 
-#hint{
+#message{
 
     position:absolute;
 
-    bottom:25px;
+    top:50%;
     left:50%;
 
-    transform:translateX(-50%);
+    transform:translate(-50%,-50%);
 
     color:white;
+
+    letter-spacing:8px;
+
+    font-size:28px;
 
     opacity:0.12;
 
-    letter-spacing:4px;
+    transition:1s;
 
-    font-size:11px;
+    text-align:center;
 
 }
 
-#next{
+.point{
 
     position:absolute;
 
-    bottom:60px;
-    left:50%;
+    width:4px;
+    height:4px;
 
-    transform:translateX(-50%);
+    background:white;
 
-    color:white;
+    border-radius:50%;
 
-    border:1px solid rgba(255,255,255,0.2);
+    opacity:0.16;
 
-    padding:14px 24px;
-
-    opacity:0;
-
-    transition:1s;
-
-    cursor:pointer;
-
-    letter-spacing:4px;
+    pointer-events:none;
 
 }
 
-#next:hover{
+#lineCanvas{
 
-    background:white;
-    color:black;
+    position:absolute;
+    width:100%;
+    height:100%;
 
 }
 
@@ -158,10 +120,34 @@ body{
     animation:flash 0.08s;
 }
 
+.shake{
+    animation:shake 0.08s infinite;
+}
+
 @keyframes flash{
 
     50%{
         opacity:0;
+    }
+
+}
+
+@keyframes shake{
+
+    0%{
+        transform:translate(0);
+    }
+
+    25%{
+        transform:translate(-5px,2px);
+    }
+
+    50%{
+        transform:translate(5px,-2px);
+    }
+
+    100%{
+        transform:translate(0);
     }
 
 }
@@ -173,63 +159,83 @@ body{
 
 <div id="bg"></div>
 
-<div id="hiddenLayer">
-    ОНА УЖЕ ЗДЕСЬ
-</div>
-
-<canvas id="cover"></canvas>
+<canvas id="lineCanvas"></canvas>
 
 <div id="noise"></div>
 <div id="scan"></div>
 
-<div id="hint">
-    СОТРИТЕ ШУМ
-</div>
-
-<div id="next">
-    ПРОДОЛЖИТЬ
+<div id="message">
+    НЕ ВСЕ ДВИЖЕНИЯ СЛУЧАЙНЫ
 </div>
 
 <script>
 
-const canvas = document.getElementById("cover");
+const canvas = document.getElementById("lineCanvas");
 const ctx = canvas.getContext("2d");
-
-const next = document.getElementById("next");
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-// ЧЕРНЫЙ СЛОЙ
+let points = [];
 
-ctx.fillStyle = "black";
-ctx.fillRect(0,0,canvas.width,canvas.height);
+let discovered = false;
 
-// СТИРАНИЕ
+const msg = document.getElementById("message");
 
-let revealed = 0;
+// СЛЕДЫ
 
 document.addEventListener("mousemove",(e)=>{
 
-    ctx.globalCompositeOperation = "destination-out";
+    const point = document.createElement("div");
 
-    ctx.beginPath();
+    point.className = "point";
 
-    ctx.arc(
-        e.clientX,
-        e.clientY,
-        50,
-        0,
-        Math.PI * 2
-    );
+    point.style.left = e.clientX + "px";
+    point.style.top = e.clientY + "px";
 
-    ctx.fill();
+    document.body.appendChild(point);
 
-    revealed++;
+    points.push({
+        x:e.clientX,
+        y:e.clientY
+    });
 
-    // ГЛИТЧ
+    // ЛИНИИ
 
-    if(Math.random() > 0.97){
+    if(points.length > 1){
+
+        let p1 = points[points.length - 2];
+        let p2 = points[points.length - 1];
+
+        ctx.strokeStyle = "rgba(255,255,255,0.03)";
+        ctx.lineWidth = 1;
+
+        ctx.beginPath();
+
+        ctx.moveTo(p1.x,p1.y);
+        ctx.lineTo(p2.x,p2.y);
+
+        ctx.stroke();
+
+    }
+
+    // НЕ УДАЛЯЕМ СЛЕДЫ СРАЗУ
+
+    setTimeout(()=>{
+
+        point.style.opacity = "0";
+
+    },6000);
+
+    setTimeout(()=>{
+
+        point.remove();
+
+    },8000);
+
+    // ГЛИТЧИ
+
+    if(Math.random() > 0.985){
 
         document.body.classList.add("flash");
 
@@ -241,49 +247,47 @@ document.addEventListener("mousemove",(e)=>{
 
     }
 
-    // ПОЯВЛЕНИЕ КНОПКИ
+    // ОБНАРУЖЕНИЕ
 
-    if(revealed > 140){
+    if(points.length > 220 && !discovered){
 
-        next.style.opacity = "0.5";
+        discovered = true;
+
+        triggerDiscovery();
 
     }
 
 });
 
-// ПЕРЕХОД
+// ОБНАРУЖЕНИЕ СКРЫТОГО
 
-next.onclick = () => {
+function triggerDiscovery(){
 
-    next.innerText = "ЗАГРУЗКА";
+    document.body.classList.add("shake");
+
+    msg.style.opacity = "0.95";
+
+    msg.innerText = "ТЫ НАШЛА ВХОД";
 
     setTimeout(()=>{
 
-        let r = Math.random();
+        msg.innerText = "СИГНАЛ ПРИНЯТ";
 
-        if(r > 0.7){
+    },3000);
 
-            window.location.href = "signal.html";
+    setTimeout(()=>{
 
-        }else if(r > 0.45){
+        window.location.href = "secret.html";
 
-            window.location.href = "observe.html";
+    },7000);
 
-        }else{
+}
 
-            window.location.href = "hub.html";
-
-        }
-
-    },1400);
-
-};
-
-// РЕДКИЕ ВСПЫШКИ
+// СЛУЧАЙНЫЕ ВСПЫШКИ
 
 setInterval(()=>{
 
-    if(Math.random() > 0.84){
+    if(Math.random() > 0.82){
 
         document.body.classList.add("flash");
 
