@@ -8,10 +8,11 @@
 
 body{
     margin:0;
-    background:black;
     overflow:hidden;
-    color:white;
+    background:black;
     font-family:monospace;
+    color:white;
+    cursor:none;
 }
 
 #bg{
@@ -20,14 +21,16 @@ body{
     width:100%;
     height:100%;
 
-    background:url("mask.jpg") center center/cover no-repeat;
+    background:url("girl.jpg") center center/cover no-repeat;
 
     filter:
     brightness(0.18)
     contrast(1.4)
     grayscale(1);
 
-    transform:scale(1.05);
+    opacity:0;
+
+    transition:4s;
 
 }
 
@@ -39,7 +42,32 @@ body{
 
     background-image:url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
 
-    opacity:0.07;
+    opacity:0.08;
+
+    mix-blend-mode:screen;
+
+    pointer-events:none;
+
+}
+
+#scan{
+
+    position:absolute;
+    width:100%;
+    height:100%;
+
+    background:
+    repeating-linear-gradient(
+        to bottom,
+        rgba(255,255,255,0.03),
+        rgba(255,255,255,0.03) 1px,
+        transparent 1px,
+        transparent 4px
+    );
+
+    opacity:0.3;
+
+    pointer-events:none;
 
 }
 
@@ -60,9 +88,9 @@ body{
 
 #line{
 
-    font-size:30px;
+    font-size:28px;
 
-    letter-spacing:5px;
+    letter-spacing:7px;
 
     opacity:0;
 
@@ -76,17 +104,55 @@ body{
 
     opacity:0;
 
+    font-size:12px;
+
+    letter-spacing:4px;
+
     transition:3s;
 
-    font-size:14px;
+}
 
-    letter-spacing:2px;
+#time{
+
+    position:absolute;
+
+    top:20px;
+    right:20px;
+
+    opacity:0.2;
+
+    font-size:12px;
+
+}
+
+#rec{
+
+    position:absolute;
+
+    top:20px;
+    left:20px;
+
+    color:red;
+
+    opacity:0.5;
+
+    animation:blink 1s infinite;
 
 }
 
 .flash{
-
     animation:flash 0.08s;
+}
+
+.glitch{
+    animation:glitch 0.08s;
+}
+
+@keyframes blink{
+
+    50%{
+        opacity:0;
+    }
 
 }
 
@@ -98,6 +164,26 @@ body{
 
 }
 
+@keyframes glitch{
+
+    0%{
+        transform:translate(-50%,-50%);
+    }
+
+    25%{
+        transform:translate(calc(-50% - 6px),calc(-50% + 2px));
+    }
+
+    50%{
+        transform:translate(calc(-50% + 6px),calc(-50% - 2px));
+    }
+
+    100%{
+        transform:translate(-50%,-50%);
+    }
+
+}
+
 </style>
 </head>
 
@@ -105,39 +191,70 @@ body{
 
 <div id="bg"></div>
 <div id="noise"></div>
+<div id="scan"></div>
+
+<div id="rec">● REC</div>
+
+<div id="time">
+22:22
+</div>
 
 <div id="center">
 
     <div id="line">
-        НАБЛЮДЕНИЕ ЗАВЕРШЕНО
+        ЦИКЛ ЗАВЕРШЕН
     </div>
 
     <div id="sub">
-        теперь запись продолжается внутри тебя
+        запись принята
     </div>
 
 </div>
 
 <script>
 
+let state = JSON.parse(localStorage.getItem("state"));
+
+if(!state){
+
+    state = {};
+
+}
+
+state.finalSeen = true;
+
+localStorage.setItem("state", JSON.stringify(state));
+
+const bg = document.getElementById("bg");
 const line = document.getElementById("line");
 const sub = document.getElementById("sub");
+const center = document.getElementById("center");
+
+// ПОЯВЛЕНИЕ
 
 setTimeout(()=>{
 
-    line.style.opacity = "1";
+    bg.style.opacity = "0.38";
 
 },1200);
 
 setTimeout(()=>{
 
-    sub.style.opacity = "0.5";
+    line.style.opacity = "0.9";
 
-},4200);
+},2600);
+
+setTimeout(()=>{
+
+    sub.style.opacity = "0.35";
+
+},5200);
+
+// ГЛИТЧИ
 
 setInterval(()=>{
 
-    if(Math.random() > 0.7){
+    if(Math.random() > 0.72){
 
         document.body.classList.add("flash");
 
@@ -149,11 +266,63 @@ setInterval(()=>{
 
     }
 
-},2500);
+},2600);
+
+setInterval(()=>{
+
+    if(Math.random() > 0.82){
+
+        center.classList.add("glitch");
+
+        setTimeout(()=>{
+
+            center.classList.remove("glitch");
+
+        },100);
+
+    }
+
+},3400);
+
+// РЕДКИЙ КАДР МАСКИ
+
+setInterval(()=>{
+
+    if(Math.random() > 0.92){
+
+        bg.style.backgroundImage =
+        'url("mask.jpg")';
+
+        setTimeout(()=>{
+
+            bg.style.backgroundImage =
+            'url("girl.jpg")';
+
+        },120);
+
+    }
+
+},5000);
+
+// МУТАЦИЯ ТЕКСТА
 
 setTimeout(()=>{
 
-    window.location.href = "index.html";
+    line.innerText = "ОНА УЖЕ ВИДЕЛА ЭТО";
+
+},9000);
+
+setTimeout(()=>{
+
+    sub.innerText = "повтор продолжается";
+
+},12000);
+
+// ВОЗВРАТ В ЦИКЛ
+
+setTimeout(()=>{
+
+    window.location.href = "hub.html";
 
 },22000);
 
