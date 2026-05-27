@@ -1,51 +1,62 @@
-let existing = document.getElementById("ambientPlayer");
+let audio = new Audio("audio/ambient.mp3");
 
-if(!existing){
+audio.loop = true;
 
-    const audio = document.createElement("audio");
+audio.volume = 0.18;
 
-    audio.id = "ambientPlayer";
+audio.preload = "auto";
 
-    audio.src = "audio/ambient.mp3";
+// ВОССТАНОВЛЕНИЕ ПОЗИЦИИ
 
-    audio.loop = true;
+const savedTime = localStorage.getItem("ambientTime");
 
-    audio.autoplay = true;
+if(savedTime){
 
-    audio.controls = true;
+    audio.currentTime = parseFloat(savedTime);
 
-    audio.style.position = "fixed";
-    audio.style.bottom = "10px";
-    audio.style.left = "10px";
-    audio.style.zIndex = "99999";
-    audio.style.opacity = "0.2";
+}
 
-    document.body.appendChild(audio);
+// СОХРАНЕНИЕ ВРЕМЕНИ
 
-    // ПРОБУЕМ ЗАПУСТИТЬ
+setInterval(()=>{
 
-    const tryPlay = () => {
+    if(!audio.paused){
 
-        audio.play()
-        .then(()=>{
+        localStorage.setItem(
+            "ambientTime",
+            audio.currentTime
+        );
 
-            console.log("AUDIO PLAYING");
+    }
 
-        })
-        .catch((e)=>{
+},1000);
 
-            console.log("AUDIO ERROR", e);
+// ЗАПУСК
 
-        });
+function startAudio(){
 
-    };
+    audio.play()
+    .then(()=>{
 
-    // ПЕРВЫЙ КЛИК
+        console.log("ambient started");
 
-    document.addEventListener(
+    })
+    .catch((e)=>{
+
+        console.log("audio blocked", e);
+
+    });
+
+    document.removeEventListener(
         "click",
-        tryPlay,
-        { once:true }
+        startAudio
     );
 
 }
+
+// ПЕРВЫЙ КЛИК ПО САЙТУ
+
+document.addEventListener(
+    "click",
+    startAudio
+);
