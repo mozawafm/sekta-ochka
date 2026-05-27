@@ -15,11 +15,9 @@ body{
 }
 
 #bg{
-
     position:absolute;
     width:100%;
     height:100%;
-
     background:url("mask.jpg") center center/cover no-repeat;
 
     filter:
@@ -27,28 +25,20 @@ body{
     contrast(1.5)
     grayscale(1);
 
-    transform:scale(1.05);
-
+    transform:scale(1.04);
 }
 
 #noise{
-
     position:absolute;
     width:100%;
     height:100%;
-
     background-image:url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
-
     opacity:0.08;
-
     mix-blend-mode:screen;
-
     pointer-events:none;
-
 }
 
 #scan{
-
     position:absolute;
     width:100%;
     height:100%;
@@ -65,7 +55,12 @@ body{
     opacity:0.24;
 
     pointer-events:none;
+}
 
+#canvas{
+    position:absolute;
+    width:100%;
+    height:100%;
 }
 
 #message{
@@ -79,40 +74,15 @@ body{
 
     color:white;
 
+    opacity:0.06;
+
     letter-spacing:8px;
 
-    font-size:28px;
-
-    opacity:0.12;
+    font-size:22px;
 
     transition:1s;
 
     text-align:center;
-
-}
-
-.point{
-
-    position:absolute;
-
-    width:4px;
-    height:4px;
-
-    background:white;
-
-    border-radius:50%;
-
-    opacity:0.16;
-
-    pointer-events:none;
-
-}
-
-#lineCanvas{
-
-    position:absolute;
-    width:100%;
-    height:100%;
 
 }
 
@@ -125,11 +95,9 @@ body{
 }
 
 @keyframes flash{
-
     50%{
         opacity:0;
     }
-
 }
 
 @keyframes shake{
@@ -159,7 +127,7 @@ body{
 
 <div id="bg"></div>
 
-<canvas id="lineCanvas"></canvas>
+<canvas id="canvas"></canvas>
 
 <div id="noise"></div>
 <div id="scan"></div>
@@ -170,72 +138,102 @@ body{
 
 <script>
 
-const canvas = document.getElementById("lineCanvas");
+const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-let points = [];
-
-let discovered = false;
+const centerX = canvas.width / 2;
+const centerY = canvas.height / 2;
 
 const msg = document.getElementById("message");
 
-// СЛЕДЫ
+let energy = 0;
+let activated = false;
+
+let points = [];
 
 document.addEventListener("mousemove",(e)=>{
 
-    const point = document.createElement("div");
+    const x = e.clientX;
+    const y = e.clientY;
 
-    point.className = "point";
+    // ТОЧКИ
 
-    point.style.left = e.clientX + "px";
-    point.style.top = e.clientY + "px";
+    points.push({x,y});
 
-    document.body.appendChild(point);
+    ctx.fillStyle = "rgba(255,255,255,0.16)";
 
-    points.push({
-        x:e.clientX,
-        y:e.clientY
-    });
+    ctx.beginPath();
+
+    ctx.arc(x,y,2,0,Math.PI*2);
+
+    ctx.fill();
 
     // ЛИНИИ
 
     if(points.length > 1){
 
-        let p1 = points[points.length - 2];
-        let p2 = points[points.length - 1];
+        let prev = points[points.length - 2];
 
-        ctx.strokeStyle = "rgba(255,255,255,0.03)";
+        ctx.strokeStyle = "rgba(255,255,255,0.025)";
+
         ctx.lineWidth = 1;
 
         ctx.beginPath();
 
-        ctx.moveTo(p1.x,p1.y);
-        ctx.lineTo(p2.x,p2.y);
+        ctx.moveTo(prev.x,prev.y);
+        ctx.lineTo(x,y);
 
         ctx.stroke();
 
     }
 
-    // НЕ УДАЛЯЕМ СЛЕДЫ СРАЗУ
+    // РАССТОЯНИЕ ДО ЦЕНТРА
 
-    setTimeout(()=>{
+    const dx = x - centerX;
+    const dy = y - centerY;
 
-        point.style.opacity = "0";
+    const dist = Math.sqrt(dx*dx + dy*dy);
 
-    },6000);
+    // ЕСЛИ ВОДЯТ ВОКРУГ ЦЕНТРА
 
-    setTimeout(()=>{
+    if(dist < 180){
 
-        point.remove();
+        energy += 1;
 
-    },8000);
+    }
 
-    // ГЛИТЧИ
+    // ПРОЯВЛЕНИЕ
 
-    if(Math.random() > 0.985){
+    if(energy > 60){
+
+        msg.style.opacity = "0.18";
+
+    }
+
+    if(energy > 120){
+
+        msg.style.opacity = "0.4";
+
+        msg.innerText = "СИГНАЛ ОБНАРУЖЕН";
+
+    }
+
+    // АКТИВАЦИЯ
+
+    if(energy > 220 && !activated){
+
+        activated = true;
+
+        activateSequence();
+
+    }
+
+    // РЕДКИЕ ВСПЫШКИ
+
+    if(Math.random() > 0.992){
 
         document.body.classList.add("flash");
 
@@ -244,62 +242,62 @@ document.addEventListener("mousemove",(e)=>{
             document.body.classList.remove("flash");
 
         },80);
-
-    }
-
-    // ОБНАРУЖЕНИЕ
-
-    if(points.length > 220 && !discovered){
-
-        discovered = true;
-
-        triggerDiscovery();
 
     }
 
 });
 
-// ОБНАРУЖЕНИЕ СКРЫТОГО
+// АКТИВАЦИЯ
 
-function triggerDiscovery(){
+function activateSequence(){
 
     document.body.classList.add("shake");
 
-    msg.style.opacity = "0.95";
+    msg.style.opacity = "1";
 
     msg.innerText = "ТЫ НАШЛА ВХОД";
 
-    setTimeout(()=>{
+    // РЕЗКИЙ ШУМ
 
-        msg.innerText = "СИГНАЛ ПРИНЯТ";
+    document.getElementById("noise").style.opacity = "0.22";
 
-    },3000);
+    // КРАСНЫЕ ВСПЫШКИ
 
-    setTimeout(()=>{
+    let flashes = 0;
 
-        window.location.href = "secret.html";
+    let fx = setInterval(()=>{
 
-    },7000);
+        document.body.style.background = flashes % 2
+        ? "black"
+        : "#200";
+
+        flashes++;
+
+        if(flashes > 10){
+
+            clearInterval(fx);
+
+            setTimeout(()=>{
+
+                window.location.href = "secret.html";
+
+            },1400);
+
+        }
+
+    },120);
 
 }
 
-// СЛУЧАЙНЫЕ ВСПЫШКИ
+// МЕДЛЕННОЕ ЗАТУХАНИЕ СЛЕДОВ
 
 setInterval(()=>{
 
-    if(Math.random() > 0.82){
+    ctx.fillStyle = "rgba(0,0,0,0.03)";
 
-        document.body.classList.add("flash");
+    ctx.fillRect(0,0,canvas.width,canvas.height);
 
-        setTimeout(()=>{
-
-            document.body.classList.remove("flash");
-
-        },80);
-
-    }
-
-},3200);
+},60);
 
 </script>
 
