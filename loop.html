@@ -11,7 +11,6 @@ body{
     overflow:hidden;
     background:black;
     font-family:monospace;
-    color:white;
     cursor:none;
 }
 
@@ -24,11 +23,46 @@ body{
     background:url("mask.jpg") center center/cover no-repeat;
 
     filter:
-    brightness(0.18)
-    contrast(1.4)
+    brightness(0.2)
+    contrast(1.5)
     grayscale(1);
 
-    transform:scale(1.05);
+    transform:scale(1.04);
+
+}
+
+#hiddenLayer{
+
+    position:absolute;
+    width:100%;
+    height:100%;
+
+    display:flex;
+
+    align-items:center;
+    justify-content:center;
+
+    color:white;
+
+    font-size:42px;
+
+    letter-spacing:10px;
+
+    opacity:0.9;
+
+    text-align:center;
+
+    pointer-events:none;
+
+}
+
+#cover{
+
+    position:absolute;
+    width:100%;
+    height:100%;
+
+    background:black;
 
 }
 
@@ -69,94 +103,59 @@ body{
 
 }
 
-#center{
+#hint{
 
     position:absolute;
 
-    top:50%;
+    bottom:25px;
     left:50%;
 
-    transform:translate(-50%,-50%);
+    transform:translateX(-50%);
 
-    text-align:center;
+    color:white;
 
-    width:90%;
+    opacity:0.12;
 
-}
-
-#line{
-
-    font-size:28px;
-
-    letter-spacing:7px;
-
-    opacity:0.9;
-
-    transition:0.3s;
-
-}
-
-#sub{
-
-    margin-top:30px;
-
-    opacity:0.2;
+    letter-spacing:4px;
 
     font-size:11px;
+
+}
+
+#next{
+
+    position:absolute;
+
+    bottom:60px;
+    left:50%;
+
+    transform:translateX(-50%);
+
+    color:white;
+
+    border:1px solid rgba(255,255,255,0.2);
+
+    padding:14px 24px;
+
+    opacity:0;
+
+    transition:1s;
+
+    cursor:pointer;
 
     letter-spacing:4px;
 
 }
 
-#hidden{
-
-    position:absolute;
-
-    bottom:30px;
-    right:30px;
-
-    opacity:0;
-
-    font-size:11px;
-
-    transition:1s;
-
-}
-
-.trail{
-
-    position:absolute;
-
-    width:3px;
-    height:3px;
+#next:hover{
 
     background:white;
-
-    border-radius:50%;
-
-    pointer-events:none;
-
-    opacity:0.2;
-
-    animation:fade 1.2s linear forwards;
+    color:black;
 
 }
 
 .flash{
     animation:flash 0.08s;
-}
-
-.shake{
-    animation:shake 0.08s;
-}
-
-@keyframes fade{
-
-    to{
-        opacity:0;
-        transform:scale(4);
-    }
-
 }
 
 @keyframes flash{
@@ -167,121 +166,70 @@ body{
 
 }
 
-@keyframes shake{
-
-    0%{
-        transform:translate(-50%,-50%);
-    }
-
-    25%{
-        transform:translate(calc(-50% - 7px),calc(-50% + 2px));
-    }
-
-    50%{
-        transform:translate(calc(-50% + 7px),calc(-50% - 2px));
-    }
-
-    100%{
-        transform:translate(-50%,-50%);
-    }
-
-}
-
 </style>
 </head>
 
 <body>
 
 <div id="bg"></div>
+
+<div id="hiddenLayer">
+    ОНА УЖЕ ЗДЕСЬ
+</div>
+
+<canvas id="cover"></canvas>
+
 <div id="noise"></div>
 <div id="scan"></div>
 
-<div id="center">
-
-    <div id="line">
-        ПОВТОР ПРОДОЛЖАЕТСЯ
-    </div>
-
-    <div id="sub">
-        move slowly
-    </div>
-
+<div id="hint">
+    СОТРИТЕ ШУМ
 </div>
 
-<div id="hidden">
-    она уже была здесь
+<div id="next">
+    ПРОДОЛЖИТЬ
 </div>
 
 <script>
 
-let hiddenUnlocked = false;
+const canvas = document.getElementById("cover");
+const ctx = canvas.getContext("2d");
 
-const line = document.getElementById("line");
-const hidden = document.getElementById("hidden");
-const center = document.getElementById("center");
+const next = document.getElementById("next");
 
-const phrases = [
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-"ПОВТОР ПРОДОЛЖАЕТСЯ",
-"НЕ ВЫКЛЮЧАЙ ЗАПИСЬ",
-"ТЫ УЖЕ ВИДЕЛА ЭТО",
-"СИГНАЛ НЕ ПРЕРЫВАЛСЯ",
-"22:22",
-"ОНА СМОТРИТ ЧЕРЕЗ ТЕБЯ"
+// ЧЕРНЫЙ СЛОЙ
 
-];
+ctx.fillStyle = "black";
+ctx.fillRect(0,0,canvas.width,canvas.height);
 
-// СЛЕДЫ КУРСОРА
+// СТИРАНИЕ
+
+let revealed = 0;
 
 document.addEventListener("mousemove",(e)=>{
 
-    const trail = document.createElement("div");
+    ctx.globalCompositeOperation = "destination-out";
 
-    trail.className = "trail";
+    ctx.beginPath();
 
-    trail.style.left = e.pageX + "px";
-    trail.style.top = e.pageY + "px";
+    ctx.arc(
+        e.clientX,
+        e.clientY,
+        50,
+        0,
+        Math.PI * 2
+    );
 
-    document.body.appendChild(trail);
+    ctx.fill();
 
-    setTimeout(()=>{
+    revealed++;
 
-        trail.remove();
+    // ГЛИТЧ
 
-    },1200);
-
-});
-
-// РЕАКЦИЯ НА ДВИЖЕНИЕ
-
-let moveCount = 0;
-
-document.addEventListener("mousemove",()=>{
-
-    moveCount++;
-
-    // ГЛИТЧ ТЕКСТА
-
-    if(moveCount % 30 === 0){
-
-        center.classList.add("shake");
-
-        line.innerText =
-        phrases[
-            Math.floor(Math.random()*phrases.length)
-        ];
-
-        setTimeout(()=>{
-
-            center.classList.remove("shake");
-
-        },120);
-
-    }
-
-    // РЕДКИЙ FLASH
-
-    if(Math.random() > 0.985){
+    if(Math.random() > 0.97){
 
         document.body.classList.add("flash");
 
@@ -293,37 +241,49 @@ document.addEventListener("mousemove",()=>{
 
     }
 
-    // СКРЫТОЕ СООБЩЕНИЕ
+    // ПОЯВЛЕНИЕ КНОПКИ
 
-    if(moveCount > 180 && !hiddenUnlocked){
+    if(revealed > 140){
 
-        hiddenUnlocked = true;
-
-        hidden.style.opacity = "0.12";
+        next.style.opacity = "0.5";
 
     }
 
 });
 
-// СКРЫТЫЙ ПЕРЕХОД
+// ПЕРЕХОД
 
-hidden.onclick = () => {
+next.onclick = () => {
 
-    hidden.innerText = "доступ разрешен";
+    next.innerText = "ЗАГРУЗКА";
 
     setTimeout(()=>{
 
-        window.location.href = "signal.html";
+        let r = Math.random();
+
+        if(r > 0.7){
+
+            window.location.href = "signal.html";
+
+        }else if(r > 0.45){
+
+            window.location.href = "observe.html";
+
+        }else{
+
+            window.location.href = "hub.html";
+
+        }
 
     },1400);
 
 };
 
-// СЛУЧАЙНЫЕ ГЛИТЧИ
+// РЕДКИЕ ВСПЫШКИ
 
 setInterval(()=>{
 
-    if(Math.random() > 0.8){
+    if(Math.random() > 0.84){
 
         document.body.classList.add("flash");
 
@@ -335,49 +295,7 @@ setInterval(()=>{
 
     }
 
-},2800);
-
-// РЕДКИЙ КАДР
-
-setInterval(()=>{
-
-    if(Math.random() > 0.93){
-
-        document.getElementById("bg").style.backgroundImage =
-        'url("girl.jpg")';
-
-        setTimeout(()=>{
-
-            document.getElementById("bg").style.backgroundImage =
-            'url("mask.jpg")';
-
-        },100);
-
-    }
-
-},5000);
-
-// АВТОПЕРЕХОД
-
-setTimeout(()=>{
-
-    let r = Math.random();
-
-    if(r > 0.7){
-
-        window.location.href = "observe.html";
-
-    }else if(r > 0.45){
-
-        window.location.href = "glitch.html";
-
-    }else{
-
-        window.location.href = "hub.html";
-
-    }
-
-},26000);
+},3200);
 
 </script>
 
