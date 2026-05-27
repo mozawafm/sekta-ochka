@@ -8,74 +8,110 @@
 
 body{
     margin:0;
-    background:black;
     overflow:hidden;
+    background:black;
     font-family:monospace;
     color:white;
+    cursor:none;
 }
 
-#cam{
+#bg{
+
     position:absolute;
     width:100%;
     height:100%;
-    background-size:cover;
-    background-position:center;
-    filter:grayscale(1) contrast(1.4);
-}
 
-#dark{
-    position:absolute;
-    width:100%;
-    height:100%;
-    background:rgba(0,0,0,0.35);
+    background:url("garage.jpg") center center/cover no-repeat;
+
+    filter:
+    brightness(0.15)
+    contrast(1.5)
+    grayscale(1);
+
+    transform:scale(1.06);
+
 }
 
 #noise{
+
     position:absolute;
     width:100%;
     height:100%;
+
     background-image:url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
-    opacity:0.05;
+
+    opacity:0.08;
+
     mix-blend-mode:screen;
+
+    pointer-events:none;
+
 }
 
-#rec{
-    position:absolute;
-    top:20px;
-    left:20px;
-    color:red;
-    animation:blink 1s infinite;
-}
+#scan{
 
-#time{
     position:absolute;
-    top:20px;
-    right:20px;
-}
-
-#status{
-    position:absolute;
-    bottom:40px;
     width:100%;
+    height:100%;
+
+    background:
+    repeating-linear-gradient(
+        to bottom,
+        rgba(255,255,255,0.02),
+        rgba(255,255,255,0.02) 1px,
+        transparent 1px,
+        transparent 3px
+    );
+
+    opacity:0.3;
+
+    pointer-events:none;
+
+}
+
+#text{
+
+    position:absolute;
+
+    top:50%;
+    left:50%;
+
+    transform:translate(-50%,-50%);
+
+    width:90%;
+
     text-align:center;
-    opacity:0.6;
-    letter-spacing:2px;
+
+    font-size:26px;
+
+    letter-spacing:5px;
+
+    opacity:0.92;
+
+}
+
+#small{
+
+    margin-top:25px;
+
+    font-size:11px;
+
+    opacity:0.25;
+
+    letter-spacing:4px;
+
 }
 
 .flash{
-    animation:flash 0.15s;
-}
-
-@keyframes blink{
-    50%{
-        opacity:0;
-    }
+    animation:flash 0.08s;
 }
 
 @keyframes flash{
-    0%{opacity:1;}
-    50%{opacity:0;}
-    100%{opacity:1;}
+
+    50%{
+        opacity:0;
+    }
+
 }
 
 </style>
@@ -83,132 +119,105 @@ body{
 
 <body>
 
-<div id="cam"></div>
-<div id="dark"></div>
+<div id="bg"></div>
 <div id="noise"></div>
+<div id="scan"></div>
 
-<div id="rec">● REC</div>
-<div id="time"></div>
+<div id="text">
 
-<div id="status">
-    подключение...
+    МЫ ВИДИМ ТЕБЯ
+
+    <div id="small">
+        observation active
+    </div>
+
 </div>
 
 <script>
 
-let state = JSON.parse(localStorage.getItem("state"));
+const text = document.getElementById("text");
 
-if(!state){
+const phrases = [
 
-    state = {
-        trust:0,
-        observed:0
-    };
-
-}
-
-state.observed = (state.observed || 0) + 1;
-state.trust += 1;
-
-localStorage.setItem("state", JSON.stringify(state));
-
-const cam = document.getElementById("cam");
-const status = document.getElementById("status");
-const time = document.getElementById("time");
-
-// СЛУЧАЙНЫЕ КАДРЫ
-const scenes = [
-
-    {
-        img:"hall.jpg",
-        text:"наблюдение активно"
-    },
-
-    {
-        img:"garage.jpg",
-        text:"сигнал нестабилен"
-    },
-
-    {
-        img:"mask.png",
-        text:"обнаружена фигура"
-    }
+"МЫ ВИДИМ ТЕБЯ",
+"ТЫ СНОВА ЗДЕСЬ",
+"НАБЛЮДЕНИЕ ПРОДОЛЖАЕТСЯ",
+"НЕ ВЫКЛЮЧАЙ ЗАПИСЬ",
+"ОНА УЖЕ ПРИХОДИЛА",
+"СИГНАЛ НЕ ПРЕРЫВАЛСЯ"
 
 ];
 
-// случайная сцена
-let scene = scenes[Math.floor(Math.random() * scenes.length)];
+// МУТАЦИЯ
 
-cam.style.backgroundImage = `url(${scene.img})`;
+setInterval(()=>{
 
-status.innerText = scene.text;
+    text.childNodes[0].nodeValue =
+    phrases[
+        Math.floor(Math.random()*phrases.length)
+    ];
 
-// случайное время
-let h = Math.floor(Math.random()*24).toString().padStart(2,"0");
-let m = Math.floor(Math.random()*60).toString().padStart(2,"0");
-let s = Math.floor(Math.random()*60).toString().padStart(2,"0");
+},3200);
 
-time.innerText = `${h}:${m}:${s}`;
+// ВСПЫШКИ
 
-// редкие события
-setTimeout(()=>{
+setInterval(()=>{
 
-    if(Math.random() > 0.65){
+    if(Math.random() > 0.7){
 
         document.body.classList.add("flash");
+
+        setTimeout(()=>{
+
+            document.body.classList.remove("flash");
+
+        },80);
+
+    }
+
+},2200);
+
+// РЕДКИЙ КАДР
+
+setInterval(()=>{
+
+    if(Math.random() > 0.9){
+
+        document.getElementById("bg").style.backgroundImage =
+        'url("girl.jpg")';
+
+        setTimeout(()=>{
+
+            document.getElementById("bg").style.backgroundImage =
+            'url("garage.jpg")';
+
+        },120);
 
     }
 
 },4000);
 
-setTimeout(()=>{
-
-    if(Math.random() > 0.7){
-
-        status.innerText = "потеря сигнала";
-
-    }
-
-},7000);
-
-setTimeout(()=>{
-
-    if(Math.random() > 0.82){
-
-        status.innerText = "она смотрит прямо сюда";
-
-    }
-
-},10000);
-
 // ПЕРЕХОДЫ
+
 setTimeout(()=>{
 
     let r = Math.random();
 
-    // РЕДКИЙ TIME
-    if(r > 0.93){
-
-        window.location.href = "time.html";
-
-    // GLITCH
-    }else if(r > 0.75){
+    if(r > 0.7){
 
         window.location.href = "glitch.html";
 
-    // LOG
     }else if(r > 0.45){
 
         window.location.href = "log.html";
 
-    // INDEX
     }else{
 
-        window.location.href = "index.html";
+        window.location.href = "hub.html";
 
     }
 
-},14000);
+},18000);
 
 </script>
 
