@@ -7,143 +7,154 @@
 <style>
 
 body{
-    margin:0;
-    overflow:hidden;
-    background:black;
-    color:white;
-    font-family:monospace;
-    cursor:none;
+margin:0;
+overflow:hidden;
+background:black;
+color:white;
+font-family:monospace;
+cursor:none;
 }
 
 #bg{
-
-    position:absolute;
-    width:100%;
-    height:100%;
-
-    background:url("garage.jpg") center center/cover no-repeat;
-
-    filter:
-    brightness(0.16)
-    contrast(1.5)
-    grayscale(1);
-
-    transform:scale(1.05);
-
+position:absolute;
+width:100%;
+height:100%;
+background:url("garage.jpg") center center/cover no-repeat;
+filter:
+brightness(0.15)
+contrast(1.5)
+grayscale(1);
+transform:scale(1.04);
 }
 
 #noise{
-
-    position:absolute;
-    width:100%;
-    height:100%;
-
-    background-image:url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
-
-    opacity:0.07;
-
-    mix-blend-mode:screen;
-
-    pointer-events:none;
-
+position:absolute;
+width:100%;
+height:100%;
+background-image:url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
+opacity:0.08;
+mix-blend-mode:screen;
+pointer-events:none;
 }
 
 #scan{
+position:absolute;
+width:100%;
+height:100%;
 
-    position:absolute;
-    width:100%;
-    height:100%;
+background:
+repeating-linear-gradient(
+to bottom,
+rgba(255,255,255,0.03),
+rgba(255,255,255,0.03) 1px,
+transparent 1px,
+transparent 4px
+);
 
-    background:
-    repeating-linear-gradient(
-        to bottom,
-        rgba(255,255,255,0.03),
-        rgba(255,255,255,0.03) 1px,
-        transparent 1px,
-        transparent 4px
-    );
-
-    opacity:0.25;
-
-    pointer-events:none;
-
+opacity:0.25;
+pointer-events:none;
 }
 
 #center{
 
-    position:absolute;
+position:absolute;
 
-    top:50%;
-    left:50%;
+top:50%;
+left:50%;
 
-    transform:translate(-50%,-50%);
+transform:translate(-50%,-50%);
 
-    text-align:center;
+width:90%;
 
-    width:90%;
+text-align:center;
 
 }
 
 #question{
 
-    font-size:28px;
+font-size:28px;
 
-    letter-spacing:6px;
+letter-spacing:6px;
 
-    margin-bottom:60px;
+margin-bottom:60px;
 
-    opacity:0.92;
+opacity:0.9;
+
+transition:1s;
 
 }
 
 .choice{
 
-    margin:18px auto;
+width:320px;
 
-    width:320px;
+margin:16px auto;
 
-    border:1px solid rgba(255,255,255,0.18);
+padding:16px;
 
-    padding:16px;
+border:1px solid rgba(255,255,255,0.15);
 
-    cursor:pointer;
+cursor:pointer;
 
-    transition:0.25s;
+opacity:0.45;
 
-    opacity:0.45;
+transition:0.3s;
 
 }
 
 .choice:hover{
 
-    opacity:1;
+opacity:1;
 
-    background:white;
-    color:black;
+background:white;
+color:black;
 
 }
 
-#small{
+#analysis{
 
-    margin-top:50px;
+margin-top:50px;
 
-    opacity:0.15;
+font-size:12px;
 
-    font-size:11px;
+letter-spacing:3px;
 
-    letter-spacing:3px;
+opacity:0;
+
+transition:1s;
+
+min-height:40px;
+
+}
+
+#secret{
+
+position:absolute;
+
+bottom:20px;
+right:20px;
+
+font-size:11px;
+
+opacity:0;
+
+letter-spacing:2px;
+
+cursor:pointer;
+
+transition:4s;
 
 }
 
 .flash{
-    animation:flash 0.08s;
+animation:flash 0.08s;
 }
 
 @keyframes flash{
 
-    50%{
-        opacity:0;
-    }
+50%{
+opacity:0;
+}
 
 }
 
@@ -158,143 +169,216 @@ body{
 
 <div id="center">
 
-    <div id="question">
-        ЧТО ТЫ ПОМНИШЬ?
-    </div>
+<div id="question">
+ЧТО ТЫ ПОМНИШЬ?
+</div>
 
-    <div class="choice" id="c1">
-        гараж
-    </div>
+<div class="choice" onclick="choose('garage')">
+гараж
+</div>
 
-    <div class="choice" id="c2">
-        маску
-    </div>
+<div class="choice" onclick="choose('mask')">
+маску
+</div>
 
-    <div class="choice" id="c3">
-        свое лицо
-    </div>
+<div class="choice" onclick="choose('face')">
+свое лицо
+</div>
 
-    <div class="choice" id="c4">
-        ничего
-    </div>
+<div class="choice" onclick="choose('nothing')">
+ничего
+</div>
 
-    <div id="small">
-        выбор влияет на запись
-    </div>
+<div id="analysis"></div>
 
+</div>
+
+<div id="secret">
+это было не со мной
 </div>
 
 <script>
 
-let state = JSON.parse(localStorage.getItem("state"));
+let state =
+JSON.parse(
+localStorage.getItem("state")
+);
 
 if(!state){
 
-    state = {};
+state = {};
 
 }
 
-function save(){
+function saveState(){
 
-    localStorage.setItem(
-        "state",
-        JSON.stringify(state)
-    );
+localStorage.setItem(
+"state",
+JSON.stringify(state)
+);
 
 }
 
-// ГЛИТЧИ
+const analysis =
+document.getElementById("analysis");
+
+function choose(answer){
+
+document
+.querySelectorAll(".choice")
+.forEach(el=>{
+
+el.style.pointerEvents = "none";
+el.style.opacity = "0.15";
+
+});
+
+state.memory = answer;
+
+saveState();
+
+analysis.style.opacity = "1";
+
+analysis.innerText =
+"обработка воспоминания...";
+
+setTimeout(()=>{
+
+analysis.innerText =
+"сопоставление записи...";
+
+},2000);
+
+setTimeout(()=>{
+
+if(answer==="garage"){
+
+analysis.innerText =
+"место найдено";
+
+}
+
+if(answer==="mask"){
+
+analysis.innerText =
+"наблюдатель подтвержден";
+
+}
+
+if(answer==="face"){
+
+analysis.innerText =
+"обнаружено совпадение";
+
+}
+
+if(answer==="nothing"){
+
+analysis.innerText =
+"ошибка памяти";
+
+}
+
+},4500);
+
+setTimeout(()=>{
+
+analysis.innerText =
+"совпадение найдено";
+
+},7000);
+
+setTimeout(()=>{
+
+go(answer);
+
+},9000);
+
+}
+
+function go(answer){
+
+document.body.classList.add("flash");
+
+setTimeout(()=>{
+
+if(answer==="garage"){
+
+window.location.href =
+"observe.html";
+
+}
+
+else if(answer==="mask"){
+
+window.location.href =
+"loop.html";
+
+}
+
+else if(answer==="face"){
+
+window.location.href =
+"signal.html";
+
+}
+
+else{
+
+window.location.href =
+"glitch.html";
+
+}
+
+},700);
+
+}
+
+setTimeout(()=>{
+
+document
+.getElementById("secret")
+.style.opacity = "0.08";
+
+},15000);
+
+document
+.getElementById("secret")
+.onclick = ()=>{
+
+analysis.style.opacity = "1";
+
+analysis.innerText =
+"запись повреждена";
+
+state.memory = "not_me";
+
+saveState();
+
+setTimeout(()=>{
+
+window.location.href =
+"secret.html";
+
+},2500);
+
+};
 
 setInterval(()=>{
 
-    if(Math.random() > 0.78){
+if(Math.random()>0.82){
 
-        document.body.classList.add("flash");
+document.body.classList.add("flash");
 
-        setTimeout(()=>{
+setTimeout(()=>{
 
-            document.body.classList.remove("flash");
+document.body.classList.remove("flash");
 
-        },80);
-
-    }
-
-},2600);
-
-// ВЫБОРЫ
-
-document.getElementById("c1").onclick = () => {
-
-    state.memory = "garage";
-    state.trust = (state.trust || 0) + 5;
-
-    save();
-
-    transition("observe.html");
-
-};
-
-document.getElementById("c2").onclick = () => {
-
-    state.memory = "mask";
-    state.trust = (state.trust || 0) + 10;
-
-    save();
-
-    transition("loop.html");
-
-};
-
-document.getElementById("c3").onclick = () => {
-
-    state.memory = "face";
-    state.trust = (state.trust || 0) + 20;
-
-    save();
-
-    transition("signal.html");
-
-};
-
-document.getElementById("c4").onclick = () => {
-
-    state.memory = "nothing";
-
-    save();
-
-    transition("glitch.html");
-
-};
-
-// ПЕРЕХОД
-
-function transition(page){
-
-    document.body.classList.add("flash");
-
-    setTimeout(()=>{
-
-        window.location.href = page;
-
-    },900);
+},80);
 
 }
 
-// СКРЫТЫЙ ВАРИАНТ
-
-let clicks = 0;
-
-document.body.addEventListener("click",()=>{
-
-    clicks++;
-
-    if(clicks > 12){
-
-        window.location.href = "secret.html";
-
-    }
-
-});
+},3000);
 
 </script>
 
