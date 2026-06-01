@@ -8,54 +8,14 @@
 
 body{
 margin:0;
-overflow:hidden;
 background:black;
 color:white;
 font-family:monospace;
+overflow:hidden;
 cursor:none;
 }
 
-#bg{
-position:absolute;
-width:100%;
-height:100%;
-background:url("garage.jpg") center center/cover no-repeat;
-filter:
-brightness(0.15)
-contrast(1.5)
-grayscale(1);
-transform:scale(1.04);
-}
-
-#noise{
-position:absolute;
-width:100%;
-height:100%;
-background-image:url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
-opacity:0.08;
-mix-blend-mode:screen;
-pointer-events:none;
-}
-
-#scan{
-position:absolute;
-width:100%;
-height:100%;
-
-background:
-repeating-linear-gradient(
-to bottom,
-rgba(255,255,255,0.03),
-rgba(255,255,255,0.03) 1px,
-transparent 1px,
-transparent 4px
-);
-
-opacity:0.25;
-pointer-events:none;
-}
-
-#center{
+#container{
 
 position:absolute;
 
@@ -74,31 +34,27 @@ text-align:center;
 
 font-size:28px;
 
-letter-spacing:6px;
+letter-spacing:4px;
 
 margin-bottom:60px;
-
-opacity:0.9;
-
-transition:1s;
 
 }
 
 .choice{
 
+margin:15px auto;
+
+padding:15px;
+
 width:320px;
 
-margin:16px auto;
-
-padding:16px;
-
-border:1px solid rgba(255,255,255,0.15);
+border:1px solid rgba(255,255,255,.2);
 
 cursor:pointer;
 
-opacity:0.45;
+opacity:.5;
 
-transition:0.3s;
+transition:.3s;
 
 }
 
@@ -107,54 +63,20 @@ transition:0.3s;
 opacity:1;
 
 background:white;
+
 color:black;
 
 }
 
-#analysis{
+#small{
 
 margin-top:50px;
 
-font-size:12px;
+font-size:11px;
 
 letter-spacing:3px;
 
-opacity:0;
-
-transition:1s;
-
-min-height:40px;
-
-}
-
-#secret{
-
-position:absolute;
-
-bottom:20px;
-right:20px;
-
-font-size:11px;
-
-opacity:0;
-
-letter-spacing:2px;
-
-cursor:pointer;
-
-transition:4s;
-
-}
-
-.flash{
-animation:flash 0.08s;
-}
-
-@keyframes flash{
-
-50%{
-opacity:0;
-}
+opacity:.2;
 
 }
 
@@ -163,222 +85,91 @@ opacity:0;
 
 <body>
 
-<div id="bg"></div>
-<div id="noise"></div>
-<div id="scan"></div>
-
-<div id="center">
+<div id="container">
 
 <div id="question">
-ЧТО ТЫ ПОМНИШЬ?
+
+что ты помнишь?
+
 </div>
 
-<div class="choice" onclick="choose('garage')">
+<div class="choice" onclick="go('garage')">
+
 гараж
+
 </div>
 
-<div class="choice" onclick="choose('mask')">
-маску
+<div class="choice" onclick="go('mask')">
+
+созерцателя
+
 </div>
 
-<div class="choice" onclick="choose('face')">
-свое лицо
+<div class="choice" onclick="go('naomi')">
+
+черную кошку
+
 </div>
 
-<div class="choice" onclick="choose('nothing')">
+<div class="choice" onclick="go('numbers')">
+
+216 / 432
+
+</div>
+
+<div class="choice" onclick="go('nothing')">
+
 ничего
-</div>
-
-<div id="analysis"></div>
 
 </div>
 
-<div id="secret">
-это было не со мной
+<div id="small">
+
+запись может быть повреждена
+
+</div>
+
 </div>
 
 <script>
 
-let state =
-JSON.parse(
-localStorage.getItem("state")
-);
-
-if(!state){
-
-state = {};
-
-}
-
-function saveState(){
+function go(choice){
 
 localStorage.setItem(
-"state",
-JSON.stringify(state)
+"memory",
+choice
 );
 
-}
+switch(choice){
 
-const analysis =
-document.getElementById("analysis");
-
-function choose(answer){
-
-document
-.querySelectorAll(".choice")
-.forEach(el=>{
-
-el.style.pointerEvents = "none";
-el.style.opacity = "0.15";
-
-});
-
-state.memory = answer;
-
-saveState();
-
-analysis.style.opacity = "1";
-
-analysis.innerText =
-"обработка воспоминания...";
-
-setTimeout(()=>{
-
-analysis.innerText =
-"сопоставление записи...";
-
-},2000);
-
-setTimeout(()=>{
-
-if(answer==="garage"){
-
-analysis.innerText =
-"место найдено";
-
-}
-
-if(answer==="mask"){
-
-analysis.innerText =
-"наблюдатель подтвержден";
-
-}
-
-if(answer==="face"){
-
-analysis.innerText =
-"обнаружено совпадение";
-
-}
-
-if(answer==="nothing"){
-
-analysis.innerText =
-"ошибка памяти";
-
-}
-
-},4500);
-
-setTimeout(()=>{
-
-analysis.innerText =
-"совпадение найдено";
-
-},7000);
-
-setTimeout(()=>{
-
-go(answer);
-
-},9000);
-
-}
-
-function go(answer){
-
-document.body.classList.add("flash");
-
-setTimeout(()=>{
-
-if(answer==="garage"){
-
+case "garage":
 window.location.href =
 "observe.html";
+break;
 
-}
-
-else if(answer==="mask"){
-
-window.location.href =
-"loop.html";
-
-}
-
-else if(answer==="face"){
-
+case "mask":
 window.location.href =
 "signal.html";
+break;
 
-}
+case "naomi":
+window.location.href =
+"loop.html";
+break;
 
-else{
-
+case "numbers":
 window.location.href =
 "glitch.html";
+break;
 
-}
-
-},700);
-
-}
-
-setTimeout(()=>{
-
-document
-.getElementById("secret")
-.style.opacity = "0.08";
-
-},15000);
-
-document
-.getElementById("secret")
-.onclick = ()=>{
-
-analysis.style.opacity = "1";
-
-analysis.innerText =
-"запись повреждена";
-
-state.memory = "not_me";
-
-saveState();
-
-setTimeout(()=>{
-
+case "nothing":
 window.location.href =
-"secret.html";
-
-},2500);
-
-};
-
-setInterval(()=>{
-
-if(Math.random()>0.82){
-
-document.body.classList.add("flash");
-
-setTimeout(()=>{
-
-document.body.classList.remove("flash");
-
-},80);
+"final.html";
+break;
 
 }
 
-},3000);
+}
 
 </script>
 
