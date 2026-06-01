@@ -7,219 +7,43 @@
 <style>
 
 body{
-    margin:0;
-    overflow:hidden;
-    background:black;
-    color:white;
-    font-family:monospace;
-    cursor:none;
+margin:0;
+background:black;
+overflow:hidden;
+color:white;
+font-family:monospace;
+cursor:none;
 }
 
-#bg{
+#text{
 
-    position:absolute;
-    width:100%;
-    height:100%;
+position:absolute;
 
-    background:url("mask.jpg") center center/cover no-repeat;
+top:50%;
+left:50%;
 
-    filter:
-    brightness(0.2)
-    contrast(1.5)
-    grayscale(1);
+transform:translate(-50%,-50%);
 
-    transform:scale(1.08);
+font-size:34px;
 
-}
-
-#noise{
-
-    position:absolute;
-    width:100%;
-    height:100%;
-
-    background-image:url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
-
-    opacity:0.12;
-
-    mix-blend-mode:screen;
-
-    pointer-events:none;
+letter-spacing:5px;
 
 }
 
-#scanlines{
+.glitch{
 
-    position:absolute;
-    width:100%;
-    height:100%;
-
-    background:
-    repeating-linear-gradient(
-        to bottom,
-        rgba(255,255,255,0.03),
-        rgba(255,255,255,0.03) 1px,
-        transparent 1px,
-        transparent 3px
-    );
-
-    pointer-events:none;
-
-    opacity:0.25;
+animation:glitch .15s infinite;
 
 }
 
-#vhs{
+@keyframes glitch{
 
-    position:absolute;
-    width:100%;
-    height:100%;
-
-    background:linear-gradient(
-        rgba(255,255,255,0.02),
-        rgba(255,255,255,0)
-    );
-
-    mix-blend-mode:screen;
-
-    animation:vhsMove 6s linear infinite;
-
-    pointer-events:none;
-
-}
-
-#center{
-
-    position:absolute;
-
-    top:50%;
-    left:50%;
-
-    transform:translate(-50%,-50%);
-
-    text-align:center;
-
-    width:90%;
-
-}
-
-#line{
-
-    font-size:42px;
-
-    letter-spacing:6px;
-
-    text-transform:uppercase;
-
-    opacity:0.9;
-
-    position:relative;
-
-}
-
-#line::before,
-#line::after{
-
-    content:attr(data-text);
-
-    position:absolute;
-
-    left:0;
-    top:0;
-
-    width:100%;
-
-    overflow:hidden;
-
-}
-
-#line::before{
-
-    color:red;
-
-    transform:translateX(-3px);
-
-    opacity:0.6;
-
-    clip-path:inset(0 0 45% 0);
-
-}
-
-#line::after{
-
-    color:cyan;
-
-    transform:translateX(3px);
-
-    opacity:0.6;
-
-    clip-path:inset(55% 0 0 0);
-
-}
-
-#sub{
-
-    margin-top:35px;
-
-    opacity:0.4;
-
-    font-size:14px;
-
-    letter-spacing:3px;
-
-}
-
-#counter{
-
-    position:absolute;
-
-    bottom:20px;
-    right:20px;
-
-    opacity:0.2;
-
-    font-size:12px;
-
-}
-
-.flash{
-    animation:flash 0.08s;
-}
-
-.shake{
-    animation:shake 0.1s;
-}
-
-.invert{
-    filter:invert(1);
-}
-
-@keyframes flash{
-
-    50%{
-        opacity:0;
-    }
-
-}
-
-@keyframes shake{
-
-    0%{transform:translate(0);}
-    25%{transform:translate(-8px,3px);}
-    50%{transform:translate(8px,-3px);}
-    100%{transform:translate(0);}
-
-}
-
-@keyframes vhsMove{
-
-    0%{
-        transform:translateY(-100%);
-    }
-
-    100%{
-        transform:translateY(100%);
-    }
+0%{transform:translate(-50%,-50%);}
+20%{transform:translate(-48%,-50%);}
+40%{transform:translate(-52%,-51%);}
+60%{transform:translate(-49%,-48%);}
+80%{transform:translate(-51%,-50%);}
+100%{transform:translate(-50%,-50%);}
 
 }
 
@@ -228,182 +52,50 @@ body{
 
 <body>
 
-<div id="bg"></div>
-<div id="noise"></div>
-<div id="scanlines"></div>
-<div id="vhs"></div>
-
-<div id="center">
-
-    <div
-    id="line"
-    data-text="SIGNAL LOST"
-    >
-        SIGNAL LOST
-    </div>
-
-    <div id="sub">
-        наблюдение продолжается
-    </div>
-
-</div>
-
-<div id="counter">
-    REC_22:22:22
+<div id="text" class="glitch">
+СБОЙ
 </div>
 
 <script>
 
-let state = JSON.parse(localStorage.getItem("state"));
+const msgs=[
 
-if(!state){
+"216",
 
-    state = {};
+"432",
 
-}
+"11:11",
 
-state.trust = (state.trust || 0) + 8;
+"22:22",
 
-localStorage.setItem("state", JSON.stringify(state));
+"созерцатель",
 
-const line = document.getElementById("line");
-const sub = document.getElementById("sub");
+"тишина заговорит",
 
-const texts = [
+"Наоми",
 
-"SIGNAL LOST",
-"НЕ ВЫКЛЮЧАЙ",
-"ОНА УЖЕ БЫЛА ЗДЕСЬ",
-"OBSERVATION ACTIVE",
-"RECORDING DAMAGED",
-"ПАМЯТЬ НЕ ЯВЛЯЕТСЯ ДОКАЗАТЕЛЬСТВОМ",
-"LOOK AWAY",
-"ЗАПИСЬ ПРОДОЛЖАЕТСЯ",
-"22:22"
+"обнаружен двойник",
+
+"ошибка памяти",
+
+"источник не найден"
 
 ];
 
-const subs = [
-
-"наблюдение продолжается",
-"человек видит то что может видеть",
-"она снова включила запись",
-"не существует последнего уровня",
-"хаотичность можно понять"
-
-];
-
-// СМЕНА ТЕКСТА
+const t=document.getElementById("text");
 
 setInterval(()=>{
 
-    let t =
-    texts[Math.floor(Math.random()*texts.length)];
+t.innerText=
+msgs[Math.floor(Math.random()*msgs.length)];
 
-    line.innerText = t;
-
-    line.setAttribute("data-text", t);
-
-    sub.innerText =
-    subs[Math.floor(Math.random()*subs.length)];
-
-},2600);
-
-// ФЛЕШИ
-
-setInterval(()=>{
-
-    if(Math.random() > 0.55){
-
-        document.body.classList.add("flash");
-
-        setTimeout(()=>{
-
-            document.body.classList.remove("flash");
-
-        },80);
-
-    }
-
-},1400);
-
-// SHAKE
-
-setInterval(()=>{
-
-    if(Math.random() > 0.72){
-
-        document.body.classList.add("shake");
-
-        setTimeout(()=>{
-
-            document.body.classList.remove("shake");
-
-        },100);
-
-    }
-
-},2200);
-
-// INVERT
-
-setInterval(()=>{
-
-    if(Math.random() > 0.88){
-
-        document.body.classList.add("invert");
-
-        setTimeout(()=>{
-
-            document.body.classList.remove("invert");
-
-        },180);
-
-    }
-
-},4000);
-
-// РЕДКИЙ СКРИМ-КАДР
-
-setInterval(()=>{
-
-    if(Math.random() > 0.94){
-
-        document.getElementById("bg").style.backgroundImage =
-        'url("girl.jpg")';
-
-        setTimeout(()=>{
-
-            document.getElementById("bg").style.backgroundImage =
-            'url("mask.jpg")';
-
-        },120);
-
-    }
-
-},5000);
-
-// ПЕРЕХОД
+},1000);
 
 setTimeout(()=>{
 
-    let r = Math.random();
+window.location.href="hub.html";
 
-    if(r > 0.7){
-
-        window.location.href = "loop.html";
-
-    }else if(r > 0.45){
-
-        window.location.href = "observe.html";
-
-    }else{
-
-        window.location.href = "index.html";
-
-    }
-
-},24000);
+},15000);
 
 </script>
 
