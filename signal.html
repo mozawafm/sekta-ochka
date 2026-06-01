@@ -22,9 +22,9 @@ height:100%;
 background:url("mask.jpg") center center/cover no-repeat;
 filter:
 brightness(0.12)
-contrast(1.5)
+contrast(1.6)
 grayscale(1);
-transform:scale(1.04);
+transform:scale(1.05);
 }
 
 #noise{
@@ -34,24 +34,6 @@ height:100%;
 background-image:url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
 opacity:0.08;
 mix-blend-mode:screen;
-pointer-events:none;
-}
-
-#scan{
-position:absolute;
-width:100%;
-height:100%;
-
-background:
-repeating-linear-gradient(
-to bottom,
-rgba(255,255,255,0.03),
-rgba(255,255,255,0.03) 1px,
-transparent 1px,
-transparent 4px
-);
-
-opacity:0.25;
 pointer-events:none;
 }
 
@@ -70,55 +52,66 @@ text-align:center;
 
 }
 
-#text{
+#title{
 
-font-size:26px;
+font-size:28px;
 
-letter-spacing:5px;
+letter-spacing:7px;
 
-opacity:0.9;
+margin-bottom:50px;
 
-min-height:70px;
+opacity:0;
 
-line-height:1.5;
+transition:2s;
 
 }
 
-.answer{
+.choice{
 
-display:inline-block;
+margin:15px auto;
 
-margin:40px 15px 0;
+padding:15px;
 
-padding:12px 25px;
+width:320px;
 
-border:1px solid rgba(255,255,255,0.2);
+border:1px solid rgba(255,255,255,.15);
+
+opacity:.35;
 
 cursor:pointer;
 
-opacity:0.4;
+transition:.25s;
 
-transition:0.3s;
+letter-spacing:3px;
 
 }
 
-.answer:hover{
+.choice:hover{
 
 opacity:1;
 
 background:white;
+
 color:black;
 
 }
 
-.hidden{
+#small{
 
-display:none;
+margin-top:40px;
+
+font-size:11px;
+
+letter-spacing:4px;
+
+opacity:.2;
 
 }
 
 .flash{
-animation:flash 0.08s;
+
+animation:flash .08s;
+
 }
 
 @keyframes flash{
@@ -136,23 +129,38 @@ opacity:0;
 
 <div id="bg"></div>
 <div id="noise"></div>
-<div id="scan"></div>
 
 <div id="center">
 
-<div id="text">
-СИГНАЛ ОБНАРУЖЕН
+<div id="title">
+
+ОБНАРУЖЕН СИГНАЛ
+
 </div>
 
-<div id="answers" class="hidden">
-
-<div class="answer" onclick="reply()">
-да
+<div class="choice" onclick="go('observe.html')">
+ГАРАЖ 216
 </div>
 
-<div class="answer" onclick="reply()">
-нет
+<div class="choice" onclick="go('loop.html')">
+НАОМИ
 </div>
+
+<div class="choice" onclick="go('glitch.html')">
+432
+</div>
+
+<div class="choice" onclick="go('video.html')">
+ЗАПИСЬ
+</div>
+
+<div class="choice" onclick="go('address.html')">
+АДРЕС
+</div>
+
+<div id="small">
+
+выберите источник
 
 </div>
 
@@ -160,170 +168,34 @@ opacity:0;
 
 <script>
 
-const text =
-document.getElementById("text");
+setTimeout(()=>{
 
-const answers =
-document.getElementById("answers");
+document
+.getElementById("title")
+.style.opacity=".9";
 
-let step = 0;
+},500);
 
-const questions = [
+function go(page){
 
-"ты здесь случайно?",
+localStorage.setItem(
+"lastSignal",
+page
+);
 
-"это знакомое место?",
-
-"что-то изменилось?",
-
-"запись продолжается?",
-
-"ты помнишь начало?",
-
-"это уже происходило раньше?"
-
-];
-
-const reactions = [
-
-"ответ отклонен",
-
-"совпадение отсутствует",
-
-"запись не подтверждена",
-
-"источник не найден",
-
-"данные повреждены",
-
-"ответ не имеет значения",
-
-"сигнал нестабилен",
-
-"проверка продолжается"
-
-];
+document.body.style.opacity=".2";
 
 setTimeout(()=>{
 
-text.innerText =
-"идет поиск источника...";
+window.location.href = page;
 
-},2000);
-
-setTimeout(()=>{
-
-text.innerText =
-"источник найден";
-
-},5000);
-
-setTimeout(()=>{
-
-text.innerText =
-questions[0];
-
-answers.classList.remove("hidden");
-
-},8000);
-
-function reply(){
-
-answers.classList.add("hidden");
-
-text.innerText =
-reactions[
-Math.floor(
-Math.random() *
-reactions.length
-)
-];
-
-step++;
-
-setTimeout(()=>{
-
-if(step < questions.length){
-
-text.innerText =
-questions[step];
-
-answers.classList.remove("hidden");
-
-}else{
-
-finish();
-
-}
-
-},2200);
-
-}
-
-function finish(){
-
-text.innerText =
-"проверка завершена";
-
-setTimeout(()=>{
-
-text.innerText =
-"анализ совпадений...";
-
-},2500);
-
-setTimeout(()=>{
-
-text.innerText =
-"совпадений не найдено";
-
-},5000);
-
-setTimeout(()=>{
-
-text.innerText =
-"мы искали не тебя";
-
-},8000);
-
-setTimeout(()=>{
-
-document.body.classList.add("flash");
-
-},10000);
-
-setTimeout(()=>{
-
-let r = Math.random();
-
-if(r > 0.66){
-
-window.location.href =
-"secret.html";
-
-}
-
-else if(r > 0.33){
-
-window.location.href =
-"final.html";
-
-}
-
-else{
-
-window.location.href =
-"hub.html";
-
-}
-
-},13000);
+},600);
 
 }
 
 setInterval(()=>{
 
-if(Math.random() > 0.84){
+if(Math.random()>.87){
 
 document.body.classList.add("flash");
 
@@ -335,7 +207,7 @@ document.body.classList.remove("flash");
 
 }
 
-},3000);
+},2500);
 
 </script>
 
