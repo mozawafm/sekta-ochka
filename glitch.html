@@ -2,20 +2,20 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>glitch</title>
+<title>secret</title>
 
 <style>
 
 body{
 margin:0;
 background:black;
-overflow:hidden;
 color:white;
 font-family:monospace;
+overflow:hidden;
 cursor:none;
 }
 
-#text{
+#center{
 
 position:absolute;
 
@@ -24,26 +24,35 @@ left:50%;
 
 transform:translate(-50%,-50%);
 
-font-size:34px;
+width:90%;
 
-letter-spacing:5px;
-
-}
-
-.glitch{
-
-animation:glitch .15s infinite;
+text-align:center;
 
 }
 
-@keyframes glitch{
+#main{
 
-0%{transform:translate(-50%,-50%);}
-20%{transform:translate(-48%,-50%);}
-40%{transform:translate(-52%,-51%);}
-60%{transform:translate(-49%,-48%);}
-80%{transform:translate(-51%,-50%);}
-100%{transform:translate(-50%,-50%);}
+font-size:28px;
+
+letter-spacing:7px;
+
+opacity:0;
+
+transition:2s;
+
+}
+
+#sub{
+
+margin-top:40px;
+
+font-size:12px;
+
+letter-spacing:3px;
+
+opacity:0;
+
+transition:2s;
 
 }
 
@@ -52,50 +61,80 @@ animation:glitch .15s infinite;
 
 <body>
 
-<div id="text" class="glitch">
-СБОЙ
+<div id="center">
+
+<div id="main">
+ДОСТУП РАЗРЕШЕН
+</div>
+
+<div id="sub"></div>
+
 </div>
 
 <script>
 
-const msgs=[
+const state=
+JSON.parse(localStorage.getItem("state"))||{};
 
-"216",
+const sub=
+document.getElementById("sub");
 
-"432",
-
-"11:11",
-
-"22:22",
-
-"созерцатель",
-
-"тишина заговорит",
-
-"Наоми",
-
-"обнаружен двойник",
-
-"ошибка памяти",
-
-"источник не найден"
-
-];
-
-const t=document.getElementById("text");
-
-setInterval(()=>{
-
-t.innerText=
-msgs[Math.floor(Math.random()*msgs.length)];
-
-},1000);
+document.getElementById("main")
+.style.opacity=".9";
 
 setTimeout(()=>{
 
-window.location.href="hub.html";
+sub.style.opacity=".5";
 
-},15000);
+if(state.memory==="garage"){
+
+sub.innerText=
+"место подтверждено";
+
+}
+
+else if(state.memory==="mask"){
+
+sub.innerText=
+"созерцатель подтвержден";
+
+}
+
+else if(state.memory==="face"){
+
+sub.innerText=
+"обнаружен второй экземпляр";
+
+}
+
+else if(state.memory==="nothing"){
+
+sub.innerText=
+"память отсутствует";
+
+}
+
+else{
+
+sub.innerText=
+"запись повреждена";
+
+}
+
+},3000);
+
+setTimeout(()=>{
+
+sub.innerText=
+"тишина заговорит";
+
+},9000);
+
+setTimeout(()=>{
+
+window.location.href="signal.html";
+
+},18000);
 
 </script>
 
