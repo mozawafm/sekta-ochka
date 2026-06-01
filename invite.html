@@ -7,138 +7,123 @@
 <style>
 
 body{
-    margin:0;
-    overflow:hidden;
-    background:black;
-    color:white;
-    font-family:monospace;
+margin:0;
+overflow:hidden;
+background:black;
+color:white;
+font-family:monospace;
 }
 
 #bg{
-    position:absolute;
-    width:100%;
-    height:100%;
-    background:url("garage.jpg") center center/cover no-repeat;
-    filter:brightness(0.28) contrast(1.2) grayscale(0.4);
-    transform:scale(1.04);
+position:absolute;
+width:100%;
+height:100%;
+background:url("garage.jpg") center center/cover no-repeat;
+filter:brightness(0.22) contrast(1.2) grayscale(.5);
+transform:scale(1.04);
 }
 
 #noise{
-    position:absolute;
-    width:100%;
-    height:100%;
-    background-image:url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
-    opacity:0.05;
-    mix-blend-mode:screen;
-    pointer-events:none;
+position:absolute;
+width:100%;
+height:100%;
+background-image:url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
+opacity:.05;
+mix-blend-mode:screen;
+pointer-events:none;
 }
 
 #chat{
 
-    position:absolute;
+position:absolute;
 
-    top:50%;
-    left:50%;
+top:50%;
+left:50%;
 
-    transform:translate(-50%,-50%);
+transform:translate(-50%,-50%);
 
-    width:90%;
-    max-width:700px;
+width:90%;
+max-width:700px;
 
-    max-height:85vh;
+max-height:85vh;
 
-    overflow-y:auto;
+overflow-y:auto;
 
-    padding-right:10px;
-
-}
-
-#chat::-webkit-scrollbar{
-    width:4px;
-}
-
-#chat::-webkit-scrollbar-thumb{
-    background:rgba(255,255,255,0.15);
 }
 
 .msg{
-    margin-bottom:18px;
-    padding:14px;
-    background:rgba(255,255,255,0.04);
-    border-left:1px solid rgba(255,255,255,0.18);
-    opacity:0;
-    animation:fade 1s forwards;
-    line-height:1.7;
+
+margin-bottom:16px;
+
+padding:14px;
+
+background:rgba(255,255,255,.04);
+
+border-left:1px solid rgba(255,255,255,.15);
+
+line-height:1.7;
+
+opacity:0;
+
+animation:fade 1s forwards;
+
 }
 
 .you{
-    border-left:1px solid rgba(255,255,255,0.45);
+
+border-left:1px solid rgba(255,255,255,.45);
+
 }
 
 .system{
-    opacity:0.45;
-    font-size:13px;
+
+opacity:.4;
+
+font-size:13px;
+
 }
 
 #playWrap{
 
-    margin-top:40px;
+display:none;
 
-    margin-bottom:80px;
+text-align:center;
 
-    text-align:center;
+margin-top:40px;
 
-    display:none;
+margin-bottom:80px;
 
 }
 
 #playBtn{
 
-    display:inline-block;
+display:inline-block;
 
-    padding:16px 28px;
+padding:16px 30px;
 
-    border:1px solid rgba(255,255,255,0.4);
+border:1px solid rgba(255,255,255,.35);
 
-    cursor:pointer;
+cursor:pointer;
 
-    transition:0.25s;
+letter-spacing:4px;
 
-    letter-spacing:3px;
-
-    background:rgba(0,0,0,0.5);
-
-    user-select:none;
+transition:.25s;
 
 }
 
 #playBtn:hover{
-    background:white;
-    color:black;
-}
 
-#hidden{
-    position:absolute;
-    bottom:18px;
-    left:20px;
-    opacity:0.06;
-    font-size:11px;
-}
+background:white;
+color:black;
 
-.flash{
-    animation:flash 0.1s;
 }
 
 @keyframes fade{
-    to{
-        opacity:1;
-    }
+
+to{
+opacity:1;
 }
 
-@keyframes flash{
-    50%{
-        opacity:0;
-    }
 }
 
 </style>
@@ -151,190 +136,155 @@ body{
 
 <div id="chat"></div>
 
-<div id="hidden">
-MAX_attachments(1)
-</div>
-
 <script>
 
-let state = JSON.parse(localStorage.getItem("state"));
-
-if(!state){
-
-    state = {
-
-        trust:0,
-        invited:0
-
-    };
-
-}
-
-state.invited = (state.invited || 0) + 1;
-state.trust += 4;
-
-localStorage.setItem("state", JSON.stringify(state));
-
-const chat = document.getElementById("chat");
+const chat =
+document.getElementById("chat");
 
 const messages = [
 
 {
-    text:"[MAX] привет. нашел тебя через знакомых. нужна девушка для странного клипа.",
-    class:"msg"
+text:"есть запись.",
+class:"msg"
 },
 
 {
-    text:"что за клип?",
-    class:"msg you"
+text:"какая?",
+class:"msg you"
 },
 
 {
-    text:"что то между линчем, кассетой и плохим сном.",
-    class:"msg"
+text:"не знаю.",
+class:"msg"
 },
 
 {
-    text:"звучит как хуйня если честно",
-    class:"msg you"
+text:"тогда зачем пишешь?",
+class:"msg you"
 },
 
 {
-    text:"возможно.",
-    class:"msg"
+text:"на ней есть гараж.",
+class:"msg"
 },
 
 {
-    text:"но тебе подойдет.",
-    class:"msg"
+text:"и что?",
+class:"msg you"
 },
 
 {
-    text:"что делать нужно?",
-    class:"msg you"
+text:"на записи кто-то стоит за камерой.",
+class:"msg"
 },
 
 {
-    text:"просто приехать в гараж и нажать play.",
-    class:"msg"
+text:"оператор?",
+class:"msg you"
 },
 
 {
-    text:"и все?",
-    class:"msg you"
+text:"нет.",
+class:"msg"
 },
 
 {
-    text:"главное не выключать запись.",
-    class:"msg"
+text:"откуда знаешь?",
+class:"msg you"
 },
 
 {
-    text:"📎 VIDEO_ATTACH_01.mp4",
-    class:"msg system"
+text:"оператора там не было.",
+class:"msg"
+},
+
+{
+text:"📎 VIDEO_ATTACH_01.mp4",
+class:"msg system"
 }
 
 ];
 
 let i = 0;
 
-function scrollDown(){
+function addMessage(){
 
-    chat.scrollTop = chat.scrollHeight;
+if(i >= messages.length){
+
+showButton();
+
+return;
 
 }
 
-function addMessage(){
+let div =
+document.createElement("div");
 
-    if(i >= messages.length){
+div.className =
+messages[i].class;
 
-        showButton();
+div.innerText =
+messages[i].text;
 
-        return;
+chat.appendChild(div);
 
-    }
+chat.scrollTop =
+chat.scrollHeight;
 
-    let div = document.createElement("div");
+i++;
 
-    div.className = messages[i].class;
-
-    div.innerText = messages[i].text;
-
-    chat.appendChild(div);
-
-    scrollDown();
-
-    if(Math.random() > 0.82){
-
-        document.body.classList.add("flash");
-
-        setTimeout(()=>{
-
-            document.body.classList.remove("flash");
-
-        },100);
-
-    }
-
-    i++;
-
-    setTimeout(addMessage,2200);
+setTimeout(addMessage,2500);
 
 }
 
 function showButton(){
 
-    let wrap = document.createElement("div");
+let wrap =
+document.createElement("div");
 
-    wrap.id = "playWrap";
+wrap.id = "playWrap";
 
-    wrap.innerHTML = `
+wrap.style.display = "block";
 
-        <div id="playBtn">
-            ВОСПРОИЗВЕСТИ ЗАПИСЬ
-        </div>
+wrap.innerHTML = `
 
-    `;
+<div id="playBtn">
+ОТКРЫТЬ ЗАПИСЬ
+</div>
 
-    chat.appendChild(wrap);
+`;
 
-    wrap.style.display = "block";
+chat.appendChild(wrap);
 
-    scrollDown();
+chat.scrollTop =
+chat.scrollHeight;
 
-    document.getElementById("playBtn").onclick = () => {
+document
+.getElementById("playBtn")
+.onclick = ()=>{
 
-        let btn = document.getElementById("playBtn");
+let r = Math.random();
 
-        btn.innerText = "ЗАГРУЗКА...";
+if(r > 0.85){
 
-        btn.style.pointerEvents = "none";
+window.location.href =
+"address.html";
 
-        state.trust += 5;
+}
+else if(r > 0.55){
 
-        localStorage.setItem("state", JSON.stringify(state));
+window.location.href =
+"video.html";
 
-        setTimeout(()=>{
+}
+else{
 
-            let r = Math.random();
+window.location.href =
+"observe.html";
 
-            if(r > 0.88){
+}
 
-                window.location.href = "secret.html";
-
-            }else if(r > 0.65){
-
-                window.location.href = "observe.html";
-
-            }else{
-
-                window.location.href = "video.html";
-
-            }
-
-        },2200);
-
-    };
+};
 
 }
 
