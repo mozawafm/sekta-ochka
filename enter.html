@@ -2,83 +2,116 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>enter</title>
+<title>question</title>
 
 <style>
 
 body{
-    margin:0;
-    background:black;
-    overflow:hidden;
-    color:white;
-    font-family:monospace;
-}
-
-#bg{
-    position:absolute;
-    width:100%;
-    height:100%;
-    background:url("garage.jpg") center center/cover no-repeat;
-    opacity:0.18;
-    filter:blur(2px) grayscale(1);
-}
-
-#noise{
-    position:absolute;
-    width:100%;
-    height:100%;
-    background-image:url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
-    opacity:0.05;
-    mix-blend-mode:screen;
+margin:0;
+background:black;
+color:white;
+font-family:monospace;
+overflow:hidden;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+cursor:none;
 }
 
 #container{
-    position:absolute;
-    top:50%;
-    left:50%;
-    transform:translate(-50%,-50%);
-    text-align:center;
-    width:80%;
+text-align:center;
+width:90%;
+max-width:600px;
 }
 
-#line{
-    font-size:24px;
-    letter-spacing:2px;
+#title{
+font-size:28px;
+letter-spacing:8px;
+margin-bottom:40px;
+opacity:.9;
 }
 
-button{
-    margin-top:30px;
-    background:black;
-    color:white;
-    border:1px solid white;
-    padding:12px 22px;
-    cursor:pointer;
-    font-family:monospace;
+input{
+
+width:100%;
+max-width:420px;
+
+padding:15px;
+
+background:black;
+
+border:1px solid rgba(255,255,255,.25);
+
+color:white;
+
+font-family:monospace;
+
+font-size:18px;
+
+text-align:center;
+
+outline:none;
+
 }
 
-button:hover{
-    background:white;
-    color:black;
+#msg{
+
+margin-top:25px;
+
+min-height:20px;
+
+font-size:12px;
+
+letter-spacing:4px;
+
+opacity:.5;
+
 }
 
-.fade{
-    animation:fade 2s forwards;
+#reset{
+
+display:none;
+
+margin:30px auto 0;
+
+padding:14px 28px;
+
+border:1px solid rgba(255,255,255,.25);
+
+background:black;
+
+color:white;
+
+font-family:monospace;
+
+letter-spacing:4px;
+
+cursor:pointer;
+
+transition:.25s;
+
 }
 
-@keyframes fade{
-    to{
-        opacity:0;
-    }
+#reset:hover{
+
+background:white;
+color:black;
+
 }
 
 .flash{
-    animation:flash 0.15s;
+
+animation:flash .08s;
+
 }
 
 @keyframes flash{
-    0%{opacity:1;}
-    50%{opacity:0;}
-    100%{opacity:1;}
+
+50%{
+opacity:0;
+}
+
 }
 
 </style>
@@ -86,98 +119,88 @@ button:hover{
 
 <body>
 
-<div id="bg"></div>
-<div id="noise"></div>
-
 <div id="container">
 
-    <div id="line">
-        ты действительно хочешь войти?
-    </div>
+<div id="title">
+ВОПРОС
+</div>
 
-    <button id="yesBtn">
-        войти
-    </button>
+<input
+id="answer"
+type="text"
+autocomplete="off"
+spellcheck="false"
+>
+
+<div id="msg"></div>
+
+<button id="reset">
+ОБНУЛИТЬ
+</button>
 
 </div>
 
 <script>
 
-let state = JSON.parse(localStorage.getItem("state"));
+const input =
+document.getElementById("answer");
 
-if(!state){
+const msg =
+document.getElementById("msg");
 
-    state = {
-        trust:0,
-        unlocked:false,
-        entered:false
-    };
+const reset =
+document.getElementById("reset");
+
+input.focus();
+
+input.addEventListener("keydown", function(e){
+
+if(e.key !== "Enter") return;
+
+const value =
+input.value.trim().toLowerCase();
+
+if(value === "ответ"){
+
+window.location.href =
+"loop.html";
+
+return;
 
 }
 
-const line = document.getElementById("line");
-const btn = document.getElementById("yesBtn");
+if(value === "тео867102"){
 
-// КНОПКА
-btn.onclick = () => {
+window.location.href =
+"secret.html";
 
-    btn.style.display = "none";
+return;
 
-    // сайт принимает её
-    state.entered = true;
-    state.trust += 25;
+}
 
-    localStorage.setItem("state", JSON.stringify(state));
+msg.innerText =
+"ДАННЫЕ ИСКАЖЕНЫ";
 
-    line.innerText = "подтверждение...";
-    
-    setTimeout(()=>{
+reset.style.display =
+"inline-block";
 
-        document.body.classList.add("flash");
+document.body.classList.add("flash");
 
-    },2000);
+setTimeout(()=>{
 
-    setTimeout(()=>{
+document.body.classList.remove("flash");
 
-        line.innerText = "мы ждали тебя";
+},100);
 
-    },4000);
+input.value = "";
+input.focus();
 
-    setTimeout(()=>{
+});
 
-        line.innerText = "не оборачивайся";
+reset.onclick = function(){
 
-    },7000);
-
-    setTimeout(()=>{
-
-        line.innerText = "запись продолжается";
-
-    },10000);
-
-    // 🔥 ПЕРЕХОД ДАЛЬШЕ
-    setTimeout(()=>{
-
-        let r = Math.random();
-
-        // редкий final
-        if(r > 0.82){
-
-            window.location.href = "final.html";
-
-        // редкий loop
-        }else if(r > 0.55){
-
-            window.location.href = "loop.html";
-
-        // обычный путь
-        }else{
-
-            window.location.href = "video.html";
-
-        }
-
-    },14000);
+window.location.href =
+"hub.html";
 
 };
 
