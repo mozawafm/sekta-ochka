@@ -2,51 +2,23 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>SEKTA OCHKA</title>
+<title>A4KO</title>
+
+<meta http-equiv="refresh" content="0; url=enter.html">
+
+<script>
+window.location.replace("enter.html");
+</script>
+
+<style>
+body{
+background:black;
+margin:0;
+}
+</style>
+
 </head>
 
 <body>
-
-<script>
-
-let state = JSON.parse(localStorage.getItem("state"));
-
-if(!state){
-
-    state = {
-
-        firstVisit:true,
-        visits:0,
-        trust:0,
-        infected:0,
-        unlocked:false,
-        codeUsed:false
-
-    };
-
-}
-
-// ПЕРВЫЙ ЗАХОД
-
-if(state.firstVisit){
-
-    state.firstVisit = false;
-
-    localStorage.setItem("state", JSON.stringify(state));
-
-    window.location.href = "enter.html";
-
-}else{
-
-    // ОБЫЧНЫЙ ЗАХОД
-
-    window.location.href = "hub.html";
-
-}
-
-</script>
-
-<script src="audio.js"></script>
-
 </body>
 </html>
