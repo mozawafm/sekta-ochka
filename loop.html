@@ -16,10 +16,8 @@ font-family:monospace;
 
 #bg{
 position:absolute;
-width:110%;
-height:110%;
-left:-5%;
-top:-5%;
+width:100%;
+height:100%;
 
 background:url("mask.jpg") center center/cover no-repeat;
 
@@ -28,28 +26,6 @@ brightness(0.12)
 contrast(1.6)
 grayscale(1);
 
-transform-origin:center center;
-transition:transform 8s linear;
-}
-
-#canvas{
-position:absolute;
-width:100%;
-height:100%;
-}
-
-#noise{
-position:absolute;
-width:100%;
-height:100%;
-
-background-image:url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
-
-opacity:0.05;
-
-mix-blend-mode:screen;
-
-pointer-events:none;
 }
 
 #symbol{
@@ -61,15 +37,15 @@ left:50%;
 
 transform:translate(-50%,-50%);
 
-font-size:180px;
-
 color:white;
 
-opacity:0.03;
+font-size:240px;
+
+opacity:0.85;
 
 pointer-events:none;
 
-transition:2s;
+user-select:none;
 
 }
 
@@ -83,15 +59,41 @@ width:100%;
 
 text-align:center;
 
-font-size:10px;
+color:white;
+
+font-size:12px;
 
 letter-spacing:8px;
 
-opacity:0.08;
+opacity:0.12;
 
-color:white;
+pointer-events:none;
 
 transition:1s;
+
+}
+
+#cover{
+
+position:absolute;
+width:100%;
+height:100%;
+
+}
+
+#noise{
+
+position:absolute;
+width:100%;
+height:100%;
+
+background-image:url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
+
+opacity:0.06;
+
+mix-blend-mode:screen;
+
+pointer-events:none;
 
 }
 
@@ -114,22 +116,22 @@ opacity:0;
 
 <div id="bg"></div>
 
-<canvas id="canvas"></canvas>
-
-<div id="noise"></div>
-
 <div id="symbol">
 ∞
 </div>
 
+<canvas id="cover"></canvas>
+
+<div id="noise"></div>
+
 <div id="hint">
-LOOP
+СТИРАЙ
 </div>
 
 <script>
 
 const canvas =
-document.getElementById("canvas");
+document.getElementById("cover");
 
 const ctx =
 canvas.getContext("2d");
@@ -140,69 +142,9 @@ window.innerWidth;
 canvas.height =
 window.innerHeight;
 
-const centerX =
-canvas.width/2;
+// ЧЕРНЫЙ СЛОЙ
 
-const centerY =
-canvas.height/2;
-
-const symbol =
-document.getElementById("symbol");
-
-const bg =
-document.getElementById("bg");
-
-let activated = false;
-
-let progress = 0;
-
-const trail = [];
-
-document.addEventListener(
-"mousemove",
-(e)=>{
-
-if(activated) return;
-
-trail.push({
-
-x:e.clientX,
-y:e.clientY,
-life:1
-
-});
-
-const dx =
-e.clientX-centerX;
-
-const dy =
-e.clientY-centerY;
-
-const leftLoop =
-Math.pow(dx+130,2)/14000 +
-Math.pow(dy,2)/8000;
-
-const rightLoop =
-Math.pow(dx-130,2)/14000 +
-Math.pow(dy,2)/8000;
-
-if(
-(leftLoop > 0.75 && leftLoop < 1.25)
-||
-(rightLoop > 0.75 && rightLoop < 1.25)
-){
-
-progress += 0.4;
-
-}
-
-});
-
-function drawTrail(){
-
-ctx.fillStyle =
-"rgba(0,0,0,0.04)";
-
+ctx.fillStyle = "black";
 ctx.fillRect(
 0,
 0,
@@ -210,38 +152,40 @@ canvas.width,
 canvas.height
 );
 
-for(
-let i=trail.length-1;
-i>=0;
-i--
-){
+let erased = 0;
+let activated = false;
 
-const p = trail[i];
+const hint =
+document.getElementById("hint");
 
-p.life -= 0.012;
+canvas.addEventListener(
+"mousemove",
+erase
+);
 
-if(p.life<=0){
+canvas.addEventListener(
+"touchmove",
+function(e){
 
-trail.splice(i,1);
+erase(e.touches[0]);
 
-continue;
+});
 
-}
+function erase(e){
+
+if(activated) return;
+
+ctx.globalCompositeOperation =
+"destination-out";
 
 ctx.beginPath();
 
-ctx.fillStyle =
-"rgba(255,255,255,"+
-(p.life*0.18)+
-")";
-
 ctx.arc(
 
-p.x,
-p.y,
+e.clientX,
+e.clientY,
 
-30*(1-p.life)+8,
-
+70,
 0,
 Math.PI*2
 
@@ -249,87 +193,36 @@ Math.PI*2
 
 ctx.fill();
 
-}
+erased++;
 
-requestAnimationFrame(
-drawTrail
-);
+if(erased > 80){
 
-}
-
-drawTrail();
-
-function update(){
-
-if(activated) return;
-
-const p =
-Math.min(
-progress/350,
-1
-);
-
-symbol.style.opacity =
-0.03 + p*0.65;
-
-symbol.style.transform =
-`translate(-50%,-50%) scale(${1+p*0.2})`;
-
-if(p > 0.25){
-
-document
-.getElementById("hint")
-.innerText =
-"ПЕТЛЯ ПРОЯВЛЯЕТСЯ";
+hint.innerText =
+"ПРОДОЛЖАЙ";
 
 }
 
-if(p > 0.55){
+if(erased > 200){
 
-document
-.getElementById("hint")
-.innerText =
-"ЦИКЛ ЗАМЫКАЕТСЯ";
+hint.innerText =
+"ПОЧТИ";
 
 }
 
-if(p > 0.85){
-
-document
-.getElementById("hint")
-.innerText =
-"∞";
-
-}
-
-if(progress >= 350){
+if(erased > 350){
 
 activate();
 
 }
 
-requestAnimationFrame(
-update
-);
-
 }
-
-update();
 
 function activate(){
 
 activated = true;
 
-symbol.style.opacity = "1";
-
-symbol.style.transition =
-"transform 12s linear";
-
-symbol.style.transform =
-"translate(-50%,-50%) scale(1.3) rotate(720deg)";
-
-bg.style.transform =
-"rotate(8deg) scale(1.15)";
+hint.innerText =
+"ЦИКЛ ОБНАРУЖЕН";
 
 let flashes = 0;
 
@@ -350,7 +243,7 @@ document.body
 
 flashes++;
 
-if(flashes>10){
+if(flashes > 8){
 
 clearInterval(fx);
 
@@ -359,11 +252,11 @@ setTimeout(()=>{
 window.location.href =
 "deeper.html";
 
-},2500);
+},2000);
 
 }
 
-},400);
+},250);
 
 }
 
