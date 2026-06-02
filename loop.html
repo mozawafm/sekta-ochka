@@ -7,95 +7,104 @@
 <style>
 
 body{
-    margin:0;
-    overflow:hidden;
-    background:black;
-    cursor:none;
-    font-family:monospace;
+margin:0;
+overflow:hidden;
+background:black;
+cursor:none;
+font-family:monospace;
 }
 
 #bg{
-    position:absolute;
-    width:100%;
-    height:100%;
-    background:url("mask.jpg") center center/cover no-repeat;
+position:absolute;
+width:110%;
+height:110%;
+left:-5%;
+top:-5%;
 
-    filter:
-    brightness(0.15)
-    contrast(1.5)
-    grayscale(1);
+background:url("mask.jpg") center center/cover no-repeat;
 
-    transform:scale(1.04);
-}
+filter:
+brightness(0.12)
+contrast(1.6)
+grayscale(1);
 
-#noise{
-    position:absolute;
-    width:100%;
-    height:100%;
-    background-image:url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
-    opacity:0.08;
-    mix-blend-mode:screen;
-    pointer-events:none;
-}
-
-#scan{
-    position:absolute;
-    width:100%;
-    height:100%;
-
-    background:
-    repeating-linear-gradient(
-        to bottom,
-        rgba(255,255,255,0.03),
-        rgba(255,255,255,0.03) 1px,
-        transparent 1px,
-        transparent 4px
-    );
-
-    opacity:0.24;
-
-    pointer-events:none;
+transform-origin:center center;
+transition:transform 8s linear;
 }
 
 #canvas{
-    position:absolute;
-    width:100%;
-    height:100%;
+position:absolute;
+width:100%;
+height:100%;
 }
 
-#message{
+#noise{
+position:absolute;
+width:100%;
+height:100%;
 
-    position:absolute;
+background-image:url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
 
-    top:50%;
-    left:50%;
+opacity:0.05;
 
-    transform:translate(-50%,-50%);
+mix-blend-mode:screen;
 
-    color:white;
+pointer-events:none;
+}
 
-    opacity:0.08;
+#symbol{
 
-    letter-spacing:8px;
+position:absolute;
 
-    font-size:22px;
+top:50%;
+left:50%;
 
-    transition:1s;
+transform:translate(-50%,-50%);
 
-    text-align:center;
+font-size:180px;
 
-    pointer-events:none;
+color:white;
+
+opacity:0.03;
+
+pointer-events:none;
+
+transition:2s;
+
+}
+
+#hint{
+
+position:absolute;
+
+bottom:60px;
+
+width:100%;
+
+text-align:center;
+
+font-size:10px;
+
+letter-spacing:8px;
+
+opacity:0.08;
+
+color:white;
+
+transition:1s;
 
 }
 
 .flash{
-    animation:flash 0.08s;
+animation:flash .08s;
 }
 
 @keyframes flash{
-    50%{
-        opacity:0;
-    }
+
+50%{
+opacity:0;
+}
+
 }
 
 </style>
@@ -108,251 +117,255 @@ body{
 <canvas id="canvas"></canvas>
 
 <div id="noise"></div>
-<div id="scan"></div>
 
-<div id="message">
-НЕ ВСЕ ДВИЖЕНИЯ СЛУЧАЙНЫ
+<div id="symbol">
+∞
+</div>
+
+<div id="hint">
+LOOP
 </div>
 
 <script>
 
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
+const canvas =
+document.getElementById("canvas");
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+const ctx =
+canvas.getContext("2d");
 
-const centerX = canvas.width / 2;
-const centerY = canvas.height / 2;
+canvas.width =
+window.innerWidth;
 
-const radius = 180;
+canvas.height =
+window.innerHeight;
 
-const msg = document.getElementById("message");
+const centerX =
+canvas.width/2;
+
+const centerY =
+canvas.height/2;
+
+const symbol =
+document.getElementById("symbol");
+
+const bg =
+document.getElementById("bg");
 
 let activated = false;
-let rotation = 0;
 
-const visited = new Set();
+let progress = 0;
 
 const trail = [];
 
-document.addEventListener("mousemove",(e)=>{
+document.addEventListener(
+"mousemove",
+(e)=>{
 
-    const x = e.clientX;
-    const y = e.clientY;
+if(activated) return;
 
-    trail.push({
-        x:x,
-        y:y,
-        life:1
-    });
+trail.push({
 
-    const dx = x - centerX;
-    const dy = y - centerY;
-
-    const dist = Math.sqrt(dx*dx + dy*dy);
-
-    if(dist < radius + 60 && dist > radius - 60){
-
-        const angle =
-        Math.atan2(dy,dx);
-
-        const segment =
-        Math.floor(
-            ((angle + Math.PI) /
-            (Math.PI*2)) * 72
-        );
-
-        visited.add(segment);
-
-    }
+x:e.clientX,
+y:e.clientY,
+life:1
 
 });
 
-function draw(){
+const dx =
+e.clientX-centerX;
 
-    requestAnimationFrame(draw);
+const dy =
+e.clientY-centerY;
 
-    ctx.fillStyle =
-    "rgba(0,0,0,0.04)";
+const leftLoop =
+Math.pow(dx+130,2)/14000 +
+Math.pow(dy,2)/8000;
 
-    ctx.fillRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
+const rightLoop =
+Math.pow(dx-130,2)/14000 +
+Math.pow(dy,2)/8000;
 
-    for(let i=trail.length-1;i>=0;i--){
+if(
+(leftLoop > 0.75 && leftLoop < 1.25)
+||
+(rightLoop > 0.75 && rightLoop < 1.25)
+){
 
-        let p = trail[i];
-
-        p.life -= 0.01;
-
-        if(p.life <= 0){
-
-            trail.splice(i,1);
-
-            continue;
-
-        }
-
-        ctx.beginPath();
-
-        ctx.fillStyle =
-        "rgba(255,255,255," +
-        (p.life*0.25) +
-        ")";
-
-        ctx.arc(
-            p.x,
-            p.y,
-            10 + (1-p.life)*20,
-            0,
-            Math.PI*2
-        );
-
-        ctx.fill();
-
-    }
-
-    const progress =
-    visited.size / 72;
-
-    if(progress > 0.15){
-
-        msg.style.opacity =
-        0.15 + progress*0.6;
-    }
-
-    if(progress > 0.35){
-
-        msg.innerText =
-        "КРУГ ПРОЯВЛЯЕТСЯ";
-    }
-
-    if(progress > 0.65){
-
-        msg.innerText =
-        "ЦИКЛ НЕ ЗАВЕРШЕН";
-    }
-
-    if(progress > 0.9){
-
-        msg.innerText =
-        "ТЫ УЖЕ БЫЛА ЗДЕСЬ";
-    }
-
-    ctx.save();
-
-    ctx.translate(
-        centerX,
-        centerY
-    );
-
-    if(progress > 0.9){
-
-        rotation += 0.003;
-    }
-
-    ctx.rotate(rotation);
-
-    ctx.beginPath();
-
-    ctx.strokeStyle =
-    "rgba(255,255,255," +
-    Math.min(progress,1) +
-    ")";
-
-    ctx.lineWidth = 3;
-
-    ctx.arc(
-        0,
-        0,
-        radius,
-        0,
-        Math.PI*2*progress
-    );
-
-    ctx.stroke();
-
-    if(progress > 0.9){
-
-        ctx.beginPath();
-
-        ctx.strokeStyle =
-        "rgba(255,255,255,0.4)";
-
-        ctx.lineWidth = 1;
-
-        ctx.arc(
-            0,
-            0,
-            radius+25,
-            0,
-            Math.PI*2
-        );
-
-        ctx.stroke();
-
-    }
-
-    ctx.restore();
-
-    if(progress > 0.98 && !activated){
-
-        activated = true;
-
-        activateSequence();
-
-    }
+progress += 0.4;
 
 }
 
-function activateSequence(){
+});
 
-    msg.innerText =
-    "ВХОД ОБНАРУЖЕН";
+function drawTrail(){
 
-    document.getElementById("noise")
-    .style.opacity = "0.2";
+ctx.fillStyle =
+"rgba(0,0,0,0.04)";
 
-    let flashes = 0;
+ctx.fillRect(
+0,
+0,
+canvas.width,
+canvas.height
+);
 
-    const fx = setInterval(()=>{
+for(
+let i=trail.length-1;
+i>=0;
+i--
+){
 
-        document.body.classList.add(
-            "flash"
-        );
+const p = trail[i];
 
-        setTimeout(()=>{
+p.life -= 0.012;
 
-            document.body.classList.remove(
-                "flash"
-            );
+if(p.life<=0){
 
-        },80);
+trail.splice(i,1);
 
-        flashes++;
-
-        if(flashes > 8){
-
-            clearInterval(fx);
-
-            setTimeout(()=>{
-
-                window.location.href =
-                "deeper.html";
-
-            },1200);
-
-        }
-
-    },250);
+continue;
 
 }
 
-draw();
+ctx.beginPath();
+
+ctx.fillStyle =
+"rgba(255,255,255,"+
+(p.life*0.18)+
+")";
+
+ctx.arc(
+
+p.x,
+p.y,
+
+30*(1-p.life)+8,
+
+0,
+Math.PI*2
+
+);
+
+ctx.fill();
+
+}
+
+requestAnimationFrame(
+drawTrail
+);
+
+}
+
+drawTrail();
+
+function update(){
+
+if(activated) return;
+
+const p =
+Math.min(
+progress/350,
+1
+);
+
+symbol.style.opacity =
+0.03 + p*0.65;
+
+symbol.style.transform =
+`translate(-50%,-50%) scale(${1+p*0.2})`;
+
+if(p > 0.25){
+
+document
+.getElementById("hint")
+.innerText =
+"ПЕТЛЯ ПРОЯВЛЯЕТСЯ";
+
+}
+
+if(p > 0.55){
+
+document
+.getElementById("hint")
+.innerText =
+"ЦИКЛ ЗАМЫКАЕТСЯ";
+
+}
+
+if(p > 0.85){
+
+document
+.getElementById("hint")
+.innerText =
+"∞";
+
+}
+
+if(progress >= 350){
+
+activate();
+
+}
+
+requestAnimationFrame(
+update
+);
+
+}
+
+update();
+
+function activate(){
+
+activated = true;
+
+symbol.style.opacity = "1";
+
+symbol.style.transition =
+"transform 12s linear";
+
+symbol.style.transform =
+"translate(-50%,-50%) scale(1.3) rotate(720deg)";
+
+bg.style.transform =
+"rotate(8deg) scale(1.15)";
+
+let flashes = 0;
+
+const fx =
+setInterval(()=>{
+
+document.body
+.classList
+.add("flash");
+
+setTimeout(()=>{
+
+document.body
+.classList
+.remove("flash");
+
+},80);
+
+flashes++;
+
+if(flashes>10){
+
+clearInterval(fx);
+
+setTimeout(()=>{
+
+window.location.href =
+"deeper.html";
+
+},2500);
+
+}
+
+},400);
+
+}
 
 </script>
 
