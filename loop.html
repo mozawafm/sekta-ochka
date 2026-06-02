@@ -74,7 +74,7 @@ body{
 
     color:white;
 
-    opacity:0.06;
+    opacity:0.08;
 
     letter-spacing:8px;
 
@@ -84,40 +84,18 @@ body{
 
     text-align:center;
 
+    pointer-events:none;
+
 }
 
 .flash{
     animation:flash 0.08s;
 }
 
-.shake{
-    animation:shake 0.08s infinite;
-}
-
 @keyframes flash{
     50%{
         opacity:0;
     }
-}
-
-@keyframes shake{
-
-    0%{
-        transform:translate(0);
-    }
-
-    25%{
-        transform:translate(-5px,2px);
-    }
-
-    50%{
-        transform:translate(5px,-2px);
-    }
-
-    100%{
-        transform:translate(0);
-    }
-
 }
 
 </style>
@@ -133,7 +111,7 @@ body{
 <div id="scan"></div>
 
 <div id="message">
-    НЕ ВСЕ ДВИЖЕНИЯ СЛУЧАЙНЫ
+НЕ ВСЕ ДВИЖЕНИЯ СЛУЧАЙНЫ
 </div>
 
 <script>
@@ -147,83 +125,181 @@ canvas.height = window.innerHeight;
 const centerX = canvas.width / 2;
 const centerY = canvas.height / 2;
 
+const radius = 180;
+
 const msg = document.getElementById("message");
 
-let energy = 0;
 let activated = false;
+let rotation = 0;
 
-let points = [];
+const visited = new Set();
+
+const trail = [];
 
 document.addEventListener("mousemove",(e)=>{
 
     const x = e.clientX;
     const y = e.clientY;
 
-    // ТОЧКИ
-
-    points.push({x,y});
-
-    ctx.fillStyle = "rgba(255,255,255,0.16)";
-
-    ctx.beginPath();
-
-    ctx.arc(x,y,2,0,Math.PI*2);
-
-    ctx.fill();
-
-    // ЛИНИИ
-
-    if(points.length > 1){
-
-        let prev = points[points.length - 2];
-
-        ctx.strokeStyle = "rgba(255,255,255,0.025)";
-
-        ctx.lineWidth = 1;
-
-        ctx.beginPath();
-
-        ctx.moveTo(prev.x,prev.y);
-        ctx.lineTo(x,y);
-
-        ctx.stroke();
-
-    }
-
-    // РАССТОЯНИЕ ДО ЦЕНТРА
+    trail.push({
+        x:x,
+        y:y,
+        life:1
+    });
 
     const dx = x - centerX;
     const dy = y - centerY;
 
     const dist = Math.sqrt(dx*dx + dy*dy);
 
-    // ЕСЛИ ВОДЯТ ВОКРУГ ЦЕНТРА
+    if(dist < radius + 60 && dist > radius - 60){
 
-    if(dist < 180){
+        const angle =
+        Math.atan2(dy,dx);
 
-        energy += 1;
+        const segment =
+        Math.floor(
+            ((angle + Math.PI) /
+            (Math.PI*2)) * 72
+        );
 
-    }
-
-    // ПРОЯВЛЕНИЕ
-
-    if(energy > 60){
-
-        msg.style.opacity = "0.18";
-
-    }
-
-    if(energy > 120){
-
-        msg.style.opacity = "0.4";
-
-        msg.innerText = "СИГНАЛ ОБНАРУЖЕН";
+        visited.add(segment);
 
     }
 
-    // АКТИВАЦИЯ
+});
 
-    if(energy > 220 && !activated){
+function draw(){
+
+    requestAnimationFrame(draw);
+
+    ctx.fillStyle =
+    "rgba(0,0,0,0.04)";
+
+    ctx.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    for(let i=trail.length-1;i>=0;i--){
+
+        let p = trail[i];
+
+        p.life -= 0.01;
+
+        if(p.life <= 0){
+
+            trail.splice(i,1);
+
+            continue;
+
+        }
+
+        ctx.beginPath();
+
+        ctx.fillStyle =
+        "rgba(255,255,255," +
+        (p.life*0.25) +
+        ")";
+
+        ctx.arc(
+            p.x,
+            p.y,
+            10 + (1-p.life)*20,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+    }
+
+    const progress =
+    visited.size / 72;
+
+    if(progress > 0.15){
+
+        msg.style.opacity =
+        0.15 + progress*0.6;
+    }
+
+    if(progress > 0.35){
+
+        msg.innerText =
+        "КРУГ ПРОЯВЛЯЕТСЯ";
+    }
+
+    if(progress > 0.65){
+
+        msg.innerText =
+        "ЦИКЛ НЕ ЗАВЕРШЕН";
+    }
+
+    if(progress > 0.9){
+
+        msg.innerText =
+        "ТЫ УЖЕ БЫЛА ЗДЕСЬ";
+    }
+
+    ctx.save();
+
+    ctx.translate(
+        centerX,
+        centerY
+    );
+
+    if(progress > 0.9){
+
+        rotation += 0.003;
+    }
+
+    ctx.rotate(rotation);
+
+    ctx.beginPath();
+
+    ctx.strokeStyle =
+    "rgba(255,255,255," +
+    Math.min(progress,1) +
+    ")";
+
+    ctx.lineWidth = 3;
+
+    ctx.arc(
+        0,
+        0,
+        radius,
+        0,
+        Math.PI*2*progress
+    );
+
+    ctx.stroke();
+
+    if(progress > 0.9){
+
+        ctx.beginPath();
+
+        ctx.strokeStyle =
+        "rgba(255,255,255,0.4)";
+
+        ctx.lineWidth = 1;
+
+        ctx.arc(
+            0,
+            0,
+            radius+25,
+            0,
+            Math.PI*2
+        );
+
+        ctx.stroke();
+
+    }
+
+    ctx.restore();
+
+    if(progress > 0.98 && !activated){
 
         activated = true;
 
@@ -231,73 +307,52 @@ document.addEventListener("mousemove",(e)=>{
 
     }
 
-    // РЕДКИЕ ВСПЫШКИ
-
-    if(Math.random() > 0.992){
-
-        document.body.classList.add("flash");
-
-        setTimeout(()=>{
-
-            document.body.classList.remove("flash");
-
-        },80);
-
-    }
-
-});
-
-// АКТИВАЦИЯ
+}
 
 function activateSequence(){
 
-    document.body.classList.add("shake");
+    msg.innerText =
+    "ВХОД ОБНАРУЖЕН";
 
-    msg.style.opacity = "1";
-
-    msg.innerText = "ТЫ НАШЛА ВХОД";
-
-    // РЕЗКИЙ ШУМ
-
-    document.getElementById("noise").style.opacity = "0.22";
-
-    // КРАСНЫЕ ВСПЫШКИ
+    document.getElementById("noise")
+    .style.opacity = "0.2";
 
     let flashes = 0;
 
-    let fx = setInterval(()=>{
+    const fx = setInterval(()=>{
 
-        document.body.style.background = flashes % 2
-        ? "black"
-        : "#200";
+        document.body.classList.add(
+            "flash"
+        );
+
+        setTimeout(()=>{
+
+            document.body.classList.remove(
+                "flash"
+            );
+
+        },80);
 
         flashes++;
 
-        if(flashes > 10){
+        if(flashes > 8){
 
             clearInterval(fx);
 
             setTimeout(()=>{
 
-                window.location.href = "secret.html";
+                window.location.href =
+                "question.html";
 
-            },1400);
+            },1200);
 
         }
 
-    },120);
+    },250);
 
 }
 
-// МЕДЛЕННОЕ ЗАТУХАНИЕ СЛЕДОВ
-
-setInterval(()=>{
-
-    ctx.fillStyle = "rgba(0,0,0,0.03)";
-
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-
-},60);
+draw();
 
 </script>
 
