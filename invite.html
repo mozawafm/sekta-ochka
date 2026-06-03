@@ -34,29 +34,18 @@ pointer-events:none;
 }
 
 #chat{
-
 position:absolute;
-
 top:20px;
 left:50%;
-
 transform:translateX(-50%);
-
 width:90%;
 max-width:900px;
-
 height:calc(100vh - 140px);
-
 overflow-y:auto;
-
 padding-right:10px;
 padding-bottom:20px;
-
 box-sizing:border-box;
-
 }
-
-/* СКРОЛЛБАР */
 
 #chat::-webkit-scrollbar{
 width:6px;
@@ -74,153 +63,90 @@ background:rgba(255,255,255,.15);
 background:rgba(255,255,255,.25);
 }
 
-/* СООБЩЕНИЯ */
-
 .msg{
-
 padding:14px;
 margin-bottom:14px;
-
 line-height:1.7;
-
 animation:fade .4s forwards;
-
 word-wrap:break-word;
-
 }
-
-/* БОТ */
 
 .bot{
-
 max-width:70%;
-
 background:rgba(255,255,255,.03);
-
 border-left:1px solid rgba(255,255,255,.15);
-
 margin-right:auto;
-
 }
-
-/* ПОЛЬЗОВАТЕЛЬ */
 
 .you{
-
 max-width:70%;
-
 background:rgba(255,255,255,.08);
-
 border-right:1px solid rgba(255,255,255,.35);
-
 margin-left:auto;
-
 text-align:right;
-
 }
 
-/* СИСТЕМА */
-
 .system{
-
 text-align:center;
-
 opacity:.35;
-
 font-size:12px;
-
 letter-spacing:3px;
-
 background:none;
-
 }
 
 .typing{
-
 opacity:.35;
-
 font-style:italic;
-
 }
 
 #inputWrap{
-
 position:fixed;
-
 bottom:20px;
 left:50%;
-
 transform:translateX(-50%);
-
 width:90%;
 max-width:900px;
-
 display:flex;
 gap:10px;
-
 z-index:100;
-
 }
 
 #input{
-
 flex:1;
-
 background:black;
-
 border:1px solid rgba(255,255,255,.15);
-
 color:white;
-
 padding:15px;
-
 font-family:monospace;
-
 font-size:14px;
-
 outline:none;
-
 }
 
 #send{
-
 width:140px;
-
 background:black;
-
 border:1px solid rgba(255,255,255,.15);
-
 color:white;
-
 font-family:monospace;
-
 letter-spacing:2px;
-
 cursor:pointer;
-
 transition:.25s;
-
 }
 
 #send:hover{
-
 background:white;
 color:black;
-
 }
 
 @keyframes fade{
-
 from{
 opacity:0;
 transform:translateY(10px);
 }
-
 to{
 opacity:1;
 transform:translateY(0);
 }
-
 }
 
 </style>
@@ -276,16 +202,6 @@ return div;
 
 }
 
-add(
-"соединение установлено",
-"system"
-);
-
-add(
-"можешь задать вопрос",
-"bot"
-);
-
 let trust =
 parseInt(
 localStorage.getItem("invite_trust")
@@ -305,13 +221,31 @@ localStorage.setItem(
 visits
 );
 
+add(
+"соединение установлено",
+"system"
+);
+
 if(visits === 1){
+
+add(
+"можешь задать вопрос",
+"bot"
+);
 
 }
 else if(visits < 5){
 
 add(
 "ты уже был здесь",
+"bot"
+);
+
+}
+else if(visits < 10){
+
+add(
+"снова ты",
 "bot"
 );
 
@@ -324,6 +258,7 @@ add(
 );
 
 }
+
 const genericReplies = [
 
 "не уверен",
@@ -359,14 +294,101 @@ function getReply(text){
 const t =
 text.toLowerCase();
 
-if(t.includes("216"))
+const insults = [
+
+"нахуй",
+"хуй",
+"ебан",
+"сука",
+"долбоеб",
+"иди нах",
+"пошел"
+
+];
+
+for(let word of insults){
+
+if(t.includes(word)){
+
+trust--;
+
+localStorage.setItem(
+"invite_trust",
+trust
+);
+
+if(trust > -3)
+return "это не вопрос";
+
+if(trust > -6)
+return "соединение нестабильно";
+
+if(trust > -10)
+return "доступ ограничен";
+
+return "...";
+
+}
+
+}
+
+const goodWords = [
+
+"кто",
+"что",
+"почему",
+"как",
+"216",
+"гараж",
+"книга",
+"озарения",
+"сигнал",
+"наблюдение",
+"время"
+
+];
+
+for(let word of goodWords){
+
+if(t.includes(word)){
+
+trust++;
+
+localStorage.setItem(
+"invite_trust",
+trust
+);
+
+break;
+
+}
+
+}
+
+if(t.includes("216")){
+
+let count =
+parseInt(
+localStorage.getItem("216_count")
+|| "0"
+);
+
+count++;
+
+localStorage.setItem(
+"216_count",
+count
+);
+
+if(count > 15)
+return "оно не изменится";
+
+if(count > 10)
+return "хватит проверять число";
+
 return "встречается чаще, чем должно";
 
-if(t.includes("11"))
-return "совпадения интересуют меня";
-
-if(t.includes("22"))
-return "совпадения интересуют меня";
+}
 
 if(t.includes("гараж"))
 return "на записи кто-то стоял за камерой";
@@ -380,8 +402,30 @@ return "название не имеет значения";
 if(t.includes("тео"))
 return "доступ уже был получен";
 
-if(t.includes("мух"))
+if(t.includes("мух")){
+
+let flies =
+parseInt(
+localStorage.getItem("flies_count")
+|| "0"
+);
+
+flies++;
+
+localStorage.setItem(
+"flies_count",
+flies
+);
+
+if(flies > 8)
 return "МУХОГЕНОЦИД";
+
+if(flies > 4)
+return "не будем об этом";
+
+return "взаимодействие с мухами есть часть опыта";
+
+}
 
 if(
 t.includes("книга")
@@ -423,15 +467,29 @@ return "запись была удалена";
 
 }
 
-if(Math.random() > .96){
+if(trust > 8){
 
-return "[СООБЩЕНИЕ УТЕРЯНО]";
+const deeper = [
 
-}
+"ты задаешь правильные вопросы",
 
-if(Math.random() > .93){
+"оператора действительно не было",
 
-return "[АРХИВ ПОВРЕЖДЁН]";
+"архив постепенно восстанавливается",
+
+"запись существует",
+
+"ты уже близко",
+
+"не все посетители доходят сюда"
+
+];
+
+return deeper[
+Math.floor(
+Math.random()*deeper.length
+)
+];
 
 }
 
@@ -445,6 +503,18 @@ window.location.href =
 },1500);
 
 return "обнаружен адрес";
+
+}
+
+if(Math.random() > .96){
+
+return "[СООБЩЕНИЕ УТЕРЯНО]";
+
+}
+
+if(Math.random() > .93){
+
+return "[АРХИВ ПОВРЕЖДЁН]";
 
 }
 
