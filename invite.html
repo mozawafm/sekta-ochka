@@ -286,6 +286,44 @@ add(
 "bot"
 );
 
+let trust =
+parseInt(
+localStorage.getItem("invite_trust")
+|| "0"
+);
+
+let visits =
+parseInt(
+localStorage.getItem("invite_visits")
+|| "0"
+);
+
+visits++;
+
+localStorage.setItem(
+"invite_visits",
+visits
+);
+
+if(visits === 1){
+
+}
+else if(visits < 5){
+
+add(
+"ты уже был здесь",
+"bot"
+);
+
+}
+else{
+
+add(
+"наблюдение продолжается",
+"bot"
+);
+
+}
 const genericReplies = [
 
 "не уверен",
