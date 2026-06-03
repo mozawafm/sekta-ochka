@@ -19,7 +19,7 @@ position:absolute;
 width:100%;
 height:100%;
 background:url("garage.jpg") center center/cover no-repeat;
-filter:brightness(0.18) contrast(1.3) grayscale(.7);
+filter:brightness(.18) contrast(1.3) grayscale(.7);
 transform:scale(1.04);
 }
 
@@ -43,43 +43,103 @@ left:50%;
 transform:translateX(-50%);
 
 width:90%;
-max-width:800px;
+max-width:900px;
 
-height:calc(100vh - 120px);
+height:calc(100vh - 140px);
 
 overflow-y:auto;
 
-padding-bottom:120px;
+padding-right:10px;
+padding-bottom:20px;
+
+box-sizing:border-box;
 
 }
+
+/* СКРОЛЛБАР */
+
+#chat::-webkit-scrollbar{
+width:6px;
+}
+
+#chat::-webkit-scrollbar-track{
+background:transparent;
+}
+
+#chat::-webkit-scrollbar-thumb{
+background:rgba(255,255,255,.15);
+}
+
+#chat::-webkit-scrollbar-thumb:hover{
+background:rgba(255,255,255,.25);
+}
+
+/* СООБЩЕНИЯ */
 
 .msg{
 
-margin-bottom:16px;
-
 padding:14px;
-
-background:rgba(255,255,255,.04);
-
-border-left:1px solid rgba(255,255,255,.15);
+margin-bottom:14px;
 
 line-height:1.7;
 
-animation:fade .6s forwards;
+animation:fade .4s forwards;
+
+word-wrap:break-word;
 
 }
+
+/* БОТ */
+
+.bot{
+
+max-width:70%;
+
+background:rgba(255,255,255,.03);
+
+border-left:1px solid rgba(255,255,255,.15);
+
+margin-right:auto;
+
+}
+
+/* ПОЛЬЗОВАТЕЛЬ */
 
 .you{
 
-border-left:1px solid rgba(255,255,255,.45);
+max-width:70%;
+
+background:rgba(255,255,255,.08);
+
+border-right:1px solid rgba(255,255,255,.35);
+
+margin-left:auto;
+
+text-align:right;
 
 }
 
+/* СИСТЕМА */
+
 .system{
 
-opacity:.45;
+text-align:center;
 
-font-size:13px;
+opacity:.35;
+
+font-size:12px;
+
+letter-spacing:3px;
+
+background:none;
+
+}
+
+.typing{
+
+opacity:.35;
+
+font-style:italic;
 
 }
 
@@ -88,17 +148,17 @@ font-size:13px;
 position:fixed;
 
 bottom:20px;
-
 left:50%;
 
 transform:translateX(-50%);
 
 width:90%;
-max-width:800px;
+max-width:900px;
 
 display:flex;
-
 gap:10px;
+
+z-index:100;
 
 }
 
@@ -108,13 +168,15 @@ flex:1;
 
 background:black;
 
-border:1px solid rgba(255,255,255,.2);
+border:1px solid rgba(255,255,255,.15);
 
 color:white;
 
-padding:14px;
+padding:15px;
 
 font-family:monospace;
+
+font-size:14px;
 
 outline:none;
 
@@ -122,17 +184,21 @@ outline:none;
 
 #send{
 
-padding:14px 24px;
+width:140px;
 
 background:black;
 
-border:1px solid rgba(255,255,255,.2);
+border:1px solid rgba(255,255,255,.15);
 
 color:white;
 
 font-family:monospace;
 
+letter-spacing:2px;
+
 cursor:pointer;
+
+transition:.25s;
 
 }
 
@@ -147,10 +213,12 @@ color:black;
 
 from{
 opacity:0;
+transform:translateY(10px);
 }
 
 to{
 opacity:1;
+transform:translateY(0);
 }
 
 }
@@ -171,6 +239,7 @@ opacity:1;
 id="input"
 autocomplete="off"
 spellcheck="false"
+placeholder="введите сообщение"
 >
 
 <button id="send">
@@ -187,13 +256,13 @@ document.getElementById("chat");
 const input =
 document.getElementById("input");
 
-function add(text,type="msg"){
+function add(text,type){
 
 const div =
 document.createElement("div");
 
 div.className =
-type;
+"msg " + type;
 
 div.innerHTML =
 text;
@@ -203,136 +272,86 @@ chat.appendChild(div);
 chat.scrollTop =
 chat.scrollHeight;
 
+return div;
+
 }
 
 add(
 "соединение установлено",
-"msg system"
+"system"
 );
 
 add(
 "можешь задать вопрос",
-"msg"
+"bot"
 );
 
-const randomReplies = [
+const genericReplies = [
 
 "не уверен",
 
-"это уже происходило",
-
-"совпадение подтверждено",
-
 "наблюдение продолжается",
-
-"запись повреждена",
-
-"не все движения случайны",
-
-"ты видишь то, что можешь видеть",
-
-"оператора там не было",
-
-"мир не обязан соответствовать твоим представлениям",
-
-"ошибочный опыт тоже опыт",
 
 "данные неполные",
 
-"216",
+"совпадение подтверждено",
 
-"сигнал слабый",
+"не все движения случайны",
 
 "источник не найден",
 
+"оператора там не было",
+
 "архив открыт частично",
 
-"спокойствие требует меньше энергии"
+"сигнал слабый",
+
+"это уже происходило",
+
+"спокойствие требует меньше энергии",
+
+"216",
+
+"запись повреждена"
 
 ];
 
-function botReply(text){
+function getReply(text){
 
 const t =
 text.toLowerCase();
 
-if(
-t.includes("216")
-){
-
+if(t.includes("216"))
 return "встречается чаще, чем должно";
 
-}
-
-if(
-t.includes("11")
-||
-t.includes("22")
-){
-
+if(t.includes("11"))
 return "совпадения интересуют меня";
 
-}
+if(t.includes("22"))
+return "совпадения интересуют меня";
 
-if(
-t.includes("гараж")
-){
-
+if(t.includes("гараж"))
 return "на записи кто-то стоял за камерой";
 
-}
-
-if(
-t.includes("тео")
-){
-
-return "доступ уже был получен";
-
-}
-
-if(
-t.includes("кто ты")
-){
-
+if(t.includes("кто ты"))
 return "не уверен, что это важно";
 
-}
-
-if(
-t.includes("а4ко")
-){
-
+if(t.includes("а4ко"))
 return "название не имеет значения";
 
-}
+if(t.includes("тео"))
+return "доступ уже был получен";
 
-if(
-t.includes("мух")
-){
-
+if(t.includes("мух"))
 return "МУХОГЕНОЦИД";
-
-}
-
-if(
-t.includes("диджей")
-||
-
-t.includes("сн")
-){
-
-return "запись была удалена";
-
-}
 
 if(
 t.includes("книга")
 ||
-
 t.includes("озарения")
 ){
 
-const book = [
+const quotes = [
 
 "не для чего, а почему",
 
@@ -342,54 +361,65 @@ const book = [
 
 "самое главное это ничего",
 
-"люди разные. и я разный.",
+"гравитация есть время",
 
-"гравитация есть время"
+"люди разные. и я разный."
 
 ];
 
-return book[
+return quotes[
 Math.floor(
-Math.random()*book.length
+Math.random()*quotes.length
 )
 ];
 
 }
 
 if(
-Math.random() > 0.93
+t.includes("диджей")
+||
+t.includes("сн")
 ){
 
-window.location.href =
-"address.html";
+return "запись была удалена";
 
 }
 
-if(
-Math.random() > 0.90
-){
-
-return "[АРХИВ ПОВРЕЖДЁН]";
-
-}
-
-if(
-Math.random() > 0.87
-){
+if(Math.random() > .96){
 
 return "[СООБЩЕНИЕ УТЕРЯНО]";
 
 }
 
-return randomReplies[
+if(Math.random() > .93){
+
+return "[АРХИВ ПОВРЕЖДЁН]";
+
+}
+
+if(Math.random() > .985){
+
+setTimeout(()=>{
+
+window.location.href =
+"address.html";
+
+},1500);
+
+return "обнаружен адрес";
+
+}
+
+return genericReplies[
 Math.floor(
-Math.random()*randomReplies.length
+Math.random()*
+genericReplies.length
 )
 ];
 
 }
 
-function send(){
+function sendMessage(){
 
 const value =
 input.value.trim();
@@ -398,32 +428,44 @@ if(!value) return;
 
 add(
 value,
-"msg you"
+"you"
 );
 
 input.value = "";
 
-setTimeout(()=>{
-
+const typing =
 add(
-botReply(value),
-"msg"
+"...",
+"bot typing"
 );
 
-},600);
+setTimeout(()=>{
+
+typing.remove();
+
+add(
+getReply(value),
+"bot"
+);
+
+},500 + Math.random()*1500);
 
 }
 
 document
 .getElementById("send")
-.onclick = send;
+.onclick =
+sendMessage;
 
 input.addEventListener(
 "keydown",
 e=>{
 
-if(e.key==="Enter")
-send();
+if(e.key==="Enter"){
+
+sendMessage();
+
+}
 
 }
 );
