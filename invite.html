@@ -20,7 +20,7 @@ body {
     background: url("garage.jpg") center center/cover no-repeat;
     filter: brightness(0.18) contrast(1.3) grayscale(0.7);
     transform: scale(1.04);
-    transition: filter 0.3s;
+    transition: all 0.05s;
 }
 
 #noise {
@@ -31,7 +31,7 @@ body {
     opacity: 0.05;
     mix-blend-mode: screen;
     pointer-events: none;
-    transition: opacity 0.1s;
+    transition: opacity 0.05s;
 }
 
 #chat {
@@ -58,7 +58,6 @@ body {
     line-height: 1.7;
     animation: fade 0.4s forwards;
     word-wrap: break-word;
-    transition: all 0.2s;
 }
 
 .bot {
@@ -88,41 +87,16 @@ body {
     text-align: center;
     margin: 20px 0;
     padding: 15px;
-    background: rgba(0,0,0,0.6);
-    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(0,0,0,0.8);
+    border: 1px solid rgba(255,255,255,0.4);
     cursor: pointer;
     transition: 0.2s;
+    font-weight: bold;
 }
 
 .choice:hover {
     background: white;
     color: black;
-}
-
-.glow {
-    animation: glow 0.5s ease-out;
-}
-
-.shake {
-    animation: shake 0.2s ease-in-out 0s 2;
-}
-
-@keyframes fade {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes glow {
-    0% { text-shadow: 0 0 0 red; }
-    50% { text-shadow: 0 0 20px red; }
-    100% { text-shadow: 0 0 0 red; }
-}
-
-@keyframes shake {
-    0% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    75% { transform: translateX(5px); }
-    100% { transform: translateX(0); }
 }
 
 #inputWrap {
@@ -167,24 +141,54 @@ body {
     position: fixed;
     top: 10px;
     right: 10px;
-    font-size: 9px;
-    opacity: 0.2;
+    font-size: 10px;
+    opacity: 0.4;
     z-index: 100;
     text-align: right;
     font-family: monospace;
+    background: rgba(0,0,0,0.5);
+    padding: 5px 10px;
+    border-radius: 5px;
 }
 
-.glitch-overlay {
+@keyframes fade {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shake {
+    0% { transform: translate(0, 0); }
+    25% { transform: translate(-8px, 2px); }
+    75% { transform: translate(8px, -2px); }
+    100% { transform: translate(0, 0); }
+}
+
+.shake-global {
+    animation: shake 0.15s ease-in-out 0s 3;
+}
+
+.glitch-flash {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(255,0,0,0.1);
+    background: white;
+    z-index: 9999;
     pointer-events: none;
-    z-index: 999;
     opacity: 0;
-    transition: opacity 0.05s;
+}
+
+.glitch-red {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: red;
+    z-index: 9998;
+    pointer-events: none;
+    opacity: 0;
 }
 </style>
 </head>
@@ -194,14 +198,16 @@ body {
 <div id="noise"></div>
 <div id="chat"></div>
 <div id="stats">
-    👁️ доверие: <span id="trustVal">0</span><br>
-    📼 визитов: <span id="visitsVal">0</span>
+    👁️ ДОВЕРИЕ: <span id="trustVal">0</span> &nbsp;|&nbsp;
+    📼 ВИЗИТОВ: <span id="visitsVal">0</span> &nbsp;|&nbsp;
+    ⚡ ГЛЮКОВ: <span id="glitchVal">0</span>
 </div>
 <div id="inputWrap">
     <input id="input" autocomplete="off" spellcheck="false" placeholder="введите сообщение">
     <button id="send">ОТПРАВИТЬ</button>
 </div>
-<div id="glitch" class="glitch-overlay"></div>
+<div id="glitchFlash" class="glitch-flash"></div>
+<div id="glitchRed" class="glitch-red"></div>
 
 <script>
 // ============================================
@@ -209,48 +215,37 @@ body {
 // ============================================
 const chat = document.getElementById("chat");
 const input = document.getElementById("input");
-const glitchOverlay = document.getElementById("glitch");
+const glitchFlash = document.getElementById("glitchFlash");
+const glitchRed = document.getElementById("glitchRed");
 
-let trust = parseInt(localStorage.getItem("invite_trust") || "5");
+let trust = parseInt(localStorage.getItem("invite_trust") || "3");
 let visits = parseInt(localStorage.getItem("invite_visits") || "0");
 let glitchCount = parseInt(localStorage.getItem("glitch_count") || "0");
-let secretUnlocked = localStorage.getItem("secret_unlocked") === "true";
 
 visits++;
 localStorage.setItem("invite_visits", visits);
+
 document.getElementById("trustVal").innerText = trust;
 document.getElementById("visitsVal").innerText = visits;
-
-// Время суток
-const hour = new Date().getHours();
-let timeOfDay = "day";
-if (hour < 6 || hour > 22) timeOfDay = "night";
-else if (hour < 12) timeOfDay = "morning";
-else if (hour < 18) timeOfDay = "day";
-else timeOfDay = "evening";
+document.getElementById("glitchVal").innerText = glitchCount;
 
 // ============================================
-// ВИЗУАЛЬНЫЕ ЭФФЕКТЫ
+// ВИЗУАЛЬНЫЕ ГЛЮКИ (ЗАМЕТНЫЕ!)
 // ============================================
-function addGlitch() {
-    glitchOverlay.style.opacity = "0.3";
-    setTimeout(() => { glitchOverlay.style.opacity = "0"; }, 100);
-    glitchCount++;
-    localStorage.setItem("glitch_count", glitchCount);
-    
-    if (glitchCount > 15 && !secretUnlocked) {
-        secretUnlocked = true;
-        localStorage.setItem("secret_unlocked", "true");
-        addMessage("[АРХИВ РАЗБЛОКИРОВАН]", "system");
-        setTimeout(() => {
-            addMessage("ты видел больше, чем должен", "bot");
-        }, 2000);
-    }
+
+function glitchWhite() {
+    glitchFlash.style.opacity = "0.8";
+    setTimeout(() => { glitchFlash.style.opacity = "0"; }, 80);
 }
 
-function addShake() {
-    document.body.classList.add("shake");
-    setTimeout(() => { document.body.classList.remove("shake"); }, 400);
+function glitchRedFull() {
+    glitchRed.style.opacity = "0.6";
+    setTimeout(() => { glitchRed.style.opacity = "0"; }, 120);
+}
+
+function shakeScreen() {
+    document.body.classList.add("shake-global");
+    setTimeout(() => { document.body.classList.remove("shake-global"); }, 450);
 }
 
 function noiseBlast() {
@@ -259,109 +254,83 @@ function noiseBlast() {
     setTimeout(() => { noise.style.opacity = "0.05"; }, 200);
 }
 
-function flashRed() {
-    const bg = document.getElementById("bg");
-    bg.style.filter = "brightness(0.4) contrast(1.5) grayscale(0.5) sepia(0.5)";
-    setTimeout(() => {
-        bg.style.filter = "brightness(0.18) contrast(1.3) grayscale(0.7)";
-    }, 150);
+function glitchComplex() {
+    glitchWhite();
+    shakeScreen();
+    noiseBlast();
+    
+    glitchCount++;
+    localStorage.setItem("glitch_count", glitchCount);
+    document.getElementById("glitchVal").innerText = glitchCount;
+    
+    // При 5 глюках — повышаем доверие
+    if (glitchCount === 5) {
+        addMessage("[СИСТЕМА НЕСТАБИЛЬНА]", "system");
+        trust += 3;
+        localStorage.setItem("invite_trust", trust);
+        document.getElementById("trustVal").innerText = trust;
+    }
+    
+    // При 10 глюках — секрет
+    if (glitchCount === 10) {
+        addMessage("[АРХИВ ПОВРЕЖДЁН... ВОССТАНОВЛЕНИЕ...]", "system");
+        addMessage("ты вызвал слишком много глюков. система тебя запомнила.", "bot");
+    }
 }
 
 // ============================================
-// ОСНОВНЫЕ ФУНКЦИИ
-// ============================================
-function addMessage(text, type) {
-    const div = document.createElement("div");
-    div.className = "msg " + type;
-    div.innerHTML = text;
-    chat.appendChild(div);
-    chat.scrollTop = chat.scrollHeight;
-    return div;
-}
-
-function addChoice(option1, option2, callback1, callback2) {
-    const wrapper = document.createElement("div");
-    wrapper.className = "system";
-    wrapper.style.margin = "20px 0";
-    
-    const btn1 = document.createElement("div");
-    btn1.className = "choice";
-    btn1.innerText = option1;
-    btn1.onclick = () => { wrapper.remove(); callback1(); };
-    
-    const btn2 = document.createElement("div");
-    btn2.className = "choice";
-    btn2.innerText = option2;
-    btn2.onclick = () => { wrapper.remove(); callback2(); };
-    
-    wrapper.appendChild(btn1);
-    wrapper.appendChild(btn2);
-    chat.appendChild(wrapper);
-    chat.scrollTop = chat.scrollHeight;
-}
-
-// ============================================
-// СЕКРЕТНЫЕ СЛОВА (40+ пасхалок)
+// СЕКРЕТНЫЕ СЛОВА
 // ============================================
 function getSecretReply(msg) {
     const t = msg.toLowerCase().trim();
     
-    // Явные команды
     if (t === "help" || t === "помощь") {
-        return "🔮 секретные слова: свет, тьма, зеркало, дверь, время, имя, сон, дождь, огонь, тишина, код, архив, помню, забудь, открой, закрой, кто ты, где я, почему, страшно, trust, глюк, мухи, 216, книга, озарение, гараж, а4ко, тео, диджей, сн";
+        return "🔮 секретные слова: глюк, свет, тьма, зеркало, дверь, время, имя, огонь, код, архив, открой, 216, мухи, книга";
     }
     
-    // Пасхалки
+    if (t.includes("глюк")) {
+        glitchComplex();
+        return "система дрожит. ты это видишь?";
+    }
+    
     if (t.includes("свет")) { trust++; return "его здесь никогда не было. или ты принёс его с собой?"; }
     if (t.includes("тьма")) return "она всегда была. и всегда будет. ты это чувствуешь?";
-    if (t.includes("зеркало")) { addGlitch(); return "посмотри на себя. узнаёшь? я не уверен, что это ты."; }
-    if (t.includes("дверь")) return trust > 8 ? "заперта. но ты знаешь код. 216." : "заперта. и не откроется. пока не наберёшь доверие.";
-    if (t.includes("время")) { noiseBlast(); return "оно идёт не так, как ты думаешь. проверь часы. они врут."; }
+    if (t.includes("зеркало")) { glitchWhite(); return "посмотри на себя. узнаёшь? я не уверен, что это ты."; }
+    if (t.includes("дверь")) return trust > 6 ? "заперта. но ты знаешь код. 216." : "заперта. и не откроется.";
+    if (t.includes("время")) { noiseBlast(); return "оно идёт не так, как ты думаешь."; }
     if (t.includes("имя")) {
-        const names = ["никто", "сигнал", "архив", "наблюдатель", "пустота", "отражение", "шум"];
-        return `твоё настоящее имя? ${names[Math.floor(Math.random() * names.length)]}. или нет. я точно не помню.`;
+        const names = ["никто", "сигнал", "архив", "наблюдатель", "пустота"];
+        return `твоё настоящее имя? ${names[Math.floor(Math.random() * names.length)]}. я точно не помню.`;
     }
-    if (t.includes("сон")) return trust > 6 ? "ты спишь. или нет. разница невелика." : "проснись. или не надо.";
-    if (t.includes("дождь")) return trust > 5 ? "за окном дождь. хотя окна нет. странно." : "я слышу капли. а ты?";
-    if (t.includes("огонь")) { flashRed(); return "не играй с огнём. здесь и так слишком жарко."; }
-    if (t.includes("тишина")) return "слышишь? она говорит громче слов.";
-    if (t.includes("код")) return `код? 216. или 666. или 0. попробуй все.`;
-    if (t.includes("архив")) return secretUnlocked ? "архив открыт. ты готов увидеть?" : "доступ закрыт. приходи ещё.";
-    if (t.includes("помню")) { trust += 2; return "помнишь? я тоже кое-что помню. но не скажу."; }
-    if (t.includes("забудь")) { trust -= 2; return "слишком поздно забывать. ты уже здесь."; }
-    if (t.includes("открой") && trust > 10) { setTimeout(() => { window.location.href = "secret.html"; }, 1500); return "открываю..."; }
-    if (t.includes("кто ты")) return trust > 7 ? "я тот, кто смотрит. всегда. даже когда ты не смотришь." : "не уверен, что это важно.";
-    if (t.includes("где я")) return "хороший вопрос. я бы и сам хотел знать.";
-    if (t.includes("почему")) return trust > 9 ? "потому что так надо. или не надо. это не важно." : "почему? почему нет?";
-    if (t.includes("страшно")) { addGlitch(); noiseBlast(); return "страх — это нормально. страх — это сигнал."; }
-    if (t.includes("глюк")) { addGlitch(); addShake(); return "система нестабильна. или это только тебе кажется?"; }
+    if (t.includes("огонь")) { glitchRedFull(); return "не играй с огнём. здесь и так слишком жарко."; }
+    if (t.includes("код")) return `код? 216. попробуй.`;
+    if (t.includes("архив")) return glitchCount > 8 ? "архив открыт. ты готов?" : "доступ закрыт. нужно больше глюков.";
+    if (t.includes("открой") && trust > 8) { 
+        setTimeout(() => { window.location.href = "secret.html"; }, 1500); 
+        return "открываю..."; 
+    }
     
-    // Существующие
     if (t.includes("216")) {
         let count = parseInt(localStorage.getItem("216_count") || "0");
         count++;
         localStorage.setItem("216_count", count);
-        if (count > 15) return "оно не изменится. сколько бы ты ни проверял.";
-        if (count > 10) return "хватит проверять число. оно не сбежит.";
-        return "встречается чаще, чем должно. совпадение?";
+        if (count > 10) return "хватит проверять число.";
+        return "встречается чаще, чем должно.";
     }
-    if (t.includes("гараж")) return "на записи кто-то стоял за камерой. ты его не видел?";
+    if (t.includes("гараж")) return "на записи кто-то стоял за камерой.";
     if (t.includes("мух")) {
         let flies = parseInt(localStorage.getItem("flies_count") || "0");
         flies++;
         localStorage.setItem("flies_count", flies);
-        if (flies > 8) { addGlitch(); return "МУХОГЕНОЦИД. система перегружена."; }
-        if (flies > 4) return "не будем об этом. мухи — не главное.";
-        return "взаимодействие с мухами есть часть опыта. странного опыта.";
+        if (flies > 8) return "МУХОГЕНОЦИД.";
+        return "взаимодействие с мухами есть часть опыта.";
     }
     if (t.includes("книга") || t.includes("озарения")) {
         const quotes = [
             "не для чего, а почему",
             "все случайности имеют значение",
             "человек видит то, что может видеть",
-            "самое главное это ничего",
-            "гравитация есть время",
-            "люди разные. и я разный."
+            "самое главное это ничего"
         ];
         return quotes[Math.floor(Math.random() * quotes.length)];
     }
@@ -370,101 +339,89 @@ function getSecretReply(msg) {
 }
 
 // ============================================
-// ОСНОВНОЙ ОТВЕТ
+// ВЫБОР С ПОСЛЕДСТВИЯМИ
 // ============================================
-function getReply(msg) {
-    const t = msg.toLowerCase().trim();
+let choiceActive = false;
+
+function showChoice() {
+    if (choiceActive) return;
+    choiceActive = true;
     
-    // Секретные слова
-    const secret = getSecretReply(msg);
-    if (secret) return secret;
+    const wrapper = document.createElement("div");
+    wrapper.className = "system";
+    wrapper.style.margin = "20px 0";
+    wrapper.style.borderTop = "1px solid rgba(255,255,255,0.2)";
+    wrapper.style.paddingTop = "15px";
     
-    // Режимы времени суток
-    if (timeOfDay === "night" && Math.random() > 0.7) {
-        addGlitch();
-        return "ты не должен быть здесь в такое время. ничего хорошего это не сулит.";
-    }
-    if (timeOfDay === "morning" && Math.random() > 0.8) {
-        return "утро. ты проснулся? или всё ещё спишь?";
-    }
+    const text = document.createElement("div");
+    text.style.textAlign = "center";
+    text.style.marginBottom = "15px";
+    text.style.opacity = "0.7";
+    text.innerText = "══ СИСТЕМНЫЙ ЗАПРОС ══";
+    wrapper.appendChild(text);
     
-    // Случайные редкие события
-    if (Math.random() > 0.97) {
-        addGlitch();
-        noiseBlast();
-        return "[СИГНАЛ ПРЕРВАН]";
-    }
-    if (Math.random() > 0.96) {
-        addShake();
-        return "[АРХИВ ПОВРЕЖДЁН]";
-    }
-    if (Math.random() > 0.98) {
-        setTimeout(() => { window.location.href = "address.html"; }, 1500);
-        return "обнаружен адрес. перенаправление...";
-    }
+    const btn1 = document.createElement("div");
+    btn1.className = "choice";
+    btn1.innerText = "🔓 ОТКРЫТЬ АРХИВ";
+    btn1.onclick = () => {
+        wrapper.remove();
+        addMessage("ты открыл архив. назад дороги нет.", "system");
+        glitchComplex();
+        setTimeout(() => { window.location.href = "secret.html"; }, 1500);
+    };
     
-    // Выбор с последствиями при высоком доверии
-    if (trust > 12 && Math.random() > 0.7 && !window.choiceActive) {
-        window.choiceActive = true;
-        addChoice(
-            "ОТКРЫТЬ АРХИВ",
-            "ОСТАВИТЬ ЗАКРЫТЫМ",
-            () => {
-                addMessage("ты открыл архив. назад дороги нет.", "system");
-                setTimeout(() => { window.location.href = "secret.html"; }, 1500);
-            },
-            () => {
-                addMessage("архив остался закрыт. но ты будешь думать о нём.", "system");
-                trust -= 2;
-                localStorage.setItem("invite_trust", trust);
-                window.choiceActive = false;
-            }
-        );
-        return "перед тобой выбор. сделай его.";
-    }
+    const btn2 = document.createElement("div");
+    btn2.className = "choice";
+    btn2.innerText = "🚪 ОСТАВИТЬ ЗАКРЫТЫМ";
+    btn2.onclick = () => {
+        wrapper.remove();
+        addMessage("архив остался закрыт. но ты будешь думать о нём.", "system");
+        trust -= 2;
+        localStorage.setItem("invite_trust", trust);
+        document.getElementById("trustVal").innerText = trust;
+        choiceActive = false;
+    };
     
-    // Основные фразы в зависимости от доверия
-    const lowTrust = [
-        "я тебе не доверяю",
-        "слишком много вопросов",
-        "наблюдение продолжается",
-        "сигнал слабый"
-    ];
-    
-    const midTrust = [
-        "не уверен, что могу ответить",
-        "данные неполные",
-        "источник не найден",
-        "совпадение подтверждено"
-    ];
-    
-    const highTrust = [
-        "ты задаёшь правильные вопросы",
-        "оператора действительно не было",
-        "архив постепенно восстанавливается",
-        "запись существует",
-        "ты уже близко"
-    ];
-    
-    const veryHighTrust = [
-        "не все посетители доходят сюда",
-        "ты особенный. или нет. проверка показала ошибку.",
-        "скоро ты узнаешь правду. или то, что за неё выдадут.",
-        "доверие растёт. но осторожно — это может быть ловушкой.",
-        "почти. ещё немного."
-    ];
-    
-    if (trust > 15) {
-        if (Math.random() > 0.5) return veryHighTrust[Math.floor(Math.random() * veryHighTrust.length)];
-        else return highTrust[Math.floor(Math.random() * highTrust.length)];
-    }
-    if (trust > 8) return highTrust[Math.floor(Math.random() * highTrust.length)];
-    if (trust > 3) return midTrust[Math.floor(Math.random() * midTrust.length)];
-    return lowTrust[Math.floor(Math.random() * lowTrust.length)];
+    wrapper.appendChild(btn1);
+    wrapper.appendChild(btn2);
+    chat.appendChild(wrapper);
+    chat.scrollTop = chat.scrollHeight;
 }
 
 // ============================================
-// ОТПРАВКА И СТАРТ
+// ОСНОВНОЙ ОТВЕТ
+// ============================================
+function getReply(msg) {
+    const secret = getSecretReply(msg);
+    if (secret) return secret;
+    
+    // Выбор при доверии > 7 (теперь появляется часто!)
+    if (trust > 7 && !choiceActive && Math.random() > 0.6 && visits > 1) {
+        showChoice();
+        return "перед тобой выбор. система ждёт.";
+    }
+    
+    // Редкие глюки случайно
+    if (Math.random() > 0.88) {
+        glitchComplex();
+        return "[СИГНАЛ ПРЕРВАН]";
+    }
+    
+    // Фразы в зависимости от доверия
+    if (trust > 12) {
+        const high = ["ты уже близко", "почти. ещё немного.", "архив восстанавливается", "не все доходят сюда"];
+        return high[Math.floor(Math.random() * high.length)];
+    }
+    if (trust > 6) {
+        const mid = ["наблюдение продолжается", "совпадение подтверждено", "сигнал стабилен", "данные неполные"];
+        return mid[Math.floor(Math.random() * mid.length)];
+    }
+    const low = ["не уверен", "сигнал слабый", "запись повреждена", "источник не найден"];
+    return low[Math.floor(Math.random() * low.length)];
+}
+
+// ============================================
+// ОТПРАВКА
 // ============================================
 function sendMessage() {
     const value = input.value.trim();
@@ -476,43 +433,40 @@ function sendMessage() {
     setTimeout(() => {
         let reply = getReply(value);
         
-        // Обновляем доверие в зависимости от ответа
-        if (reply.includes("доверяю") || reply.includes("правильные")) trust += 2;
-        if (reply.includes("доверяю") === false && reply.length < 15 && Math.random() > 0.7) trust -= 1;
+        // Обновляем доверие
+        if (reply.includes("близко") || reply.includes("правильные")) trust += 2;
+        if (reply.includes("слабый")) trust -= 1;
         if (trust < 0) trust = 0;
         if (trust > 20) trust = 20;
         localStorage.setItem("invite_trust", trust);
         document.getElementById("trustVal").innerText = trust;
         
         addMessage(reply, "bot");
-        
-        // Редкий глюк после ответа
-        if (Math.random() > 0.92) addGlitch();
-        if (Math.random() > 0.95) addShake();
-    }, 400 + Math.random() * 1000);
+    }, 500 + Math.random() * 800);
+}
+
+function addMessage(text, type) {
+    const div = document.createElement("div");
+    div.className = "msg " + type;
+    div.innerHTML = text;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+    return div;
 }
 
 function start() {
-    let greeting = "соединение установлено";
-    if (visits === 1) greeting = "соединение установлено. первый визит.";
-    else if (visits > 20) greeting = "соединение установлено. ты слишком часто здесь. это опасно.";
-    else if (visits > 10) greeting = "соединение установлено. снова ты.";
-    addMessage(greeting, "system");
+    addMessage("соединение установлено", "system");
     
-    if (timeOfDay === "night") addMessage("ночной режим. будь осторожен.", "system");
-    if (visits === 3) addMessage("третий визит. система начинает тебя запоминать.", "system");
-    if (visits === 7) addMessage("седьмой визит. удачи.", "system");
-    if (visits === 13) addMessage("тринадцатый. число не простое.", "system");
+    if (visits === 1) addMessage("можешь задать вопрос", "bot");
+    else if (visits > 10) addMessage("снова ты. система устала.", "bot");
+    else addMessage("я тебя помню", "bot");
     
-    if (trust > 5) addMessage("ты мне нравишься. или нет. проверка показала ошибку.", "bot");
-    else addMessage("наблюдение продолжается", "bot");
+    if (glitchCount > 5) addMessage("⚠️ нестабильность зафиксирована", "system");
     
-    // Персонализированное приветствие
-    if (visits > 1 && trust > 5) {
-        setTimeout(() => {
-            addMessage("я тебя помню. это важно? не уверен.", "bot");
-        }, 2000);
-    }
+    // Подсказка
+    setTimeout(() => {
+        addMessage("напиши 'помощь' чтобы увидеть секретные слова", "system");
+    }, 3000);
 }
 
 document.getElementById("send").onclick = sendMessage;
