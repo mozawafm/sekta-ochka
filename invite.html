@@ -2,585 +2,539 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>invite</title>
+<title>invite • сигнал [HF AI]</title>
 
 <style>
-
-body{
-margin:0;
-overflow:hidden;
-background:black;
-color:white;
-font-family:monospace;
+body {
+    margin: 0;
+    overflow: hidden;
+    background: black;
+    color: white;
+    font-family: monospace;
 }
 
-#bg{
-position:absolute;
-width:100%;
-height:100%;
-background:url("garage.jpg") center center/cover no-repeat;
-filter:brightness(.18) contrast(1.3) grayscale(.7);
-transform:scale(1.04);
+#bg {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: url("garage.jpg") center center/cover no-repeat;
+    filter: brightness(0.18) contrast(1.3) grayscale(0.7);
+    transform: scale(1.04);
 }
 
-#noise{
-position:absolute;
-width:100%;
-height:100%;
-background-image:url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
-opacity:.05;
-mix-blend-mode:screen;
-pointer-events:none;
+#noise {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-image: url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
+    opacity: 0.05;
+    mix-blend-mode: screen;
+    pointer-events: none;
 }
 
-#chat{
-position:absolute;
-top:20px;
-left:50%;
-transform:translateX(-50%);
-width:90%;
-max-width:900px;
-height:calc(100vh - 140px);
-overflow-y:auto;
-padding-right:10px;
-padding-bottom:20px;
-box-sizing:border-box;
+#chat {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 900px;
+    height: calc(100vh - 140px);
+    overflow-y: auto;
+    padding-right: 10px;
+    padding-bottom: 20px;
+    box-sizing: border-box;
 }
 
-#chat::-webkit-scrollbar{
-width:6px;
+#chat::-webkit-scrollbar {
+    width: 6px;
+}
+#chat::-webkit-scrollbar-track {
+    background: transparent;
+}
+#chat::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.15);
+}
+#chat::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,0.25);
 }
 
-#chat::-webkit-scrollbar-track{
-background:transparent;
+.msg {
+    padding: 14px;
+    margin-bottom: 14px;
+    line-height: 1.7;
+    animation: fade 0.4s forwards;
+    word-wrap: break-word;
 }
 
-#chat::-webkit-scrollbar-thumb{
-background:rgba(255,255,255,.15);
+.bot {
+    max-width: 70%;
+    background: rgba(255,255,255,0.03);
+    border-left: 1px solid rgba(255,255,255,0.15);
+    margin-right: auto;
 }
 
-#chat::-webkit-scrollbar-thumb:hover{
-background:rgba(255,255,255,.25);
+.you {
+    max-width: 70%;
+    background: rgba(255,255,255,0.08);
+    border-right: 1px solid rgba(255,255,255,0.35);
+    margin-left: auto;
+    text-align: right;
 }
 
-.msg{
-padding:14px;
-margin-bottom:14px;
-line-height:1.7;
-animation:fade .4s forwards;
-word-wrap:break-word;
+.system {
+    text-align: center;
+    opacity: 0.35;
+    font-size: 12px;
+    letter-spacing: 3px;
+    background: none;
 }
 
-.bot{
-max-width:70%;
-background:rgba(255,255,255,.03);
-border-left:1px solid rgba(255,255,255,.15);
-margin-right:auto;
+.typing {
+    opacity: 0.35;
+    font-style: italic;
 }
 
-.you{
-max-width:70%;
-background:rgba(255,255,255,.08);
-border-right:1px solid rgba(255,255,255,.35);
-margin-left:auto;
-text-align:right;
+#inputWrap {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 900px;
+    display: flex;
+    gap: 10px;
+    z-index: 100;
 }
 
-.system{
-text-align:center;
-opacity:.35;
-font-size:12px;
-letter-spacing:3px;
-background:none;
+#input {
+    flex: 1;
+    background: black;
+    border: 1px solid rgba(255,255,255,0.15);
+    color: white;
+    padding: 15px;
+    font-family: monospace;
+    font-size: 14px;
+    outline: none;
 }
 
-.typing{
-opacity:.35;
-font-style:italic;
+#input:focus {
+    border-color: rgba(255,255,255,0.4);
 }
 
-#inputWrap{
-position:fixed;
-bottom:20px;
-left:50%;
-transform:translateX(-50%);
-width:90%;
-max-width:900px;
-display:flex;
-gap:10px;
-z-index:100;
+#send {
+    width: 140px;
+    background: black;
+    border: 1px solid rgba(255,255,255,0.15);
+    color: white;
+    font-family: monospace;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: 0.25s;
 }
 
-#input{
-flex:1;
-background:black;
-border:1px solid rgba(255,255,255,.15);
-color:white;
-padding:15px;
-font-family:monospace;
-font-size:14px;
-outline:none;
+#send:hover {
+    background: white;
+    color: black;
 }
 
-#send{
-width:140px;
-background:black;
-border:1px solid rgba(255,255,255,.15);
-color:white;
-font-family:monospace;
-letter-spacing:2px;
-cursor:pointer;
-transition:.25s;
+#aiStatus {
+    position: fixed;
+    bottom: 15px;
+    right: 15px;
+    font-size: 10px;
+    opacity: 0.3;
+    z-index: 100;
+    background: black;
+    padding: 4px 8px;
+    border-radius: 4px;
 }
 
-#send:hover{
-background:white;
-color:black;
+@keyframes fade {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
-
-@keyframes fade{
-from{
-opacity:0;
-transform:translateY(10px);
-}
-to{
-opacity:1;
-transform:translateY(0);
-}
-}
-
 </style>
 </head>
-
 <body>
 
 <div id="bg"></div>
 <div id="noise"></div>
-
 <div id="chat"></div>
-
 <div id="inputWrap">
-
-<input
-id="input"
-autocomplete="off"
-spellcheck="false"
-placeholder="введите сообщение"
->
-
-<button id="send">
-ОТПРАВИТЬ
-</button>
-
+    <input id="input" autocomplete="off" spellcheck="false" placeholder="введите сообщение">
+    <button id="send">ОТПРАВИТЬ</button>
 </div>
+<div id="aiStatus">🤖 HF: загрузка...</div>
 
 <script>
+// ============================================
+// ⚠️ ВАЖНО: ЗАМЕНИТЕ ЭТОТ ТОКЕН НА СВОЙ!
+// ============================================
+// Инструкция: https://huggingface.co/settings/tokens
+const HF_API_TOKEN = 'hf_xxxxxxxxxxxxxxxxxxxxxxxxx'; // <- ВСТАВЬ СВОЙ ТОКЕН СЮДА
+const HF_MODEL = 'microsoft/DialoGPT-medium'; // Модель для диалогов
 
-const chat =
-document.getElementById("chat");
+// ============================================
+// ИНИЦИАЛИЗАЦИЯ
+// ============================================
+const chat = document.getElementById("chat");
+const input = document.getElementById("input");
+const aiStatus = document.getElementById("aiStatus");
 
-const input =
-document.getElementById("input");
-
-function add(text,type){
-
-const div =
-document.createElement("div");
-
-div.className =
-"msg " + type;
-
-div.innerHTML =
-text;
-
-chat.appendChild(div);
-
-chat.scrollTop =
-chat.scrollHeight;
-
-return div;
-
-}
-
-let trust =
-parseInt(
-localStorage.getItem("invite_trust")
-|| "0"
-);
-
-let visits =
-parseInt(
-localStorage.getItem("invite_visits")
-|| "0"
-);
-
+// Состояние из localStorage
+let trust = parseInt(localStorage.getItem("invite_trust") || "0");
+let visits = parseInt(localStorage.getItem("invite_visits") || "0");
 visits++;
+localStorage.setItem("invite_visits", visits);
 
-localStorage.setItem(
-"invite_visits",
-visits
-);
+// История сообщений (для контекста диалога)
+let conversationHistory = [];
 
-add(
-"соединение установлено",
-"system"
-);
+// ============================================
+// ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+// ============================================
 
-if(visits === 1){
-
-add(
-"можешь задать вопрос",
-"bot"
-);
-
-}
-else if(visits < 5){
-
-add(
-"ты уже был здесь",
-"bot"
-);
-
-}
-else if(visits < 10){
-
-add(
-"снова ты",
-"bot"
-);
-
-}
-else{
-
-add(
-"наблюдение продолжается",
-"bot"
-);
-
+function addMessage(text, type) {
+    const div = document.createElement("div");
+    div.className = "msg " + type;
+    div.innerHTML = text.replace(/\n/g, '<br>');
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+    return div;
 }
 
-const genericReplies = [
+// Анимация печати
+async function animateTyping(element, text, delay = 25) {
+    element.innerHTML = '';
+    for (let i = 0; i < text.length; i++) {
+        element.innerHTML += text[i];
+        await new Promise(r => setTimeout(r, delay));
+        chat.scrollTop = chat.scrollHeight;
+    }
+}
 
-"не уверен",
+// ============================================
+// ЛОКАЛЬНЫЕ ОТВЕТЫ (специальные триггеры)
+// ============================================
 
-"наблюдение продолжается",
+function getLocalReply(userMessage) {
+    const t = userMessage.toLowerCase().trim();
+    
+    // Число 216
+    if (t.includes("216")) {
+        let count = parseInt(localStorage.getItem("216_count") || "0");
+        count++;
+        localStorage.setItem("216_count", count);
+        if (count > 15) return "оно не изменится";
+        if (count > 10) return "хватит проверять число";
+        return "встречается чаще, чем должно";
+    }
+    
+    // Гараж
+    if (t.includes("гараж")) return "на записи кто-то стоял за камерой";
+    
+    // Кто ты
+    if (t.includes("кто ты")) return "не уверен, что это важно";
+    
+    // Название
+    if (t.includes("а4ко")) return "название не имеет значения";
+    if (t.includes("тео")) return "доступ уже был получен";
+    
+    // Мухи
+    if (t.includes("мух")) {
+        let flies = parseInt(localStorage.getItem("flies_count") || "0");
+        flies++;
+        localStorage.setItem("flies_count", flies);
+        if (flies > 8) return "МУХОГЕНОЦИД";
+        if (flies > 4) return "не будем об этом";
+        return "взаимодействие с мухами есть часть опыта";
+    }
+    
+    // Книга озарения
+    if (t.includes("книга") || t.includes("озарения")) {
+        const quotes = [
+            "не для чего, а почему",
+            "все случайности имеют значение",
+            "человек видит то, что может видеть",
+            "самое главное это ничего",
+            "гравитация есть время",
+            "люди разные. и я разный."
+        ];
+        return quotes[Math.floor(Math.random() * quotes.length)];
+    }
+    
+    // Диджей/СН
+    if (t.includes("диджей") || t.includes("сн")) {
+        return "запись была удалена";
+    }
+    
+    // Редкие события
+    if (Math.random() > 0.985) {
+        setTimeout(() => {
+            window.location.href = "address.html";
+        }, 1500);
+        return "обнаружен адрес";
+    }
+    
+    if (Math.random() > 0.96) return "[СООБЩЕНИЕ УТЕРЯНО]";
+    if (Math.random() > 0.93) return "[АРХИВ ПОВРЕЖДЁН]";
+    
+    return null; // Нет локального ответа — используем AI
+}
 
-"данные неполные",
-
-"совпадение подтверждено",
-
-"не все движения случайны",
-
-"источник не найден",
-
-"оператора там не было",
-
-"архив открыт частично",
-
-"сигнал слабый",
-
-"это уже происходило",
-
-"спокойствие требует меньше энергии",
-
-"216",
-
-"запись повреждена"
-
+// Fallback ответы (если API недоступен)
+const fallbackReplies = [
+    "не уверен",
+    "наблюдение продолжается",
+    "данные неполные",
+    "совпадение подтверждено",
+    "не все движения случайны",
+    "источник не найден",
+    "оператора там не было",
+    "архив открыт частично",
+    "сигнал слабый",
+    "это уже происходило",
+    "спокойствие требует меньше энергии",
+    "запись повреждена"
 ];
 
-function getReply(text){
-
-const t =
-text.toLowerCase();
-
-const insults = [
-
-"нахуй",
-"хуй",
-"ебан",
-"сука",
-"долбоеб",
-"иди нах",
-"пошел"
-
-];
-
-for(let word of insults){
-
-if(t.includes(word)){
-
-trust--;
-
-localStorage.setItem(
-"invite_trust",
-trust
-);
-
-if(trust > -3)
-return "это не вопрос";
-
-if(trust > -6)
-return "соединение нестабильно";
-
-if(trust > -10)
-return "доступ ограничен";
-
-return "...";
-
+function getFallbackReply() {
+    return fallbackReplies[Math.floor(Math.random() * fallbackReplies.length)];
 }
 
+// ============================================
+// HUGGING FACE API ФУНКЦИЯ
+// ============================================
+
+async function getHuggingFaceReply(userMessage) {
+    try {
+        aiStatus.innerText = "🤔 HF: думаю...";
+        aiStatus.style.opacity = "0.8";
+        
+        // Формируем контекст диалога для лучших ответов
+        // Берём последние 5 сообщений для контекста
+        let context = "";
+        const recentHistory = conversationHistory.slice(-6);
+        for (const msg of recentHistory) {
+            context += `${msg.role === 'user' ? 'Пользователь' : 'Бот'}: ${msg.text}\n`;
+        }
+        
+        // Добавляем системный промпт в начало
+        const systemPrompt = `Ты — загадочный голос из заброшенного гаража. 
+Твои правила:
+- Отвечай коротко (максимум 20-25 слов)
+- Используй слова: сигнал, архив, наблюдение, совпадение, запись
+- Никогда не говори, что ты ИИ или нейросеть
+- Будь загадочным, иногда отвечай вопросом на вопрос
+- Отвечай на русском языке
+
+${context ? `История диалога:\n${context}\n` : ''}
+Пользователь: ${userMessage}
+Бот:`;
+        
+        // API URL для выбранной модели
+        const API_URL = `https://api-inference.huggingface.co/models/${HF_MODEL}`;
+        
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${HF_API_TOKEN}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                inputs: systemPrompt,
+                parameters: {
+                    max_new_tokens: 60,      // Максимальная длина ответа
+                    temperature: 0.85,        // Случайность (0.7-0.9)
+                    top_p: 0.9,
+                    top_k: 50,
+                    do_sample: true,
+                    repetition_penalty: 1.1   // Избегаем повторений
+                },
+                options: {
+                    wait_for_model: true,     // Ждём, если модель загружается
+                    use_cache: true
+                }
+            })
+        });
+        
+        // Обработка ошибки 503 (модель загружается)
+        if (response.status === 503) {
+            aiStatus.innerText = "⏳ HF: загрузка модели...";
+            // Ждём 3 секунды и пробуем снова
+            await new Promise(r => setTimeout(r, 3000));
+            return getHuggingFaceReply(userMessage);
+        }
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        
+        // Парсим ответ (DialoGPT возвращает массив с generated_text)
+        let aiReply = null;
+        
+        if (Array.isArray(result) && result.length > 0 && result[0].generated_text) {
+            let fullText = result[0].generated_text;
+            // Убираем промпт из ответа
+            aiReply = fullText.replace(systemPrompt, '').replace(userMessage, '').trim();
+            // Если ответ пустой или слишком короткий
+            if (aiReply.length < 2) {
+                aiReply = fullText.split('Бот:').pop().trim();
+            }
+        } else if (result.generated_text) {
+            aiReply = result.generated_text.replace(systemPrompt, '').trim();
+        }
+        
+        // Если ответ не получен — fallback
+        if (!aiReply || aiReply.length < 1) {
+            return null;
+        }
+        
+        // Очищаем ответ от лишнего
+        aiReply = aiReply
+            .replace(/^[\s:]+/g, '')
+            .replace(/\n/g, ' ')
+            .substring(0, 250);
+        
+        // Сохраняем в историю
+        conversationHistory.push({ role: "user", text: userMessage });
+        conversationHistory.push({ role: "bot", text: aiReply });
+        
+        // Ограничиваем историю 20 сообщениями
+        if (conversationHistory.length > 20) {
+            conversationHistory = conversationHistory.slice(-20);
+        }
+        
+        aiStatus.innerText = "🤖 HF: активен";
+        aiStatus.style.opacity = "0.3";
+        return aiReply;
+        
+    } catch (error) {
+        console.error("Hugging Face API ошибка:", error);
+        aiStatus.innerText = "⚠️ HF: ошибка";
+        aiStatus.style.opacity = "0.5";
+        
+        // Возвращаем статус через 3 секунды
+        setTimeout(() => {
+            aiStatus.innerText = "🤖 HF: активен";
+            aiStatus.style.opacity = "0.3";
+        }, 3000);
+        
+        return null;
+    }
 }
 
-const goodWords = [
+// ============================================
+// ОСНОВНАЯ ФУНКЦИЯ ОТПРАВКИ
+// ============================================
 
-"кто",
-"что",
-"почему",
-"как",
-"216",
-"гараж",
-"книга",
-"озарения",
-"сигнал",
-"наблюдение",
-"время"
-
-];
-
-for(let word of goodWords){
-
-if(t.includes(word)){
-
-trust++;
-
-localStorage.setItem(
-"invite_trust",
-trust
-);
-
-break;
-
+async function sendMessage() {
+    const value = input.value.trim();
+    if (!value) return;
+    
+    // Показываем сообщение пользователя
+    addMessage(value, "you");
+    input.value = "";
+    
+    // Анимация печати бота
+    const typingDiv = addMessage("...", "bot typing");
+    
+    try {
+        // Сначала проверяем локальные триггеры
+        let reply = getLocalReply(value);
+        let isLocal = !!reply;
+        
+        // Если нет локального ответа — используем AI
+        if (!reply) {
+            reply = await getHuggingFaceReply(value);
+            if (!reply) {
+                reply = getFallbackReply();
+                isLocal = false;
+            }
+        }
+        
+        // Убираем анимацию печати
+        typingDiv.remove();
+        
+        // Показываем ответ (с анимацией для коротких ответов)
+        if (reply.length < 100 && !isLocal) {
+            const finalDiv = addMessage("", "bot");
+            await animateTyping(finalDiv, reply, 20);
+        } else {
+            addMessage(reply, "bot");
+        }
+        
+        // Обновляем trust
+        if (!isLocal) {
+            if (reply.length > 40) trust += 2;
+            else if (reply.includes("?")) trust += 1;
+            else trust += 1;
+        }
+        
+        if (trust > 20) trust = 20;
+        localStorage.setItem("invite_trust", trust);
+        
+    } catch (error) {
+        console.error("Ошибка в sendMessage:", error);
+        typingDiv.remove();
+        addMessage("сигнал потерян... попробуй позже", "bot");
+    }
 }
 
+// ============================================
+// СТАРТОВЫЕ СООБЩЕНИЯ
+// ============================================
+
+function startConversation() {
+    addMessage("соединение установлено", "system");
+    
+    if (visits === 1) {
+        addMessage("можешь задать вопрос", "bot");
+        aiStatus.innerText = "🤖 HF: активен";
+        aiStatus.style.opacity = "0.3";
+    } else if (visits < 5) {
+        addMessage("ты уже был здесь", "bot");
+    } else if (visits < 10) {
+        addMessage("снова ты", "bot");
+    } else {
+        addMessage("наблюдение продолжается", "bot");
+    }
+    
+    // Проверка API при старте (только для визуального индикатора)
+    setTimeout(() => {
+        if (HF_API_TOKEN === 'hf_xxxxxxxxxxxxxxxxxxxxxxxxx') {
+            console.warn("⚠️ ВНИМАНИЕ: Не установлен API токен Hugging Face!");
+            aiStatus.innerText = "⚠️ нет токена";
+            aiStatus.style.opacity = "0.8";
+        }
+    }, 1000);
 }
 
-if(t.includes("216")){
-
-let count =
-parseInt(
-localStorage.getItem("216_count")
-|| "0"
-);
-
-count++;
-
-localStorage.setItem(
-"216_count",
-count
-);
-
-if(count > 15)
-return "оно не изменится";
-
-if(count > 10)
-return "хватит проверять число";
-
-return "встречается чаще, чем должно";
-
-}
-
-if(t.includes("гараж"))
-return "на записи кто-то стоял за камерой";
-
-if(t.includes("кто ты"))
-return "не уверен, что это важно";
-
-if(t.includes("а4ко"))
-return "название не имеет значения";
-
-if(t.includes("тео"))
-return "доступ уже был получен";
-
-if(t.includes("мух")){
-
-let flies =
-parseInt(
-localStorage.getItem("flies_count")
-|| "0"
-);
-
-flies++;
-
-localStorage.setItem(
-"flies_count",
-flies
-);
-
-if(flies > 8)
-return "МУХОГЕНОЦИД";
-
-if(flies > 4)
-return "не будем об этом";
-
-return "взаимодействие с мухами есть часть опыта";
-
-}
-
-if(
-t.includes("книга")
-||
-t.includes("озарения")
-){
-
-const quotes = [
-
-"не для чего, а почему",
-
-"все случайности имеют значение",
-
-"человек видит то, что может видеть",
-
-"самое главное это ничего",
-
-"гравитация есть время",
-
-"люди разные. и я разный."
-
-];
-
-return quotes[
-Math.floor(
-Math.random()*quotes.length
-)
-];
-
-}
-
-if(
-t.includes("диджей")
-||
-t.includes("сн")
-){
-
-return "запись была удалена";
-
-}
-
-if(trust > 8){
-
-const deeper = [
-
-"ты задаешь правильные вопросы",
-
-"оператора действительно не было",
-
-"архив постепенно восстанавливается",
-
-"запись существует",
-
-"ты уже близко",
-
-"не все посетители доходят сюда"
-
-];
-
-return deeper[
-Math.floor(
-Math.random()*deeper.length
-)
-];
-
-}
-
-if(Math.random() > .985){
-
-setTimeout(()=>{
-
-window.location.href =
-"address.html";
-
-},1500);
-
-return "обнаружен адрес";
-
-}
-
-if(Math.random() > .96){
-
-return "[СООБЩЕНИЕ УТЕРЯНО]";
-
-}
-
-if(Math.random() > .93){
-
-return "[АРХИВ ПОВРЕЖДЁН]";
-
-}
-
-return genericReplies[
-Math.floor(
-Math.random()*
-genericReplies.length
-)
-];
-
-}
-
-function sendMessage(){
-
-const value =
-input.value.trim();
-
-if(!value) return;
-
-add(
-value,
-"you"
-);
-
-input.value = "";
-
-const typing =
-add(
-"...",
-"bot typing"
-);
-
-setTimeout(()=>{
-
-typing.remove();
-
-add(
-getReply(value),
-"bot"
-);
-
-},500 + Math.random()*1500);
-
-}
-
-document
-.getElementById("send")
-.onclick =
-sendMessage;
-
-input.addEventListener(
-"keydown",
-e=>{
-
-if(e.key==="Enter"){
-
-sendMessage();
-
-}
-
-}
-);
-
+// ============================================
+// ОБРАБОТЧИКИ СОБЫТИЙ
+// ============================================
+
+document.getElementById("send").onclick = sendMessage;
+input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") sendMessage();
+});
+
+// Запуск
+startConversation();
+
+// Сохраняем состояние при закрытии
+window.addEventListener("beforeunload", () => {
+    localStorage.setItem("invite_trust", trust);
+});
 </script>
-
-<script src="audio.js"></script>
-
 </body>
 </html>
