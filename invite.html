@@ -167,13 +167,6 @@ body {
     text-align: center;
     margin: 5px;
 }
-
-.debug-error {
-    color: #ff6666;
-    font-size: 10px;
-    text-align: center;
-    margin: 5px;
-}
 </style>
 </head>
 <body>
@@ -185,17 +178,16 @@ body {
     <input id="input" autocomplete="off" spellcheck="false" placeholder="введите сообщение">
     <button id="send">ОТПРАВИТЬ</button>
 </div>
-<div id="aiStatus">🤖 HF: проверка...</div>
+<div id="aiStatus">🤖 HF: готов</div>
 
 <script>
 // ============================================
-// НАСТРОЙКИ - ЗАМЕНИ ЭТИ ДВЕ СТРОЧКИ!
+// НАСТРОЙКИ
 // ============================================
-const HF_API_TOKEN = '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'; // <- ТВОЙ ТОКЕН ОТ HUGGING FACE
-const WORKER_URL = 'https://hf-proxy.mramazanoff.workers.dev/'; // <- АДРЕС ТВОЕГО WORKER
+const WORKER_URL = 'https://hf-proxy.mramazanoff.workers.dev';
 
 // ============================================
-// ОСТАЛЬНОЙ КОД
+// ИНИЦИАЛИЗАЦИЯ
 // ============================================
 const chat = document.getElementById("chat");
 const input = document.getElementById("input");
@@ -206,9 +198,9 @@ let visits = parseInt(localStorage.getItem("invite_visits") || "0");
 visits++;
 localStorage.setItem("invite_visits", visits);
 
-function addDebug(text, isError = false) {
+function addDebug(text) {
     const div = document.createElement("div");
-    div.className = isError ? "debug-error" : "debug";
+    div.className = "debug";
     div.innerHTML = `🔧 ${text}`;
     chat.appendChild(div);
     chat.scrollTop = chat.scrollHeight;
@@ -310,13 +302,11 @@ function getLocalReply(userMessage) {
 }
 
 // ============================================
-// ОСНОВНАЯ ФУНКЦИЯ С ПОДРОБНОЙ ОТЛАДКОЙ
+// ГЛАВНАЯ ФУНКЦИЯ - ОБРАЩЕНИЕ К WORKER
 // ============================================
 async function getHuggingFaceReply(userMessage) {
     try {
         aiStatus.innerText = "🤔 HF: думаю...";
-        
-        addDebug(`📤 Отправляем запрос на Worker: ${WORKER_URL}`);
         
         const response = await fetch(WORKER_URL, {
             method: 'POST',
@@ -324,66 +314,21 @@ async function getHuggingFaceReply(userMessage) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                inputs: userMessage,
-                parameters: {
-                    max_new_tokens: 60,
-                    temperature: 0.8,
-                    top_p: 0.9,
-                    do_sample: true,
-                    return_full_text: false
-                }
+                inputs: userMessage
             })
         });
         
-        addDebug(`📥 Статус ответа от Worker: ${response.status}`);
-        
-        if (!response.ok) {
-            addDebug(`❌ Worker вернул ошибку: ${response.status}`, true);
-            throw new Error(`HTTP ${response.status}`);
-        }
-        
         const result = await response.json();
-        addDebug(`📦 Получены данные: ${JSON.stringify(result).substring(0, 200)}`);
         
-        let aiReply = null;
-        
-        // Разные форматы ответа от Hugging Face
-        if (result && Array.isArray(result) && result.length > 0) {
-            if (result[0].generated_text) {
-                aiReply = result[0].generated_text.trim();
-                addDebug(`📝 Парсинг Array[0].generated_text`);
-            } else if (result[0].summary_text) {
-                aiReply = result[0].summary_text.trim();
-                addDebug(`📝 Парсинг Array[0].summary_text`);
-            }
-        } else if (result && result.generated_text) {
-            aiReply = result.generated_text.trim();
-            addDebug(`📝 Парсинг result.generated_text`);
-        } else if (result && result.error) {
-            addDebug(`❌ Ошибка от Hugging Face: ${result.error}`, true);
-            return null;
-        } else if (result && typeof result === 'object') {
-            // Показываем что именно пришло
-            addDebug(`⚠️ Неизвестный формат ответа. Ключи: ${Object.keys(result).join(', ')}`, true);
-            return null;
+        if (result.generated_text && result.generated_text.length > 2) {
+            aiStatus.innerText = "🤖 HF: готов";
+            return result.generated_text;
         }
         
-        // Если ответ пустой или слишком короткий
-        if (!aiReply || aiReply.length < 2) {
-            addDebug(`⚠️ Пустой ответ от API`, true);
-            return null;
-        }
-        
-        // Убираем возможные теги и лишнее
-        aiReply = aiReply.replace(/<[^>]*>/g, '').trim();
-        
-        addDebug(`✅ Успешно получен ответ: "${aiReply.substring(0, 80)}"`);
-        aiStatus.innerText = "🤖 HF: готов";
-        return aiReply;
+        return null;
         
     } catch (error) {
-        addDebug(`💥 Ошибка: ${error.message}`, true);
-        console.error("Полная ошибка:", error);
+        console.error("Proxy ошибка:", error);
         aiStatus.innerText = "⚠️ ошибка";
         return null;
     }
@@ -405,16 +350,14 @@ async function sendMessage() {
         let reply = getLocalReply(value);
         
         if (!reply) {
-            addDebug(`🔄 Нет локального ответа, отправляем в API: "${value.substring(0, 50)}"`);
+            addDebug(`🔄 Отправляем в API: "${value}"`);
             reply = await getHuggingFaceReply(value);
             
             if (!reply) {
-                addDebug(`⚠️ API не ответил, использую fallback`, true);
+                addDebug(`⚠️ API не ответил, использую fallback`);
                 const fallbacks = ["не уверен", "наблюдение продолжается", "сигнал слабый", "запись повреждена"];
                 reply = fallbacks[Math.floor(Math.random() * fallbacks.length)];
             }
-        } else {
-            addDebug(`📝 Локальный ответ: "${reply}"`);
         }
         
         typingDiv.remove();
@@ -429,41 +372,16 @@ async function sendMessage() {
         localStorage.setItem("invite_trust", trust);
         
     } catch (error) {
-        addDebug(`💥 Критическая ошибка: ${error.message}`, true);
+        addDebug(`💥 Ошибка: ${error.message}`);
         typingDiv.remove();
         addMessage("сигнал потерян... попробуй позже", "bot");
     }
 }
 
 // ============================================
-// ПРОВЕРКА РАБОТЫ WORKER (ДОБАВЛЕНО)
-// ============================================
-async function testWorker() {
-    try {
-        addDebug(`🔍 Тестирую Worker: ${WORKER_URL}`);
-        const response = await fetch(WORKER_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ inputs: "test", parameters: { max_new_tokens: 5 } })
-        });
-        addDebug(`📥 Worker ответил со статусом: ${response.status}`);
-        
-        if (response.status === 200) {
-            const data = await response.json();
-            addDebug(`✅ Worker работает! Ответ: ${JSON.stringify(data).substring(0, 100)}`);
-        } else {
-            const text = await response.text();
-            addDebug(`⚠️ Worker ответил: ${response.status} - ${text.substring(0, 100)}`, true);
-        }
-    } catch (e) {
-        addDebug(`❌ Worker не отвечает: ${e.message}`, true);
-    }
-}
-
-// ============================================
 // ЗАПУСК
 // ============================================
-async function start() {
+function start() {
     addMessage("соединение установлено", "system");
     
     if (visits === 1) {
@@ -476,15 +394,7 @@ async function start() {
         addMessage("наблюдение продолжается", "bot");
     }
     
-    if (HF_API_TOKEN === 'hf_xxxxxxxxxxxxxxxxxxxxxxxxx') {
-        addDebug("❌ Токен не установлен! Вставь HF_API_TOKEN", true);
-        aiStatus.innerText = "❌ нет токена";
-    } else if (WORKER_URL === 'https://hf-proxy.mramazanoff.workers.dev') {
-        addDebug("✅ Адрес Worker указан: " + WORKER_URL);
-        aiStatus.innerText = "🤖 HF: готов";
-        // Тестируем Worker
-        await testWorker();
-    }
+    addDebug(`✅ Worker адрес: ${WORKER_URL}`);
 }
 
 document.getElementById("send").onclick = sendMessage;
