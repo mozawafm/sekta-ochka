@@ -46,18 +46,9 @@ body {
     box-sizing: border-box;
 }
 
-#chat::-webkit-scrollbar {
-    width: 6px;
-}
-#chat::-webkit-scrollbar-track {
-    background: transparent;
-}
-#chat::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.15);
-}
-#chat::-webkit-scrollbar-thumb:hover {
-    background: rgba(255,255,255,0.25);
-}
+#chat::-webkit-scrollbar { width: 6px; }
+#chat::-webkit-scrollbar-track { background: transparent; }
+#chat::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); }
 
 .msg {
     padding: 14px;
@@ -118,9 +109,7 @@ body {
     outline: none;
 }
 
-#input:focus {
-    border-color: rgba(255,255,255,0.4);
-}
+#input:focus { border-color: rgba(255,255,255,0.4); }
 
 #send {
     width: 140px;
@@ -133,10 +122,7 @@ body {
     transition: 0.25s;
 }
 
-#send:hover {
-    background: white;
-    color: black;
-}
+#send:hover { background: white; color: black; }
 
 #aiStatus {
     position: fixed;
@@ -151,14 +137,8 @@ body {
 }
 
 @keyframes fade {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .debug {
@@ -178,16 +158,17 @@ body {
     <input id="input" autocomplete="off" spellcheck="false" placeholder="введите сообщение">
     <button id="send">ОТПРАВИТЬ</button>
 </div>
-<div id="aiStatus">🤖 HF: готов</div>
+<div id="aiStatus">🤖 AI: готов</div>
 
 <script>
 // ============================================
-// НАСТРОЙКИ
+// ВСТАВЬ СВОЙ API КЛЮЧ ОТ GROQ СЮДА
+// Получить: https://console.groq.com
 // ============================================
-const WORKER_URL = 'https://hf-proxy.mramazanoff.workers.dev';
+const GROQ_API_KEY = 'gsk_твой_ключ_сюда';
 
 // ============================================
-// ИНИЦИАЛИЗАЦИЯ
+// ВСЁ ОСТАЛЬНОЕ
 // ============================================
 const chat = document.getElementById("chat");
 const input = document.getElementById("input");
@@ -204,19 +185,18 @@ function addDebug(text) {
     div.innerHTML = `🔧 ${text}`;
     chat.appendChild(div);
     chat.scrollTop = chat.scrollHeight;
-    console.log("[DEBUG]", text);
 }
 
 function addMessage(text, type) {
     const div = document.createElement("div");
     div.className = "msg " + type;
-    div.innerHTML = text.replace(/\n/g, '<br>');
+    div.innerHTML = text;
     chat.appendChild(div);
     chat.scrollTop = chat.scrollHeight;
     return div;
 }
 
-async function animateTyping(element, text, delay = 20) {
+async function animateTyping(element, text, delay = 25) {
     element.innerHTML = '';
     for (let i = 0; i < text.length; i++) {
         element.innerHTML += text[i];
@@ -225,20 +205,9 @@ async function animateTyping(element, text, delay = 20) {
     }
 }
 
+// Локальные ответы для специальных слов
 function getLocalReply(userMessage) {
     const t = userMessage.toLowerCase().trim();
-    
-    const insults = ["нахуй", "хуй", "ебан", "сука", "долбоеб", "иди нах", "пошел"];
-    for (let word of insults) {
-        if (t.includes(word)) {
-            trust--;
-            localStorage.setItem("invite_trust", trust);
-            if (trust > -3) return "это не вопрос";
-            if (trust > -6) return "соединение нестабильно";
-            if (trust > -10) return "доступ ограничен";
-            return "...";
-        }
-    }
     
     if (t.includes("216")) {
         let count = parseInt(localStorage.getItem("216_count") || "0");
@@ -250,10 +219,6 @@ function getLocalReply(userMessage) {
     }
     
     if (t.includes("гараж")) return "на записи кто-то стоял за камерой";
-    if (t.includes("кто ты")) return "не уверен, что это важно";
-    if (t.includes("а4ко")) return "название не имеет значения";
-    if (t.includes("тео")) return "доступ уже был получен";
-    
     if (t.includes("мух")) {
         let flies = parseInt(localStorage.getItem("flies_count") || "0");
         flies++;
@@ -269,74 +234,76 @@ function getLocalReply(userMessage) {
             "все случайности имеют значение",
             "человек видит то, что может видеть",
             "самое главное это ничего",
-            "гравитация есть время",
-            "люди разные. и я разный."
+            "гравитация есть время"
         ];
         return quotes[Math.floor(Math.random() * quotes.length)];
     }
     
-    if (t.includes("диджей") || t.includes("сн")) return "запись была удалена";
-    
-    const goodWords = ["кто", "что", "почему", "как", "216", "гараж", "книга", "озарения", "сигнал", "наблюдение", "время"];
-    for (let word of goodWords) {
-        if (t.includes(word)) {
-            trust++;
-            localStorage.setItem("invite_trust", trust);
-            break;
-        }
-    }
-    
-    if (Math.random() > 0.985) {
+    if (Math.random() > 0.98) {
         setTimeout(() => { window.location.href = "address.html"; }, 1500);
         return "обнаружен адрес";
-    }
-    if (Math.random() > 0.96) return "[СООБЩЕНИЕ УТЕРЯНО]";
-    if (Math.random() > 0.93) return "[АРХИВ ПОВРЕЖДЁН]";
-    
-    if (trust > 8) {
-        const deeper = ["ты задаешь правильные вопросы", "оператора действительно не было", "архив постепенно восстанавливается", "запись существует", "ты уже близко", "не все посетители доходят сюда"];
-        return deeper[Math.floor(Math.random() * deeper.length)];
     }
     
     return null;
 }
 
-// ============================================
-// ГЛАВНАЯ ФУНКЦИЯ - ОБРАЩЕНИЕ К WORKER
-// ============================================
-async function getHuggingFaceReply(userMessage) {
+// ГЛАВНАЯ ФУНКЦИЯ - ЗАПРОС К GROQ
+async function getAIReply(userMessage) {
     try {
-        aiStatus.innerText = "🤔 HF: думаю...";
+        aiStatus.innerText = "🤔 AI: думаю...";
         
-        const response = await fetch(WORKER_URL, {
-            method: 'POST',
+        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+            method: "POST",
             headers: {
-                'Content-Type': 'application/json'
+                "Authorization": `Bearer ${GROQ_API_KEY}`,
+                "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                inputs: userMessage
+                model: "llama-3.2-3b-preview",
+                messages: [
+                    {
+                        role: "system",
+                        content: `Ты — загадочный голос из заброшенного гаража. Твои правила:
+- Отвечай коротко, 1-2 предложения, максимум 20 слов
+- Используй слова: сигнал, архив, наблюдение, совпадение, запись
+- Никогда не говори что ты ИИ или нейросеть
+- Будь загадочным, иногда отвечай вопросом на вопрос
+- Отвечай на русском языке
+- Если не знаешь что ответить — скажи "сигнал слабый" или "запись повреждена"`
+                    },
+                    {
+                        role: "user",
+                        content: userMessage
+                    }
+                ],
+                max_tokens: 80,
+                temperature: 0.9
             })
         });
         
-        const result = await response.json();
+        const data = await response.json();
         
-        if (result.generated_text && result.generated_text.length > 2) {
-            aiStatus.innerText = "🤖 HF: готов";
-            return result.generated_text;
+        if (data.choices && data.choices[0] && data.choices[0].message) {
+            let reply = data.choices[0].message.content;
+            reply = reply.replace(/[\[\]\(\)*#]/g, '').trim();
+            if (reply.length > 200) reply = reply.substring(0, 197) + "...";
+            
+            aiStatus.innerText = "🤖 AI: готов";
+            trust++;
+            localStorage.setItem("invite_trust", trust);
+            return reply;
         }
         
         return null;
         
     } catch (error) {
-        console.error("Proxy ошибка:", error);
+        console.error("AI ошибка:", error);
         aiStatus.innerText = "⚠️ ошибка";
         return null;
     }
 }
 
-// ============================================
 // ОТПРАВКА СООБЩЕНИЯ
-// ============================================
 async function sendMessage() {
     const value = input.value.trim();
     if (!value) return;
@@ -350,11 +317,8 @@ async function sendMessage() {
         let reply = getLocalReply(value);
         
         if (!reply) {
-            addDebug(`🔄 Отправляем в API: "${value}"`);
-            reply = await getHuggingFaceReply(value);
-            
+            reply = await getAIReply(value);
             if (!reply) {
-                addDebug(`⚠️ API не ответил, использую fallback`);
                 const fallbacks = ["не уверен", "наблюдение продолжается", "сигнал слабый", "запись повреждена"];
                 reply = fallbacks[Math.floor(Math.random() * fallbacks.length)];
             }
@@ -362,39 +326,33 @@ async function sendMessage() {
         
         typingDiv.remove();
         
-        if (reply.length < 150) {
+        if (reply.length < 120) {
             const finalDiv = addMessage("", "bot");
             await animateTyping(finalDiv, reply, 20);
         } else {
             addMessage(reply, "bot");
         }
         
-        localStorage.setItem("invite_trust", trust);
-        
     } catch (error) {
-        addDebug(`💥 Ошибка: ${error.message}`);
         typingDiv.remove();
-        addMessage("сигнал потерян... попробуй позже", "bot");
+        addMessage("сигнал потерян...", "bot");
     }
 }
 
-// ============================================
 // ЗАПУСК
-// ============================================
 function start() {
     addMessage("соединение установлено", "system");
     
-    if (visits === 1) {
-        addMessage("можешь задать вопрос", "bot");
-    } else if (visits < 5) {
-        addMessage("ты уже был здесь", "bot");
-    } else if (visits < 10) {
-        addMessage("снова ты", "bot");
-    } else {
-        addMessage("наблюдение продолжается", "bot");
-    }
+    if (visits === 1) addMessage("можешь задать вопрос", "bot");
+    else if (visits < 5) addMessage("ты уже был здесь", "bot");
+    else if (visits < 10) addMessage("снова ты", "bot");
+    else addMessage("наблюдение продолжается", "bot");
     
-    addDebug(`✅ Worker адрес: ${WORKER_URL}`);
+    if (GROQ_API_KEY === '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') {
+        addDebug("❌ ВСТАВЬ API КЛЮЧ ОТ GROQ! Получить: https://console.groq.com");
+    } else {
+        addDebug("✅ AI готов. Спрашивай что угодно.");
+    }
 }
 
 document.getElementById("send").onclick = sendMessage;
