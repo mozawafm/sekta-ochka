@@ -19,7 +19,6 @@
         overflow-x: hidden;
     }
 
-    /* Старая бумажная текстура */
     body::before {
         content: "";
         position: fixed;
@@ -311,7 +310,6 @@
         animation: pageAppear 1.2s ease-out;
     }
 
-    /* Мигающий курсор для анимации печати */
     .typing-cursor {
         display: inline-block;
         width: 8px;
@@ -327,7 +325,6 @@
         50% { opacity: 0; }
     }
 
-    /* Адаптив */
     @media (max-width: 650px) {
         .book-container { padding: 25px 20px; margin: 20px; }
         .book-title h1 { font-size: 1.3em; letter-spacing: 3px; }
@@ -508,6 +505,7 @@
     // ПЕРЕМЕННЫЕ
     // ============================================
     let currentChapter = 0;
+    let typingInterval = null;
     const flashDiv = document.getElementById('flash');
     const chapterNav = document.getElementById('chapterNav');
     const chapterContent = document.getElementById('chapterContent');
@@ -519,20 +517,38 @@
         setTimeout(() => { flashDiv.style.opacity = '0'; }, 80);
     }
 
-    // Функция анимации печати текста
-    function typeText(element, text, speed = 100, callback) {
-        let i = 0;
-        element.innerHTML = '';
-        function type() {
-            if (i < text.length) {
-                element.innerHTML += text[i];
-                i++;
-                setTimeout(type, speed);
-            } else {
-                if (callback) callback();
+    // БЕСКОНЕЧНАЯ АНИМАЦИЯ ПЕЧАТИ
+    function startTypingLoop(element, symbols, speedBetweenCycles = 2000) {
+        if (typingInterval) clearInterval(typingInterval);
+        
+        let isTyping = false;
+        
+        function typeLoop() {
+            if (isTyping) return;
+            isTyping = true;
+            
+            let i = 0;
+            element.innerHTML = '';
+            
+            function addNextSymbol() {
+                if (i < symbols.length) {
+                    element.innerHTML += symbols[i];
+                    i++;
+                    setTimeout(addNextSymbol, 300);
+                } else {
+                    isTyping = false;
+                    setTimeout(() => {
+                        if (element && element.parentNode) {
+                            typeLoop();
+                        }
+                    }, speedBetweenCycles);
+                }
             }
+            
+            addNextSymbol();
         }
-        type();
+        
+        typeLoop();
     }
 
     function renderChapter(index) {
@@ -542,13 +558,18 @@
             <div class="chapter-text">${chapter.content}</div>
         `;
         
-        // Если это последняя глава (Послесловие) — запускаем анимацию печати
         if (index === bookData.length - 1) {
             const targetElement = document.getElementById('animatedEnding');
             if (targetElement) {
-                // Текст для анимации — три точки, как будто печатаются
-                typeText(targetElement, '· · ·', 400);
+                startTypingLoop(targetElement, ['·', ' ', '·', ' ', '·'], 1800);
             }
+        } else {
+            if (typingInterval) {
+                clearInterval(typingInterval);
+                typingInterval = null;
+            }
+            const targetElement = document.getElementById('animatedEnding');
+            if (targetElement) targetElement.innerHTML = '';
         }
         
         document.querySelectorAll('.chapter-btn').forEach((btn, i) => {
