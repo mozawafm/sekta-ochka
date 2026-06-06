@@ -1,12 +1,12 @@
-// audio.js — генератор 432 Гц с гармониками
+// audio.js — генератор 432 Гц с гармониками (кнопка справа внизу)
 
 (function() {
-    // Создаём HTML-структуру плеера
+    // Создаём HTML-структуру плеера — ТЕПЕРЬ СПРАВА
     const playerHTML = `
         <div id="globalPlayer" style="
             position: fixed;
             bottom: 20px;
-            left: 20px;
+            right: 20px;
             z-index: 9999;
             background: rgba(0,0,0,0.65);
             backdrop-filter: blur(12px);
@@ -41,32 +41,29 @@
     let isPlaying = false;
     let masterGain = null;
     let reverbNode = null;
-    let convolver = null;
     
-    // Источники звука (гармоники)
     let oscillators = [];
-    let lfo = null; // для лёгкой вибрации
+    let lfo = null;
+    let crackleInterval = null;
     
     // Гармоники: 432 Гц + обертоны
     const harmonics = [
-        { freq: 432,  gain: 0.12,  type: 'sine' },     // Основной тон
-        { freq: 864,  gain: 0.06,  type: 'sine' },     // Октава
-        { freq: 1296, gain: 0.04,  type: 'triangle' }, // Терция
-        { freq: 216,  gain: 0.05,  type: 'sine' },     // Октава вниз (бас)
-        { freq: 108,  gain: 0.03,  type: 'sine' },     // Суб-бас
-        { freq: 1728, gain: 0.02,  type: 'sawtooth' }  // Высокое мерцание
+        { freq: 432,  gain: 0.12,  type: 'sine' },
+        { freq: 864,  gain: 0.06,  type: 'sine' },
+        { freq: 1296, gain: 0.04,  type: 'triangle' },
+        { freq: 216,  gain: 0.05,  type: 'sine' },
+        { freq: 108,  gain: 0.03,  type: 'sine' },
+        { freq: 1728, gain: 0.02,  type: 'sawtooth' }
     ];
     
     function initAudio() {
         if (audioCtx) return;
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
-        // Мастер-громкость
         masterGain = audioCtx.createGain();
-        masterGain.gain.value = 0.22; // Общая громкость (приятный фон)
+        masterGain.gain.value = 0.22;
         masterGain.connect(audioCtx.destination);
         
-        // Простой ревербератор (задержка + фильтр)
         const delay = audioCtx.createDelay();
         const feedback = audioCtx.createGain();
         const filter = audioCtx.createBiquadFilter();
@@ -81,20 +78,15 @@
         delay.connect(filter);
         filter.connect(masterGain);
         
-        // Запоминаем реверберацию как отдельный узел
         reverbNode = { delay, feedback, filter };
     }
     
     function startSound() {
-        if (!audioCtx) {
-            initAudio();
-        }
+        if (!audioCtx) initAudio();
         if (!audioCtx) return;
         
         if (audioCtx.state === 'suspended') {
-            audioCtx.resume().then(() => {
-                createSoundSources();
-            }).catch(e => console.log);
+            audioCtx.resume().then(() => createSoundSources());
         } else {
             createSoundSources();
         }
@@ -103,21 +95,18 @@
     function createSoundSources() {
         if (!audioCtx) return;
         
-        // Очищаем старые источники
         oscillators.forEach(osc => {
             try { osc.stop(); } catch(e) {}
             try { osc.disconnect(); } catch(e) {}
         });
         oscillators = [];
         
-        // Создаём LFO для плавной вибрации частоты
         lfo = audioCtx.createOscillator();
         const lfoGain = audioCtx.createGain();
-        lfo.frequency.value = 0.15; // Медленная вибрация
-        lfoGain.gain.value = 1.2;   // Амплитуда вибрации
+        lfo.frequency.value = 0.15;
+        lfoGain.gain.value = 1.2;
         lfo.connect(lfoGain);
         
-        // Создаём каждый гармонический тон
         harmonics.forEach((harm, idx) => {
             const osc = audioCtx.createOscillator();
             const oscGain = audioCtx.createGain();
@@ -126,17 +115,15 @@
             osc.frequency.value = harm.freq;
             oscGain.gain.value = harm.gain;
             
-            // Если это основной тон (432 Гц) — добавляем вибрацию
             if (harm.freq === 432) {
                 lfoGain.connect(osc.frequency);
             }
             
             osc.connect(oscGain);
             
-            // Подключаем к ревербератору и мастеру
             if (reverbNode) {
                 oscGain.connect(reverbNode.delay);
-                oscGain.connect(masterGain); // прямой сигнал тоже идёт
+                oscGain.connect(masterGain);
             } else {
                 oscGain.connect(masterGain);
             }
@@ -144,12 +131,10 @@
             osc.start();
             oscillators.push(osc);
             
-            // Плавное затухание для некоторых гармоник (создаёт движение)
             if (idx === 2 || idx === 4) {
                 const now = audioCtx.currentTime;
                 oscGain.gain.setValueAtTime(harm.gain, now);
                 oscGain.gain.exponentialRampToValueAtTime(0.01, now + 12);
-                // Через 12 секунд возвращаем
                 setTimeout(() => {
                     if (isPlaying && audioCtx) {
                         const newTime = audioCtx.currentTime;
@@ -160,10 +145,7 @@
             }
         });
         
-        // LFO запускаем
         lfo.start();
-        
-        // Добавляем редкий случайный шум (атмосферные потрескивания)
         startRandomCrackle();
         
         isPlaying = true;
@@ -174,21 +156,18 @@
         playerDiv.style.backgroundColor = 'rgba(0,0,0,0.8)';
     }
     
-    let crackleInterval = null;
-    
     function startRandomCrackle() {
         if (crackleInterval) clearInterval(crackleInterval);
         
         crackleInterval = setInterval(() => {
             if (!isPlaying || !audioCtx || audioCtx.state !== 'running') return;
             
-            if (Math.random() > 0.85) { // 15% вероятность каждые 8 секунд
+            if (Math.random() > 0.85) {
                 const now = audioCtx.currentTime;
                 const noiseGain = audioCtx.createGain();
                 noiseGain.gain.setValueAtTime(0.02, now);
                 noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
                 
-                // Короткий шум (потрескивание)
                 const bufferSize = 4096;
                 const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
                 const data = noiseBuffer.getChannelData(0);
@@ -212,12 +191,7 @@
         }
         
         oscillators.forEach(osc => {
-            try { 
-                if (osc) {
-                    osc.stop(); 
-                    osc.disconnect();
-                }
-            } catch(e) {}
+            try { osc.stop(); osc.disconnect(); } catch(e) {}
         });
         oscillators = [];
         
@@ -227,7 +201,6 @@
         }
         
         if (audioCtx) {
-            // Не закрываем контекст полностью, чтобы можно было быстро перезапустить
             audioCtx.suspend().catch(e => console.log);
         }
         
@@ -239,16 +212,13 @@
         playerDiv.style.backgroundColor = 'rgba(0,0,0,0.65)';
     }
     
-    // Обработчик клика по плееру
     if (playerDiv) {
         playerDiv.addEventListener('click', (e) => {
             e.stopPropagation();
             
             if (!isPlaying) {
                 if (audioCtx && audioCtx.state === 'suspended') {
-                    audioCtx.resume().then(() => {
-                        startSound();
-                    });
+                    audioCtx.resume().then(() => startSound());
                 } else {
                     startSound();
                 }
@@ -257,12 +227,9 @@
             }
         });
         
-        // Ховер
         playerDiv.addEventListener('mouseenter', () => {
             playerDiv.style.backgroundColor = 'rgba(0,0,0,0.85)';
-            if (!isPlaying) {
-                playerDiv.style.borderColor = '#d4c5a0';
-            }
+            if (!isPlaying) playerDiv.style.borderColor = '#d4c5a0';
         });
         playerDiv.addEventListener('mouseleave', () => {
             if (!isPlaying) {
@@ -272,11 +239,10 @@
         });
     }
     
-    // Удаляем старый обработчик body, если он мешал
     if (document.body._audioClickHandler) {
         document.body.removeEventListener('click', document.body._audioClickHandler);
         document.body._audioClickHandler = null;
     }
     
-    console.log('🎵 432 Hz Generator | Harmonized resonance engine');
+    console.log('🎵 432 Hz Generator | Кнопка справа внизу');
 })();
