@@ -43,13 +43,11 @@
         }
     }
 
-    /* Задержки для появления строк */
     p:nth-of-type(1) { animation-delay: 0.5s; }
     p:nth-of-type(2) { animation-delay: 2.5s; }
     p:nth-of-type(3) { animation-delay: 4.5s; }
     p:nth-of-type(4) { animation-delay: 6.5s; }
 
-    /* Глитч-эффект для отдельных слов */
     .glitch {
         position: relative;
         display: inline-block;
@@ -69,7 +67,6 @@
         100% { text-shadow: -2px 0 red, 2px 0 blue; transform: skew(0deg); }
     }
 
-    /* Мигающий курсор в конце */
     .cursor {
         display: inline-block;
         width: 12px;
@@ -85,7 +82,6 @@
         50% { opacity: 0; }
     }
 
-    /* Скрытая подсказка */
     .hint {
         position: fixed;
         bottom: 15px;
@@ -101,7 +97,6 @@
         opacity: 0.8;
     }
 
-    /* Шум поверх всего */
     .noise {
         position: fixed;
         top: 0;
@@ -115,7 +110,6 @@
         mix-blend-mode: screen;
     }
 
-    /* Редкие вспышки */
     .flash {
         position: fixed;
         top: 0;
@@ -129,9 +123,24 @@
         transition: opacity 0.05s;
     }
 
-    /* Аудио-контрол (если есть звук) */
-    audio {
-        display: none;
+    /* Секретное уведомление */
+    .secret-toast {
+        position: fixed;
+        bottom: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0,0,0,0.8);
+        border: 1px solid #d4c5a0;
+        color: #d4c5a0;
+        padding: 10px 20px;
+        font-family: monospace;
+        font-size: 0.8em;
+        letter-spacing: 3px;
+        z-index: 50;
+        opacity: 0;
+        transition: opacity 0.3s;
+        pointer-events: none;
+        white-space: nowrap;
     }
 </style>
 </head>
@@ -139,6 +148,7 @@
 
 <div class="noise"></div>
 <div class="flash" id="flash"></div>
+<div class="secret-toast" id="secretToast">🎭 216</div>
 
 <p>она не должна была это <span class="glitch" title="оператор?">найти</span></p>
 <p><span class="glitch" title="уже здесь">они</span> уже видят тебя</p>
@@ -148,62 +158,123 @@
 <div class="hint" id="hint">[тишина. нажми для сигнала]</div>
 
 <script>
-    // Редкие вспышки и глитчи
+    // ============================================
+    // ЭЛЕМЕНТЫ
+    // ============================================
     const flashDiv = document.getElementById('flash');
     const watchSpan = document.getElementById('watchTrigger');
     const hintDiv = document.getElementById('hint');
+    const secretToast = document.getElementById('secretToast');
+    
+    // ============================================
+    // ВИЗУАЛЬНЫЕ ЭФФЕКТЫ
+    // ============================================
+    function doFlash() {
+        flashDiv.style.opacity = '0.25';
+        setTimeout(() => { flashDiv.style.opacity = '0'; }, 90);
+    }
+    
+    function showToast(text, duration = 1500) {
+        secretToast.innerText = text;
+        secretToast.style.opacity = '1';
+        setTimeout(() => {
+            secretToast.style.opacity = '0';
+        }, duration);
+    }
     
     // Случайные вспышки
     setInterval(() => {
         if (Math.random() > 0.92) {
-            flashDiv.style.opacity = '0.25';
-            setTimeout(() => { flashDiv.style.opacity = '0'; }, 90);
-            // Лёгкий звуковой глитч (если audio.js доступен)
+            doFlash();
             if (typeof playGlitch === 'function') playGlitch();
         }
     }, 3500);
     
-    // Эффект при наведении на "внимательно"
+    // ============================================
+    // КЛИК ПО "ВНИМАТЕЛЬНО" -> КНИГА
+    // ============================================
     watchSpan.addEventListener('click', () => {
-        // Вспышка
-        flashDiv.style.opacity = '0.4';
-        setTimeout(() => { flashDiv.style.opacity = '0'; }, 150);
-        // Меняем текст
+        doFlash();
         watchSpan.innerHTML = 'УВИДЕЛ';
         watchSpan.style.color = '#ff8888';
         watchSpan.style.animation = 'glitchText 0.2s infinite';
-        // Добавляем сообщение в консоль (секрет)
-        console.log('%cТЫ ЗАШЁЛ СЛИШКОМ ДАЛЕКО', 'color: #ff4444; font-size: 16px; font-family: monospace;');
-        console.log('%cархив повреждён', 'color: #888;');
-        // Доп. мистика: небольшой таймер на редирект?
+        console.log('%cТЫ ОТКРЫЛ КНИГУ ОЗАРЕНИЯ', 'color: #d4c5a0; font-size: 14px;');
+        showToast('📖 КНИГА ОТКРЫВАЕТСЯ...', 1200);
         setTimeout(() => {
-            let r = Math.random();
-            if (r > 0.85) {
-                window.location.href = 'secret.html';
-            } else if (r > 0.6) {
-                window.location.href = 'signal.html';
-            }
-        }, 2000);
+            window.location.href = 'book.html';
+        }, 1300);
     });
     
-    // Нажатие на hint
+    // ============================================
+    // КЛИК ПО ПОДСКАЗКЕ
+    // ============================================
     hintDiv.addEventListener('click', () => {
         hintDiv.innerHTML = '[сигнал пойман. они ближе]';
         hintDiv.style.opacity = '0.8';
-        flashDiv.style.opacity = '0.2';
-        setTimeout(() => { flashDiv.style.opacity = '0'; }, 200);
-        // Переход на другую страницу через время (опционально)
+        doFlash();
         setTimeout(() => {
             window.location.href = 'signal.html';
-        }, 1800);
+        }, 1500);
     });
     
-    // Проигрывание случайного глитч-звука (если audio.js предоставляет такую функцию)
+    // ============================================
+    // 🔥 ГЛАВНАЯ ФИЧА: НАБОР 216 НА КЛАВИАТУРЕ
+    // ============================================
+    let keyBuffer = '';
+    let lastKeyTime = 0;
+    
+    document.addEventListener('keydown', (e) => {
+        // Игнорируем модификаторы и функциональные клавиши
+        if (e.key.length > 1) return;
+        
+        const now = Date.now();
+        // Если прошло больше 1.5 секунд — сбрасываем буфер
+        if (now - lastKeyTime > 1500) {
+            keyBuffer = '';
+        }
+        lastKeyTime = now;
+        
+        // Добавляем символ в буфер
+        keyBuffer += e.key;
+        // Оставляем только последние 6 символов (максимум)
+        if (keyBuffer.length > 6) {
+            keyBuffer = keyBuffer.slice(-6);
+        }
+        
+        // Проверяем, содержит ли буфер "216"
+        if (keyBuffer.includes('216')) {
+            console.log('%c🔮 КОД 216 ВВЕДЁН', 'color: #d4c5a0; font-size: 14px;');
+            showToast('🎭 216', 800);
+            
+            // Эффект: три вспышки
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => { doFlash(); }, i * 150);
+            }
+            
+            // Небольшая задержка для атмосферы
+            setTimeout(() => {
+                window.location.href = 'book.html';
+            }, 800);
+            
+            // Очищаем буфер, чтобы не сработало повторно
+            keyBuffer = '';
+        }
+        
+        // Дополнительно: на Escape — дёргаем экран
+        if (e.key === 'Escape') {
+            document.body.style.transform = 'translateX(4px)';
+            setTimeout(() => { document.body.style.transform = ''; }, 100);
+            doFlash();
+        }
+    });
+    
+    // ============================================
+    // ПРОИГРЫВАНИЕ ГЛИТЧ-ЗВУКА
+    // ============================================
     function playGlitch() {
         if (typeof playSound === 'function') {
             playSound('glitch');
         } else {
-            // Создаём простой писк, если звука нет
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
                 const osc = ctx.createOscillator();
@@ -220,7 +291,9 @@
         }
     }
     
-    // Загрузка состояния из localStorage, если есть
+    // ============================================
+    // LOCALSTORAGE
+    // ============================================
     let state = JSON.parse(localStorage.getItem('state') || '{}');
     if (!state.deeper) {
         state.deeper = { visited: 1 };
@@ -229,19 +302,8 @@
         state.deeper.visited++;
         localStorage.setItem('state', JSON.stringify(state));
     }
-    
-    // Эффект дрожания экрана по F11 или нажатию Escape
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            document.body.style.transform = 'translateX(4px)';
-            setTimeout(() => { document.body.style.transform = ''; }, 100);
-            flashDiv.style.opacity = '0.15';
-            setTimeout(() => { flashDiv.style.opacity = '0'; }, 80);
-        }
-    });
 </script>
 
-<!-- Подключаем audio.js если он есть -->
 <script src="audio.js"></script>
 </body>
 </html>
