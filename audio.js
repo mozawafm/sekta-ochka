@@ -1,7 +1,7 @@
 // audio.js — генератор 432 Гц с гармониками (кнопка справа внизу)
 
 (function() {
-    // Создаём HTML-структуру плеера — ТЕПЕРЬ СПРАВА
+    // Создаём HTML-структуру плеера — справа внизу
     const playerHTML = `
         <div id="globalPlayer" style="
             position: fixed;
@@ -25,7 +25,7 @@
             box-shadow: 0 0 8px rgba(0,0,0,0.4);
         ">
             <span id="playerIcon">▶</span>
-            <span id="playerText">432 Hz — SIGNAL</span>
+            <span id="playerText">SIGNAL</span>
         </div>
     `;
     
@@ -150,7 +150,7 @@
         
         isPlaying = true;
         playerIcon.innerText = '⏸';
-        playerText.innerText = '432 Hz — RESONANCE';
+        playerText.innerText = 'SIGNAL';
         playerDiv.style.borderColor = '#d4c5a0';
         playerDiv.style.boxShadow = '0 0 18px rgba(212,197,160,0.4)';
         playerDiv.style.backgroundColor = 'rgba(0,0,0,0.8)';
@@ -206,7 +206,7 @@
         
         isPlaying = false;
         playerIcon.innerText = '▶';
-        playerText.innerText = '432 Hz — SIGNAL';
+        playerText.innerText = 'SIGNAL';
         playerDiv.style.borderColor = 'rgba(212,197,160,0.3)';
         playerDiv.style.boxShadow = '0 0 8px rgba(0,0,0,0.4)';
         playerDiv.style.backgroundColor = 'rgba(0,0,0,0.65)';
@@ -244,5 +244,5 @@
         document.body._audioClickHandler = null;
     }
     
-    console.log('🎵 432 Hz Generator | Кнопка справа внизу');
+    console.log('🎵 432 Hz Generator | SIGNAL');
 })();
