@@ -1,20 +1,247 @@
 <!DOCTYPE html>
 <html>
-<body style="background:black;color:white;text-align:center;font-family:monospace;">
+<head>
+<meta charset="UTF-8">
+<title>deeper</title>
+<style>
+    body {
+        margin: 0;
+        height: 100vh;
+        background: radial-gradient(circle at center, #0a0a0a 0%, #000000 100%);
+        color: #b0b0b0;
+        text-align: center;
+        font-family: 'Courier New', monospace;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        cursor: default;
+        opacity: 0;
+        animation: fadeInBody 3s ease forwards;
+        overflow: hidden;
+    }
 
-<p>она не должна была это найти</p>
+    @keyframes fadeInBody {
+        0% { opacity: 0; }
+        100% { opacity: 1; }
+    }
 
-<br>
+    p {
+        margin: 20px 0;
+        font-size: 1.2em;
+        letter-spacing: 2px;
+        text-shadow: 0 0 5px rgba(255,255,255,0.2);
+        opacity: 0;
+        transform: translateY(15px);
+        animation: fadeInUp 0.8s forwards;
+    }
 
-<p>они уже видят тебя</p>
+    @keyframes fadeInUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 
-<br><br>
+    /* Задержки для появления строк */
+    p:nth-of-type(1) { animation-delay: 0.5s; }
+    p:nth-of-type(2) { animation-delay: 2.5s; }
+    p:nth-of-type(3) { animation-delay: 4.5s; }
+    p:nth-of-type(4) { animation-delay: 6.5s; }
 
-<p>следующий шаг уже был</p>
+    /* Глитч-эффект для отдельных слов */
+    .glitch {
+        position: relative;
+        display: inline-block;
+    }
 
-<br>
+    .glitch:hover {
+        animation: glitchText 0.3s infinite;
+        color: #ff4d4d;
+        cursor: help;
+    }
 
-<p>смотри внимательно</p>
+    @keyframes glitchText {
+        0% { text-shadow: -2px 0 red, 2px 0 blue; transform: skew(0deg); }
+        25% { text-shadow: 2px 0 red, -2px 0 blue; transform: skew(2deg); }
+        50% { text-shadow: -2px 0 blue, 2px 0 red; transform: skew(-2deg); }
+        75% { text-shadow: 2px 0 blue, -2px 0 red; transform: skew(1deg); }
+        100% { text-shadow: -2px 0 red, 2px 0 blue; transform: skew(0deg); }
+    }
 
+    /* Мигающий курсор в конце */
+    .cursor {
+        display: inline-block;
+        width: 12px;
+        height: 18px;
+        background-color: #b0b0b0;
+        vertical-align: middle;
+        margin-left: 8px;
+        animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
+    }
+
+    /* Скрытая подсказка */
+    .hint {
+        position: fixed;
+        bottom: 15px;
+        left: 15px;
+        font-size: 0.7em;
+        opacity: 0.2;
+        transition: 0.3s;
+        cursor: pointer;
+        z-index: 10;
+    }
+
+    .hint:hover {
+        opacity: 0.8;
+    }
+
+    /* Шум поверх всего */
+    .noise {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url('https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif');
+        opacity: 0.04;
+        pointer-events: none;
+        z-index: 20;
+        mix-blend-mode: screen;
+    }
+
+    /* Редкие вспышки */
+    .flash {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: white;
+        opacity: 0;
+        pointer-events: none;
+        z-index: 30;
+        transition: opacity 0.05s;
+    }
+
+    /* Аудио-контрол (если есть звук) */
+    audio {
+        display: none;
+    }
+</style>
+</head>
+<body>
+
+<div class="noise"></div>
+<div class="flash" id="flash"></div>
+
+<p>она не должна была это <span class="glitch" title="оператор?">найти</span></p>
+<p><span class="glitch" title="уже здесь">они</span> уже видят тебя</p>
+<p>следующий шаг <span class="glitch" title="уже был. или нет.">уже был</span></p>
+<p>смотри <span class="glitch" id="watchTrigger" title="нажми на меня">внимательно</span><span class="cursor"></span></p>
+
+<div class="hint" id="hint">[тишина. нажми для сигнала]</div>
+
+<script>
+    // Редкие вспышки и глитчи
+    const flashDiv = document.getElementById('flash');
+    const watchSpan = document.getElementById('watchTrigger');
+    const hintDiv = document.getElementById('hint');
+    
+    // Случайные вспышки
+    setInterval(() => {
+        if (Math.random() > 0.92) {
+            flashDiv.style.opacity = '0.25';
+            setTimeout(() => { flashDiv.style.opacity = '0'; }, 90);
+            // Лёгкий звуковой глитч (если audio.js доступен)
+            if (typeof playGlitch === 'function') playGlitch();
+        }
+    }, 3500);
+    
+    // Эффект при наведении на "внимательно"
+    watchSpan.addEventListener('click', () => {
+        // Вспышка
+        flashDiv.style.opacity = '0.4';
+        setTimeout(() => { flashDiv.style.opacity = '0'; }, 150);
+        // Меняем текст
+        watchSpan.innerHTML = 'УВИДЕЛ';
+        watchSpan.style.color = '#ff8888';
+        watchSpan.style.animation = 'glitchText 0.2s infinite';
+        // Добавляем сообщение в консоль (секрет)
+        console.log('%cТЫ ЗАШЁЛ СЛИШКОМ ДАЛЕКО', 'color: #ff4444; font-size: 16px; font-family: monospace;');
+        console.log('%cархив повреждён', 'color: #888;');
+        // Доп. мистика: небольшой таймер на редирект?
+        setTimeout(() => {
+            let r = Math.random();
+            if (r > 0.85) {
+                window.location.href = 'secret.html';
+            } else if (r > 0.6) {
+                window.location.href = 'signal.html';
+            }
+        }, 2000);
+    });
+    
+    // Нажатие на hint
+    hintDiv.addEventListener('click', () => {
+        hintDiv.innerHTML = '[сигнал пойман. они ближе]';
+        hintDiv.style.opacity = '0.8';
+        flashDiv.style.opacity = '0.2';
+        setTimeout(() => { flashDiv.style.opacity = '0'; }, 200);
+        // Переход на другую страницу через время (опционально)
+        setTimeout(() => {
+            window.location.href = 'signal.html';
+        }, 1800);
+    });
+    
+    // Проигрывание случайного глитч-звука (если audio.js предоставляет такую функцию)
+    function playGlitch() {
+        if (typeof playSound === 'function') {
+            playSound('glitch');
+        } else {
+            // Создаём простой писк, если звука нет
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.frequency.value = 800;
+                gain.gain.value = 0.1;
+                osc.start();
+                gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.3);
+                osc.stop(ctx.currentTime + 0.3);
+                ctx.resume();
+            } catch(e) { console.log(e); }
+        }
+    }
+    
+    // Загрузка состояния из localStorage, если есть
+    let state = JSON.parse(localStorage.getItem('state') || '{}');
+    if (!state.deeper) {
+        state.deeper = { visited: 1 };
+        localStorage.setItem('state', JSON.stringify(state));
+    } else {
+        state.deeper.visited++;
+        localStorage.setItem('state', JSON.stringify(state));
+    }
+    
+    // Эффект дрожания экрана по F11 или нажатию Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            document.body.style.transform = 'translateX(4px)';
+            setTimeout(() => { document.body.style.transform = ''; }, 100);
+            flashDiv.style.opacity = '0.15';
+            setTimeout(() => { flashDiv.style.opacity = '0'; }, 80);
+        }
+    });
+</script>
+
+<!-- Подключаем audio.js если он есть -->
+<script src="audio.js"></script>
 </body>
 </html>
