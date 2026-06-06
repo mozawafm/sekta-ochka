@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Книга Озарения</title>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        background: #03050a;
+        font-family: 'Courier New', monospace;
+        color: #b8b8c8;
+        overflow-x: hidden;
+    }
+
+    /* Шум */
+    .noise {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url('https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif');
+        opacity: 0.03;
+        pointer-events: none;
+        z-index: 100;
+        mix-blend-mode: screen;
+    }
+
+    /* Вспышка */
+    .flash {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #f5e6c8;
+        opacity: 0;
+        pointer-events: none;
+        z-index: 200;
+        transition: opacity 0.05s;
+    }
+
+    /* Обложка */
+    .cover {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #0a0c14;
+        z-index: 50;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        transition: opacity 1s ease;
+        backdrop-filter: blur(4px);
+    }
+
+    .cover h1 {
+        font-size: 3em;
+        letter-spacing: 15px;
+        color: #d4c5a0;
+        text-shadow: 0 0 20px rgba(212,197,160,0.3);
+        margin-bottom: 20px;
+        animation: pulseGlow 3s infinite;
+    }
+
+    .cover p {
+        font-size: 0.8em;
+        opacity: 0.5;
+        letter-spacing: 5px;
+    }
+
+    @keyframes pulseGlow {
+        0%, 100% { opacity: 0.7; text-shadow: 0 0 10px rgba(212,197,160,0.2); }
+        50% { opacity: 1; text-shadow: 0 0 30px rgba(212,197,160,0.5); }
+    }
+
+    /* Основной контейнер книги */
+    .book-container {
+        display: none;
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 40px 20px 80px;
+        position: relative;
+        z-index: 10;
+    }
+
+    /* Заголовок книги */
+    .book-header {
+        text-align: center;
+        border-bottom: 1px solid #2a2a3a;
+        margin-bottom: 40px;
+        padding-bottom: 20px;
+    }
+
+    .book-header h1 {
+        font-size: 2.2em;
+        letter-spacing: 10px;
+        color: #d4c5a0;
+        font-weight: normal;
+    }
+
+    .book-header h2 {
+        font-size: 0.9em;
+        font-weight: normal;
+        opacity: 0.5;
+        letter-spacing: 5px;
+        margin-top: 10px;
+    }
+
+    /* Навигация по главам */
+    .chapter-nav {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 50px;
+        border-bottom: 1px solid #1a1a2a;
+        padding-bottom: 20px;
+    }
+
+    .chapter-btn {
+        background: none;
+        border: 1px solid #3a3a4a;
+        color: #a0a0b0;
+        padding: 8px 16px;
+        font-family: monospace;
+        font-size: 0.8em;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .chapter-btn:hover {
+        background: #d4c5a0;
+        color: #0a0c14;
+        border-color: #d4c5a0;
+    }
+
+    .chapter-btn.active {
+        background: #d4c5a0;
+        color: #0a0c14;
+        border-color: #d4c5a0;
+    }
+
+    /* Содержание главы */
+    .chapter-content {
+        animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .chapter-title {
+        font-size: 1.8em;
+        color: #c4b88a;
+        margin-bottom: 30px;
+        border-left: 3px solid #d4c5a0;
+        padding-left: 20px;
+    }
+
+    .chapter-text p {
+        line-height: 1.8;
+        margin-bottom: 20px;
+        text-align: justify;
+    }
+
+    .verse {
+        font-style: italic;
+        color: #a8b8d4;
+        border-left: 2px solid #4a3f2c;
+        padding-left: 25px;
+        margin: 25px 0;
+        background: rgba(212,197,160,0.03);
+        padding: 15px 20px;
+    }
+
+    .psalm {
+        background: rgba(100,80,50,0.1);
+        padding: 20px;
+        margin: 25px 0;
+        border: 1px solid #3a3a4a;
+    }
+
+    .psalm p {
+        margin-bottom: 10px;
+    }
+
+    /* Счетчик 216 */
+    .number-216 {
+        text-align: center;
+        margin-top: 50px;
+        font-size: 0.9em;
+        color: #6a6a7a;
+        letter-spacing: 8px;
+        border-top: 1px solid #1a1a2a;
+        padding-top: 30px;
+    }
+
+    /* Кнопка возврата */
+    .back-link {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: rgba(0,0,0,0.6);
+        border: 1px solid #3a3a4a;
+        padding: 10px 20px;
+        font-size: 0.7em;
+        cursor: pointer;
+        transition: 0.2s;
+        z-index: 30;
+        font-family: monospace;
+    }
+
+    .back-link:hover {
+        background: #d4c5a0;
+        color: black;
+        border-color: #d4c5a0;
+    }
+
+    /* Скрытая подсказка */
+    .hidden-hint {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        font-size: 0.6em;
+        opacity: 0.15;
+        z-index: 30;
+        cursor: pointer;
+    }
+
+    .hidden-hint:hover {
+        opacity: 0.6;
+    }
+
+    /* Адаптив */
+    @media (max-width: 600px) {
+        .chapter-btn { padding: 5px 10px; font-size: 0.7em; }
+        .chapter-title { font-size: 1.3em; }
+        .book-header h1 { font-size: 1.5em; letter-spacing: 5px; }
+    }
+</style>
+</head>
+<body>
+
+<div class="noise"></div>
+<div class="flash" id="flash"></div>
+
+<!-- Обложка -->
+<div class="cover" id="cover">
+    <h1>КНИГА<br>ОЗАРЕНИЯ</h1>
+    <p>нажми, чтобы открыть</p>
+</div>
+
+<!-- Основное содержание -->
+<div class="book-container" id="bookContainer">
+    <div class="book-header">
+        <h1>КНИГА ОЗАРЕНИЯ</h1>
+        <h2>Писания о Многомерности и Времени</h2>
+    </div>
+
+    <div class="chapter-nav" id="chapterNav"></div>
+    <div class="chapter-content" id="chapterContent"></div>
+    
+    <div class="number-216">
+        216 → 0x216 ← 216
+    </div>
+</div>
+
+<div class="back-link" id="backLink">[вернуться в тишину]</div>
+<div class="hidden-hint" id="hint">[216]</div>
+
+<script>
+    // ============================================
+    // ТЕКСТ КНИГИ ПО ГЛАВАМ
+    // ============================================
+    const bookData = [
+        {
+            title: "Глава 1. О Сущем и Невидимом",
+            content: `
+                <p>И сказал Созерцатель: "Я живу в интересном мире, где всё течет и изменяется".</p>
+                <p>И взглянул он на пространство, и увидел, что тело его — инструмент, дабы получать знания из бездны.</p>
+                <p>"Развитие есть изменение", — провозгласил он, и слово его стало истиной.</p>
+                <p>Но воистину, нет объективной реальности, ибо всё, что я называю "я", есть отражение опыта, который может быть ложным или замещённым.</p>
+                <p>И воззвал он к небесам: "Мир не обязан соответствовать моим представлениям о нем".</p>
+                <div class="verse">И ответили ему небеса: "Люди разные, и ты тоже другой".</div>
+            `
+        },
+        {
+            title: "Глава 2. О Часах и Знаках",
+            content: `
+                <p>И явился ему знак в час одиннадцатый, когда стрелки сошлись на 11:11.</p>
+                <p>И снова явился знак в час двадцать второй, когда время показало 22:22.</p>
+                <p>"Время: часы, минуты и секунды на самом деле не имеют значения, но эти совпадения интересны мне", — записал он в свиток.</p>
+                <p>И сказал он ученикам своим: "Что в жизни может быть важнее, чем понять её как можно глубже?"</p>
+                <div class="verse">И ответили ученики: "Ничего, учитель, ибо путь к истине лежит через наблюдение и принятие".</div>
+            `
+        },
+        {
+            title: "Глава 3. О Языке и Слове",
+            content: `
+                <p>И сравнил он русский язык с Линуксом, а английский — с macOS.</p>
+                <p>"Язык, основанный на страхе, порождает осуждение", — говорил он.</p>
+                <p>И добавил: "Осуждение есть поверхностное понимание без погружения".</p>
+                <p>И заповедовал он: <span class="glitch-word">"Не для чего, а почему"</span>.</p>
+                <p>И ещё сказал: "Проще наблюдать и анализировать получаемый опыт, чем создавать установки и следовать им".</p>
+            `
+        },
+        {
+            title: "Глава 4. О Вселенной и Самовоспроизведении",
+            content: `
+                <p>И провозгласил он: "Вселенная есть бесконечно повторяемый процесс самовоспроизведения".</p>
+                <p>"Гравитация есть время, и время есть всё вокруг меня", — добавил он.</p>
+                <p>И спросили его ученики: "Всё в этом мире случайно или случайностей вообще не существует?"</p>
+                <div class="verse">И ответил он: "В конечном итоге все случайности имеют значение".</div>
+            `
+        },
+        {
+            title: "Псалом 1. О Мудрости",
+            content: `
+                <div class="psalm">
+                    <p>Благословенны те, кто наблюдают за своим телом, ибо оно подает сигналы.</p>
+                    <p>Благословенны те, кто признают ошибочность своих суждений, ибо мудрость приходит через принятие.</p>
+                    <p>Благословенны те, кто знают, что знание есть сила, но любое знание субъективно.</p>
+                </div>
+            `
+        },
+        {
+            title: "Псалом 2. О Спокойствии",
+            content: `
+                <div class="psalm">
+                    <p>Блаженны те, кто стремятся к спокойствию, ибо оно есть наименее энергозатратное состояние.</p>
+                    <p>Блаженны те, кто не светятся, не пиздят, ибо они избегают пустоты.</p>
+                    <p>Блаженны те, кто знают, что за любой тайной скрывается более глубокая тайна.</p>
+                </div>
+            `
+        },
+        {
+            title: "Притча о Мухах",
+            content: `
+                <p>И случилось однажды, что мухи наполнили пространство его.</p>
+                <p>И сказал он: "Взаимодействие с мухами есть часть опыта".</p>
+                <div class="verse">Но в конце концов всё окончилось мухогеноцидом, и он записал: "Такова природа вещей".</div>
+            `
+        },
+        {
+            title: "Глава 5. О Цели и Мечте",
+            content: `
+                <p>И сказал он: "Кажется, я нашел свою цель и мечту".</p>
+                <div class="verse">И добавил: "О, печенька. МММ, шоколадка".</div>
+                <p>И посмеялся он над собой, ибо знал, что смеяться над чем-либо — это уже новое.</p>
+            `
+        },
+        {
+            title: "Псалом 3. О Знании",
+            content: `
+                <div class="psalm">
+                    <p>Благословенны те, кто признают субъективность знаний, ибо истинное знание есть интерпретация.</p>
+                    <p>Благословенны те, кто стремятся к большему количеству знаний, ибо качество их менее важно.</p>
+                    <p>Благословенны те, кто знают, что правда — это всё, что происходит в квантовом мире.</p>
+                </div>
+            `
+        },
+        {
+            title: "Глава 6. О Человеке и Его Множественности",
+            content: `
+                <p>И сказал Созерцатель: "Я тоже другой".</p>
+                <p>И добавил он: "Люди разные, и я разный".</p>
+                <p>И постигли ученики его, что каждый человек есть отражение своего опыта.</p>
+                <p>"Ошибочный опыт — это первичный опыт", — записал он в свиток.</p>
+                <p>И воззвал он к своим последователям: "Мудрость принятия своих ошибок есть путь к истине".</p>
+                <div class="verse">И ответили они: "Мы поняли, что спокойствие есть наименее энергозатратное состояние".</div>
+            `
+        },
+        {
+            title: "Глава 7. О Свете и Тьме",
+            content: `
+                <p>И сказал Созерцатель: "В каждом человеке есть свет и тьма, и они не враги, но части одного целого".</p>
+                <p>"Тьма — это неведение, а свет — это знание", — провозгласил он, и слова его стали истиной.</p>
+                <p>И добавил он: "Не бойтесь тьмы, ибо в ней рождается свет".</p>
+                <p>И спросили его ученики: "Как же нам найти свет в себе?"</p>
+                <p>И ответил он: "Наблюдайте за своим телом, ибо оно подает сигналы. Распознавайте их, и вы найдете путь".</p>
+                <div class="verse">"Человек видит то, что может видеть", — напомнил он.</div>
+                <p>"Но если вы погрузитесь глубже, то увидите то, чего раньше не замечали".</p>
+            `
+        },
+        {
+            title: "Глава 8. О Пустоте и Наполненности",
+            content: `
+                <p>И сказал Созерцатель: "Пустота — это не отсутствие, но возможность для наполнения".</p>
+                <p>"Не бойтесь ничего, ибо в ничто кроется все", — добавил он.</p>
+                <div class="verse">И записал он: "Самое главное — это ничего".</div>
+                <p>И спросили его ученики: "Как же нам жить с этим знанием?"</p>
+                <p>И ответил он: "Живите так, словно каждый момент — это дар. Принимайте его без страха".</p>
+            `
+        },
+        {
+            title: "Заключение. О Вечности",
+            content: `
+                <p>И сказал он: "Вселенная — это бесконечно повторяемый процесс самовоспроизведения".</p>
+                <p>"Гравитация — это всё вокруг меня", — повторил он, и слова его стали вечными.</p>
+                <p>И умолк, ибо знал, что каждое действие имеет последствие.</p>
+                <p>И стали слова его священным писанием, и передавались они из поколения в поколение.</p>
+            `
+        },
+        {
+            title: "Послесловие",
+            content: `
+                <p>И сказали старцы: "Эти писания суть ключ к пониманию многомерного пространства, где каждый ищет себя".</p>
+                <div class="verse">И ответили юные: "Да будет так, ибо мы видим то, что можем видеть".</div>
+                <p style="margin-top: 30px; text-align: center;">Аминь.</p>
+            `
+        }
+    ];
+
+    // ============================================
+    // ПЕРЕМЕННЫЕ
+    // ============================================
+    let currentChapter = 0;
+    let glitchCount = 0;
+
+    const cover = document.getElementById('cover');
+    const bookContainer = document.getElementById('bookContainer');
+    const chapterNav = document.getElementById('chapterNav');
+    const chapterContent = document.getElementById('chapterContent');
+    const flashDiv = document.getElementById('flash');
+    const backLink = document.getElementById('backLink');
+    const hint = document.getElementById('hint');
+
+    // ============================================
+    // ФУНКЦИИ
+    // ============================================
+    function doFlash() {
+        flashDiv.style.opacity = '0.2';
+        setTimeout(() => { flashDiv.style.opacity = '0'; }, 80);
+    }
+
+    function randomFlash() {
+        if (Math.random() > 0.92) {
+            doFlash();
+        }
+    }
+
+    function renderChapter(index) {
+        const chapter = bookData[index];
+        chapterContent.innerHTML = `
+            <div class="chapter-title">${chapter.title}</div>
+            <div class="chapter-text">${chapter.content}</div>
+        `;
+        
+        // Обновляем активную кнопку
+        document.querySelectorAll('.chapter-btn').forEach((btn, i) => {
+            if (i === index) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+        
+        // Плавный скролл наверх
+        chapterContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        
+        // Эффект: небольшая вспышка при смене главы
+        doFlash();
+        
+        // Сохраняем в localStorage
+        localStorage.setItem('book_last_chapter', index);
+    }
+
+    function buildNavigation() {
+        chapterNav.innerHTML = '';
+        bookData.forEach((chapter, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'chapter-btn';
+            btn.innerText = idx === 0 ? 'Пролог' : 
+                           idx === bookData.length - 1 ? 'Эпилог' :
+                           `${idx}`;
+            btn.title = chapter.title;
+            btn.onclick = () => {
+                currentChapter = idx;
+                renderChapter(currentChapter);
+            };
+            chapterNav.appendChild(btn);
+        });
+    }
+
+    // ============================================
+    // СЕКРЕТЫ
+    // ============================================
+    
+    // Команда 216 на клавиатуре
+    let keyBuffer = '';
+    let lastKeyTime = 0;
+    
+    document.addEventListener('keydown', (e) => {
+        if (e.key.length > 1) return;
+        
+        const now = Date.now();
+        if (now - lastKeyTime > 1500) keyBuffer = '';
+        lastKeyTime = now;
+        
+        keyBuffer += e.key;
+        if (keyBuffer.length > 6) keyBuffer = keyBuffer.slice(-6);
+        
+        if (keyBuffer.includes('216')) {
+            doFlash();
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => doFlash(), i * 150);
+            }
+            keyBuffer = '';
+            
+            // Секретный эффект: подсветка числа 216
+            const num216 = document.querySelector('.number-216');
+            if (num216) {
+                num216.style.color = '#d4c5a0';
+                num216.style.textShadow = '0 0 10px #d4c5a0';
+                setTimeout(() => {
+                    num216.style.color = '';
+                    num216.style.textShadow = '';
+                }, 1000);
+            }
+        }
+        
+        // Секретная команда "мухи"
+        if (keyBuffer.includes('мухи') || keyBuffer === 'muxi') {
+            doFlash();
+            alert('🐝 МУХОГЕНОЦИД');
+            keyBuffer = '';
+        }
+    });
+    
+    // Клик по подсказке
+    hint.addEventListener('click', () => {
+        doFlash();
+        hint.style.opacity = '1';
+        hint.innerText = '[216]';
+        setTimeout(() => {
+            hint.style.opacity = '0.15';
+        }, 2000);
+    });
+    
+    // Возврат на deeper
+    backLink.addEventListener('click', () => {
+        doFlash();
+        setTimeout(() => {
+            window.location.href = 'deeper.html';
+        }, 200);
+    });
+    
+    // Открытие книги
+    cover.addEventListener('click', () => {
+        cover.style.opacity = '0';
+        setTimeout(() => {
+            cover.style.display = 'none';
+            bookContainer.style.display = 'block';
+            // Восстанавливаем последнюю прочитанную главу
+            const lastChapter = localStorage.getItem('book_last_chapter');
+            if (lastChapter && parseInt(lastChapter) < bookData.length) {
+                currentChapter = parseInt(lastChapter);
+            }
+            renderChapter(currentChapter);
+        }, 1000);
+    });
+    
+    // Случайные вспышки при чтении
+    setInterval(() => {
+        if (bookContainer.style.display === 'block') {
+            randomFlash();
+        }
+    }, 5000);
+    
+    // Запись в localStorage о посещении
+    let state = JSON.parse(localStorage.getItem('state') || '{}');
+    if (!state.book) {
+        state.book = { opened: 1 };
+    } else {
+        state.book.opened++;
+    }
+    localStorage.setItem('state', JSON.stringify(state));
+    
+    // Сборка навигации
+    buildNavigation();
+    
+    console.log('%c📖 КНИГА ОЗАРЕНИЯ ОТКРЫТА', 'color: #d4c5a0; font-size: 14px;');
+    console.log(`%cпосещений: ${state.book.opened}`, 'color: #8a7a5a;');
+</script>
+</body>
+</html>
