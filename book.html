@@ -261,6 +261,21 @@
         padding-top: 25px;
         font-family: monospace;
     }
+    
+    /* Стиль для кликабельного 216 */
+    .clickable-216 {
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-block;
+        padding: 0 4px;
+        border-radius: 3px;
+    }
+    
+    .clickable-216:hover {
+        text-shadow: 0 0 8px #b03030;
+        color: #b03030;
+        background: rgba(0,0,0,0.05);
+    }
 
     .back-link {
         position: fixed;
@@ -351,7 +366,7 @@
     <div class="chapter-content" id="chapterContent"></div>
     
     <div class="number-216">
-        <span id="num216">216</span> → 0x216 ← <span id="num216b">216</span>
+        <span id="num216" class="clickable-216">216</span> → 0x216 ← <span id="num216b" class="clickable-216">216</span>
     </div>
 </div>
 
@@ -359,6 +374,69 @@
 <div class="secret-hint" id="secretHint">[найди 216]</div>
 
 <script>
+    // ============================================
+    // ЗВУК 216 ГЦ
+    // ============================================
+    let audioCtx = null;
+    let isAudioAllowed = false;
+    
+    function initAudio() {
+        if (audioCtx) return;
+        try {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        } catch(e) {
+            console.log("Web Audio API не поддерживается");
+        }
+    }
+    
+    function play216Hz() {
+        if (!audioCtx) {
+            initAudio();
+        }
+        if (!audioCtx) return;
+        
+        // Возобновляем контекст, если он заблокирован
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume().then(() => {
+                playTone();
+            }).catch(e => console.log);
+        } else {
+            playTone();
+        }
+    }
+    
+    function playTone() {
+        if (!audioCtx) return;
+        
+        const now = audioCtx.currentTime;
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        oscillator.frequency.value = 216; // ← 216 Гц, половина от 432
+        
+        // Атмосферный звук: тихо, плавное затухание
+        gainNode.gain.setValueAtTime(0.08, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 3.5);
+        
+        oscillator.start(now);
+        oscillator.stop(now + 3.5);
+        
+        // Лёгкая вспышка в такт звуку
+        doFlash();
+        setTimeout(() => doFlash(), 500);
+        setTimeout(() => doFlash(), 1000);
+    }
+    
+    // Инициализируем аудио при первом клике где угодно
+    document.body.addEventListener('click', () => {
+        if (audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+    }, { once: true });
+
     // ============================================
     // ТЕКСТ КНИГИ
     // ============================================
@@ -513,7 +591,7 @@
     const secretHint = document.getElementById('secretHint');
 
     function doFlash() {
-        flashDiv.style.opacity = '0.3';
+        flashDiv.style.opacity = '0.25';
         setTimeout(() => { flashDiv.style.opacity = '0'; }, 80);
     }
 
@@ -600,6 +678,29 @@
     }
 
     // ============================================
+    // КЛИК НА 216 — ЗВУК И ВСПЫШКА
+    // ============================================
+    function setup216Click() {
+        const num216 = document.getElementById('num216');
+        const num216b = document.getElementById('num216b');
+        
+        const clickHandler = () => {
+            play216Hz();
+            doFlash();
+            // Эффект свечения
+            [num216, num216b].forEach(el => {
+                el.style.textShadow = '0 0 12px #b03030';
+                setTimeout(() => {
+                    el.style.textShadow = '';
+                }, 600);
+            });
+        };
+        
+        num216.addEventListener('click', clickHandler);
+        num216b.addEventListener('click', clickHandler);
+    }
+
+    // ============================================
     // СЕКРЕТЫ
     // ============================================
     let keyBuffer = '';
@@ -616,6 +717,7 @@
         if (keyBuffer.length > 6) keyBuffer = keyBuffer.slice(-6);
         
         if (keyBuffer.includes('216')) {
+            play216Hz();
             doFlash();
             for (let i = 0; i < 3; i++) {
                 setTimeout(() => doFlash(), i * 120);
@@ -668,13 +770,14 @@
     
     buildNavigation();
     renderChapter(currentChapter);
+    setup216Click();
     
     let state = JSON.parse(localStorage.getItem('state') || '{}');
     if (!state.book) state.book = { opened: 1 };
     else state.book.opened++;
     localStorage.setItem('state', JSON.stringify(state));
     
-    console.log('%c📜 КНИГА ОЗАРЕНИЯ | страница найдена', 'color: #c4b58a; font-size: 12px;');
+    console.log('%c📜 КНИГА ОЗАРЕНИЯ | 216 Гц | половина от 432', 'color: #c4b58a; font-size: 12px;');
 </script>
 </body>
 </html>
