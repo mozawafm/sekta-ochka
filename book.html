@@ -262,7 +262,6 @@
         font-family: monospace;
     }
     
-    /* Стиль для кликабельного 216 */
     .clickable-216 {
         cursor: pointer;
         transition: all 0.2s ease;
@@ -395,7 +394,6 @@
         }
         if (!audioCtx) return;
         
-        // Возобновляем контекст, если он заблокирован
         if (audioCtx.state === 'suspended') {
             audioCtx.resume().then(() => {
                 playTone();
@@ -415,22 +413,19 @@
         oscillator.connect(gainNode);
         gainNode.connect(audioCtx.destination);
         
-        oscillator.frequency.value = 216; // ← 216 Гц, половина от 432
+        oscillator.frequency.value = 216;
         
-        // Атмосферный звук: тихо, плавное затухание
         gainNode.gain.setValueAtTime(0.08, now);
         gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 3.5);
         
         oscillator.start(now);
         oscillator.stop(now + 3.5);
         
-        // Лёгкая вспышка в такт звуку
         doFlash();
         setTimeout(() => doFlash(), 500);
         setTimeout(() => doFlash(), 1000);
     }
     
-    // Инициализируем аудио при первом клике где угодно
     document.body.addEventListener('click', () => {
         if (audioCtx && audioCtx.state === 'suspended') {
             audioCtx.resume();
@@ -595,7 +590,6 @@
         setTimeout(() => { flashDiv.style.opacity = '0'; }, 80);
     }
 
-    // БЕСКОНЕЧНАЯ АНИМАЦИЯ ПЕЧАТИ
     function startTypingLoop(element, symbols, speedBetweenCycles = 2000) {
         if (typingInterval) clearInterval(typingInterval);
         
@@ -677,9 +671,6 @@
         });
     }
 
-    // ============================================
-    // КЛИК НА 216 — ЗВУК И ВСПЫШКА
-    // ============================================
     function setup216Click() {
         const num216 = document.getElementById('num216');
         const num216b = document.getElementById('num216b');
@@ -687,7 +678,6 @@
         const clickHandler = () => {
             play216Hz();
             doFlash();
-            // Эффект свечения
             [num216, num216b].forEach(el => {
                 el.style.textShadow = '0 0 12px #b03030';
                 setTimeout(() => {
@@ -750,10 +740,11 @@
         }, 2500);
     });
     
+    // 🔥 ЗДЕСЬ ЕДИНСТВЕННОЕ ИЗМЕНЕНИЕ — ПЕРЕХОД НА hub.html
     backLink.addEventListener('click', () => {
         doFlash();
         setTimeout(() => {
-            window.location.href = 'deeper.html';
+            window.location.href = 'hub.html';
         }, 200);
     });
     
