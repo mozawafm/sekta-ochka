@@ -5,146 +5,166 @@
 <title>final</title>
 
 <style>
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
 
-body {
-    margin: 0;
-    overflow: hidden;
-    background: black;
-    color: white;
-    font-family: monospace;
-    cursor: none;
-}
+    body {
+        margin: 0;
+        overflow: hidden;
+        background: black;
+        color: white;
+        font-family: 'Courier New', monospace;
+        cursor: default; /* Курсор видим */
+    }
 
-#bg {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background: url("garage.jpg") center center/cover no-repeat;
-    filter: brightness(0.06) contrast(1.8) grayscale(1);
-    transform: scale(1.08);
-    transition: filter 0.3s ease;
-}
+    /* Фон с динамическим эффектом */
+    #bg {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: url("garage.jpg") center center/cover no-repeat;
+        filter: brightness(0.06) contrast(1.8) grayscale(1);
+        transform: scale(1.08);
+        transition: all 0.5s ease;
+    }
 
-#noise {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background-image: url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
-    opacity: 0.1;
-    mix-blend-mode: screen;
-    pointer-events: none;
-}
+    /* Шум */
+    #noise {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background-image: url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
+        opacity: 0.08;
+        mix-blend-mode: screen;
+        pointer-events: none;
+    }
 
-#center {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90%;
-    max-width: 800px;
-    text-align: center;
-    z-index: 20;
-}
+    /* Контейнер */
+    #center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 90%;
+        max-width: 800px;
+        text-align: center;
+        z-index: 20;
+    }
 
-/* Основная фраза */
-#line {
-    font-size: 32px;
-    letter-spacing: 8px;
-    opacity: 0;
-    transition: 2s;
-    text-shadow: 0 0 10px rgba(255,255,255,0.3);
-    margin-bottom: 30px;
-}
+    /* Строки */
+    .line {
+        font-size: 28px;
+        letter-spacing: 6px;
+        margin: 20px 0;
+        opacity: 0;
+        transition: all 0.8s ease;
+    }
 
-/* Дополнительные строки */
-.small {
-    margin-top: 25px;
-    font-size: 14px;
-    letter-spacing: 5px;
-    opacity: 0;
-    transition: 2s;
-    color: #b0a0a0;
-}
+    .line-main {
+        font-size: 36px;
+        letter-spacing: 8px;
+        text-shadow: 0 0 20px rgba(212,197,160,0.5);
+    }
 
-/* Финальная фраза */
-#finalLine {
-    margin-top: 50px;
-    font-size: 11px;
-    letter-spacing: 3px;
-    opacity: 0;
-    transition: 3s;
-    color: #6a5a4a;
-    border-top: 1px dashed rgba(255,255,255,0.1);
-    padding-top: 30px;
-    display: inline-block;
-}
+    .line-small {
+        font-size: 14px;
+        letter-spacing: 4px;
+        color: #b0a0a0;
+    }
 
-/* Эффект вспышки */
-.flash {
-    animation: flashAnim 0.08s;
-}
+    .line-final {
+        font-size: 18px;
+        letter-spacing: 6px;
+        color: #d4c5a0;
+        margin-top: 50px;
+        border-top: 1px dashed rgba(212,197,160,0.3);
+        padding-top: 30px;
+        display: inline-block;
+    }
 
-@keyframes flashAnim {
-    50% { opacity: 0; }
-}
+    /* Прогресс-бар */
+    #progressContainer {
+        position: fixed;
+        bottom: 30px;
+        left: 10%;
+        width: 80%;
+        height: 2px;
+        background: rgba(255,255,255,0.1);
+        z-index: 100;
+    }
 
-/* Эффект пульсации фона */
-.pulse {
-    animation: bgPulse 0.2s ease-out;
-}
+    #progressBar {
+        width: 0%;
+        height: 100%;
+        background: #d4c5a0;
+        transition: width 0.1s linear;
+        box-shadow: 0 0 5px #d4c5a0;
+    }
 
-@keyframes bgPulse {
-    0% { filter: brightness(0.06) contrast(1.8) grayscale(1); }
-    50% { filter: brightness(0.15) contrast(1.6) grayscale(0.8); }
-    100% { filter: brightness(0.06) contrast(1.8) grayscale(1); }
-}
+    /* Счётчик */
+    #counter {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        font-size: 9px;
+        opacity: 0.2;
+        z-index: 100;
+        letter-spacing: 2px;
+    }
 
-/* Глитч-эффект для финальной фразы */
-@keyframes glitch {
-    0% { text-shadow: -2px 0 red, 2px 0 blue; transform: skew(0deg); }
-    20% { text-shadow: 2px 0 red, -2px 0 blue; transform: skew(2deg); }
-    40% { text-shadow: -2px 0 blue, 2px 0 red; transform: skew(-2deg); }
-    60% { text-shadow: 2px 0 blue, -2px 0 red; transform: skew(1deg); }
-    80% { text-shadow: -2px 0 red, 2px 0 blue; transform: skew(0deg); }
-    100% { text-shadow: -2px 0 red, 2px 0 blue; transform: skew(0deg); }
-}
+    /* Кнопка пропуска */
+    #skip {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        font-size: 9px;
+        opacity: 0.15;
+        cursor: pointer;
+        transition: 0.2s;
+        z-index: 100;
+        letter-spacing: 2px;
+    }
 
-.glitch-active {
-    animation: glitch 0.3s infinite;
-    color: #d4c5a0;
-}
+    #skip:hover {
+        opacity: 0.6;
+    }
 
-/* Счётчик */
-#counter {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    font-size: 10px;
-    opacity: 0.15;
-    z-index: 100;
-    font-family: monospace;
-}
+    /* Анимации */
+    @keyframes flashAnim {
+        0% { opacity: 1; }
+        50% { opacity: 0; }
+        100% { opacity: 1; }
+    }
 
-/* Кнопка пропуска (на случай если кто-то захочет ускорить) */
-#skip {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    font-size: 9px;
-    opacity: 0.08;
-    cursor: pointer;
-    transition: 0.2s;
-    z-index: 100;
-}
+    @keyframes glitch {
+        0% { transform: translate(0); text-shadow: -2px 0 red, 2px 0 blue; }
+        25% { transform: translate(-2px, 1px); text-shadow: 2px 0 red, -2px 0 blue; }
+        50% { transform: translate(2px, -1px); text-shadow: -2px 0 blue, 2px 0 red; }
+        75% { transform: translate(-1px, 2px); text-shadow: 2px 0 blue, -2px 0 red; }
+        100% { transform: translate(0); text-shadow: -2px 0 red, 2px 0 blue; }
+    }
 
-#skip:hover {
-    opacity: 0.4;
-}
+    @keyframes pulse {
+        0% { opacity: 0.3; filter: brightness(0.06); }
+        50% { opacity: 0.8; filter: brightness(0.15); }
+        100% { opacity: 0.3; filter: brightness(0.06); }
+    }
+
+    .glitch-active {
+        animation: glitch 0.2s infinite;
+        color: #d4c5a0;
+    }
+
+    .pulse-active {
+        animation: pulse 0.3s ease-out;
+    }
+
+    .flash-active {
+        animation: flashAnim 0.08s;
+    }
 </style>
 </head>
 <body>
@@ -153,23 +173,34 @@ body {
 <div id="noise"></div>
 
 <div id="center">
-    <div id="line"></div>
-    <div id="s1" class="small"></div>
-    <div id="s2" class="small"></div>
-    <div id="finalLine"></div>
+    <div id="line1" class="line line-main"></div>
+    <div id="line2" class="line line-small"></div>
+    <div id="line3" class="line line-small"></div>
+    <div id="line4" class="line line-final"></div>
 </div>
 
-<div id="counter">◉ ЗАПИСЬ ЗАВЕРШЕНА</div>
-<div id="skip">[пропустить]</div>
+<div id="progressContainer">
+    <div id="progressBar"></div>
+</div>
+
+<div id="counter">◉ ЗАПИСЬ ЗАВЕРШАЕТСЯ</div>
+<div id="skip">[пропустить →]</div>
 
 <script>
-    // Расширенный набор фраз — более мистические и финальные
-    const phrases = [
+    // ============================================
+    // РАСШИРЕННЫЙ НАБОР ФРАЗ
+    // ============================================
+    const mainPhrases = [
         "216",
         "432",
+        "СОВПАДЕНИЕ ПОДТВЕРЖДЕНО",
+        "СИГНАЛ ОБНАРУЖЕН",
+        "ДОСТУП РАЗРЕШЁН"
+    ];
+    
+    const secondaryPhrases = [
         "созерцатель молчит",
         "запись продолжается",
-        "совпадение найдено",
         "тишина заговорит",
         "источник неизвестен",
         "наблюдение активно",
@@ -178,133 +209,198 @@ body {
         "цикл замкнулся",
         "216 секунд тишины",
         "лазеры погасли",
-        "гараж дышит"
+        "гараж дышит",
+        "3:36"
     ];
     
     const finalPhrases = [
-        "это никогда не закончится",
-        "ты всегда был здесь",
-        "финал — это иллюзия",
-        "нажми любую кнопку",
-        "выбора не существует",
-        "добро пожаловать домой"
+        "ЭТО НИКОГДА НЕ ЗАКОНЧИТСЯ",
+        "ТЫ ВСЕГДА БЫЛ ЗДЕСЬ",
+        "ФИНАЛ — ЭТО ИЛЛЮЗИЯ",
+        "ВЫБОРА НЕ СУЩЕСТВУЕТ",
+        "ДОБРО ПОЖАЛОВАТЬ ДОМОЙ",
+        "216 → 0x216 ← 216"
     ];
     
-    const line = document.getElementById("line");
-    const s1 = document.getElementById("s1");
-    const s2 = document.getElementById("s2");
-    const finalLine = document.getElementById("finalLine");
+    // ============================================
+    // ЭЛЕМЕНТЫ
+    // ============================================
+    const line1 = document.getElementById("line1");
+    const line2 = document.getElementById("line2");
+    const line3 = document.getElementById("line3");
+    const line4 = document.getElementById("line4");
     const bg = document.getElementById("bg");
+    const noise = document.getElementById("noise");
+    const progressBar = document.getElementById("progressBar");
     
-    let step = 0;
+    let startTime = Date.now();
+    let totalDuration = 26000; // 26 секунд
     let intervalId = null;
-    let finalShown = false;
+    let timeoutIds = [];
     
-    // Функция вспышки
+    // ============================================
+    // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+    // ============================================
     function doFlash() {
-        document.body.classList.add("flash");
+        document.body.classList.add("flash-active");
         setTimeout(() => {
-            document.body.classList.remove("flash");
+            document.body.classList.remove("flash-active");
         }, 80);
     }
     
-    // Функция пульсации фона
-    function pulseBg() {
-        bg.classList.add("pulse");
+    function doPulse() {
+        bg.classList.add("pulse-active");
         setTimeout(() => {
-            bg.classList.remove("pulse");
-        }, 200);
+            bg.classList.remove("pulse-active");
+        }, 300);
     }
     
-    // Функция глитча на финальной фразе
-    function startGlitch() {
-        finalLine.classList.add("glitch-active");
+    function randomFrom(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
     }
     
-    // Основной тайминг
-    setTimeout(() => {
-        const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
-        line.innerText = randomPhrase;
-        line.style.opacity = "0.95";
-        doFlash();
-        pulseBg();
-    }, 800);
+    function updateProgress() {
+        const elapsed = Date.now() - startTime;
+        let percent = Math.min(100, (elapsed / totalDuration) * 100);
+        progressBar.style.width = percent + "%";
+        
+        if (percent < 100) {
+            requestAnimationFrame(updateProgress);
+        }
+    }
     
-    setTimeout(() => {
-        const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
-        s1.innerText = randomPhrase;
-        s1.style.opacity = "0.6";
-        doFlash();
-        pulseBg();
-    }, 4500);
+    function glitchElement(element, duration = 500) {
+        element.classList.add("glitch-active");
+        setTimeout(() => {
+            element.classList.remove("glitch-active");
+        }, duration);
+    }
     
+    function finalGlitch() {
+        line4.classList.add("glitch-active");
+    }
+    
+    // ============================================
+    // АНИМАЦИЯ ФРАЗ
+    // ============================================
+    
+    // Первая фраза (крупная)
     setTimeout(() => {
-        const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
-        s2.innerText = randomPhrase;
-        s2.style.opacity = "0.35";
+        line1.innerText = randomFrom(mainPhrases);
+        line1.style.opacity = "0.95";
         doFlash();
-        pulseBg();
-    }, 8500);
+        doPulse();
+    }, 500);
+    
+    // Вторая фраза
+    setTimeout(() => {
+        line2.innerText = randomFrom(secondaryPhrases);
+        line2.style.opacity = "0.7";
+        doFlash();
+        doPulse();
+    }, 4000);
+    
+    // Третья фраза
+    setTimeout(() => {
+        line3.innerText = randomFrom(secondaryPhrases);
+        line3.style.opacity = "0.5";
+        doFlash();
+        doPulse();
+    }, 8000);
     
     // Финальная фраза с глитчем
     setTimeout(() => {
-        const randomFinal = finalPhrases[Math.floor(Math.random() * finalPhrases.length)];
-        finalLine.innerText = randomFinal;
-        finalLine.style.opacity = "0.7";
-        startGlitch();
+        line4.innerText = randomFrom(finalPhrases);
+        line4.style.opacity = "0.85";
+        finalGlitch();
         doFlash();
-        pulseBg();
+        doPulse();
         
-        // Тройная вспышка для эффекта
-        setTimeout(() => doFlash(), 200);
-        setTimeout(() => doFlash(), 400);
-        setTimeout(() => doFlash(), 600);
+        // Тройная вспышка
+        setTimeout(() => doFlash(), 150);
+        setTimeout(() => doFlash(), 300);
+        setTimeout(() => doFlash(), 450);
     }, 13000);
     
-    // Случайные вспышки и пульсация на всём протяжении
+    // ============================================
+    // СЛУЧАЙНЫЕ ЭФФЕКТЫ
+    // ============================================
     intervalId = setInterval(() => {
-        if (Math.random() > 0.82) {
+        if (Math.random() > 0.75) {
             doFlash();
         }
+        if (Math.random() > 0.85) {
+            doPulse();
+        }
         if (Math.random() > 0.9) {
-            pulseBg();
+            const tempNoise = noise.style.opacity;
+            noise.style.opacity = "0.2";
+            setTimeout(() => {
+                noise.style.opacity = tempNoise;
+            }, 200);
+        }
+        if (Math.random() > 0.92) {
+            // Случайный глитч на одной из строк
+            const lines = [line1, line2, line3];
+            const randomLine = randomFrom(lines);
+            if (randomLine.style.opacity > 0) {
+                glitchElement(randomLine, 200);
+            }
         }
     }, 2500);
     
-    // Усиление шума перед финалом
+    // ============================================
+    // УСИЛЕНИЕ ПЕРЕД ФИНАЛОМ
+    // ============================================
     setTimeout(() => {
-        const noise = document.getElementById("noise");
-        noise.style.opacity = "0.2";
-        setTimeout(() => {
-            noise.style.opacity = "0.1";
-        }, 1500);
+        noise.style.opacity = "0.18";
+        bg.style.filter = "brightness(0.1) contrast(1.8) grayscale(0.8)";
+        doFlash();
+        doPulse();
     }, 12000);
     
-    // Финальная вспышка перед переходом
     setTimeout(() => {
-        for (let i = 0; i < 5; i++) {
-            setTimeout(() => doFlash(), i * 150);
-        }
-        setTimeout(() => pulseBg(), 300);
-    }, 23000);
+        noise.style.opacity = "0.08";
+        bg.style.filter = "brightness(0.06) contrast(1.8) grayscale(1)";
+    }, 16000);
     
-    // Переход на hub.html
+    // ============================================
+    // ПРОГРЕСС-БАР И ПЕРЕХОД
+    // ============================================
+    updateProgress();
+    
+    setTimeout(() => {
+        // Финальная серия вспышек
+        for (let i = 0; i < 6; i++) {
+            setTimeout(() => doFlash(), i * 120);
+        }
+        setTimeout(() => doPulse(), 300);
+        setTimeout(() => {
+            noise.style.opacity = "0.25";
+        }, 400);
+    }, 25000);
+    
+    // Переход
     setTimeout(() => {
         window.location.href = "hub.html";
-    }, 28000);
+    }, totalDuration);
     
-    // Кнопка пропуска
+    // ============================================
+    // КНОПКА ПРОПУСКА
+    // ============================================
     document.getElementById("skip").addEventListener("click", () => {
         if (intervalId) clearInterval(intervalId);
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < 5; i++) {
             setTimeout(() => doFlash(), i * 80);
         }
         setTimeout(() => {
             window.location.href = "hub.html";
-        }, 300);
+        }, 400);
     });
     
-    // Сохраняем в localStorage факт финала
+    // ============================================
+    // LOCALSTORAGE
+    // ============================================
     let state = JSON.parse(localStorage.getItem('state') || '{}');
     if (!state.final) {
         state.final = { completed: 1, timestamp: Date.now() };
@@ -313,9 +409,14 @@ body {
     }
     localStorage.setItem('state', JSON.stringify(state));
     
-    // Консольное сообщение для самых внимательных
-    console.log("%cФИНАЛ", "color: #d4c5a0; font-size: 20px; font-family: monospace;");
-    console.log("%c216 → 0x216 ← 216", "color: #8a7a5a; font-size: 12px;");
+    // ============================================
+    // СЕКРЕТНОЕ СООБЩЕНИЕ В КОНСОЛЬ
+    // ============================================
+    console.log("%c▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓", "color: #d4c5a0");
+    console.log("%cФИНАЛ", "color: #d4c5a0; font-size: 24px; font-family: monospace;");
+    console.log("%c216 → 0x216 ← 216", "color: #8a7a5a; font-size: 14px;");
+    console.log("%cНаоми смотрит на дверь", "color: #6a5a4a; font-size: 11px;");
+    console.log("%c▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓", "color: #d4c5a0");
 </script>
 
 <script src="audio.js"></script>
