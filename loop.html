@@ -35,6 +35,7 @@ letter-spacing:2px;
 opacity:.85;
 user-select:none;
 pointer-events:none;
+z-index:5;
 }
 
 #noise{
@@ -45,6 +46,17 @@ background-image:url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
 opacity:.08;
 mix-blend-mode:screen;
 pointer-events:none;
+z-index:1;
+}
+
+#cover{
+position:absolute;
+top:0;
+left:0;
+width:100%;
+height:100%;
+z-index:20;
+cursor:crosshair;
 }
 
 #status{
@@ -55,6 +67,7 @@ text-align:center;
 font-size:11px;
 letter-spacing:6px;
 opacity:.15;
+z-index:25;
 }
 
 .progress-container{
@@ -62,10 +75,10 @@ position:fixed;
 bottom:60px;
 left:50%;
 transform:translateX(-50%);
-width:200px;
+width:250px;
 height:2px;
-background:rgba(255,255,255,0.1);
-z-index:30;
+background:rgba(255,255,255,0.15);
+z-index:25;
 border-radius:2px;
 overflow:hidden;
 }
@@ -86,8 +99,9 @@ text-align:center;
 font-size:9px;
 letter-spacing:3px;
 color:#6a5a4a;
-opacity:0.3;
+opacity:0.35;
 pointer-events:none;
+z-index:25;
 }
 
 .flash{
@@ -102,7 +116,6 @@ animation:flash .08s;
 <body>
 
 <div id="bg"></div>
-
 <div id="text">
 И было сказано:
 <br><br>
@@ -117,108 +130,100 @@ animation:flash .08s;
 <br><br>
 216
 </div>
-
 <canvas id="cover"></canvas>
-
 <div id="noise"></div>
-
 <div id="status">ЗАПИСЬ ПОВРЕЖДЕНА</div>
 <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
-<div class="hint">[ стирайте слой ]</div>
+<div class="hint">[ сотрите защитный слой ]</div>
 
 <script>
 const canvas = document.getElementById("cover");
 const ctx = canvas.getContext("2d");
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+resizeCanvas();
 
-ctx.fillStyle = "black";
-ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-let revealed = 0;
+let erasedPixels = 0;
 let activated = false;
-let totalPixels = canvas.width * canvas.height;
+const NEEDED_ERASES = 300;
 
 const statusDiv = document.getElementById("status");
 const progressBar = document.getElementById("progressBar");
 
-const BRUSH_SIZE = 60;
-const NEEDED = 250; // столько "мазков" нужно для активации
-
-function erase(x,y){
-if(activated) return;
-
-ctx.globalCompositeOperation = "destination-out";
-ctx.beginPath();
-ctx.arc(x, y, BRUSH_SIZE, 0, Math.PI*2);
-ctx.fill();
-
-revealed++;
-
-let percent = Math.min(100, Math.floor((revealed / NEEDED) * 100));
-progressBar.style.width = percent + "%";
-
-if(revealed > NEEDED * 0.3){
-statusDiv.innerText = "ВОССТАНОВЛЕНИЕ";
-}
-if(revealed > NEEDED * 0.7){
-statusDiv.innerText = "ЧТЕНИЕ";
-}
-if(revealed > NEEDED){
-activate();
-}
+function erase(x, y) {
+    if (activated) return;
+    
+    ctx.globalCompositeOperation = "destination-out";
+    ctx.beginPath();
+    ctx.arc(x, y, 45, 0, Math.PI * 2);
+    ctx.fill();
+    
+    erasedPixels++;
+    
+    let percent = Math.min(100, (erasedPixels / NEEDED_ERASES) * 100);
+    progressBar.style.width = percent + "%";
+    
+    if (erasedPixels > NEEDED_ERASES * 0.3) {
+        statusDiv.innerText = "ВОССТАНОВЛЕНИЕ";
+    }
+    if (erasedPixels > NEEDED_ERASES * 0.7) {
+        statusDiv.innerText = "ЧТЕНИЕ";
+    }
+    if (erasedPixels > NEEDED_ERASES) {
+        activate();
+    }
 }
 
-function activate(){
-activated = true;
-statusDiv.innerText = "СОВПАДЕНИЕ ПОДТВЕРЖДЕНО";
-
-const text = document.getElementById("text");
-const bg = document.getElementById("bg");
-const noise = document.getElementById("noise");
-
-setTimeout(()=>{
-bg.style.background = "#200";
-noise.style.opacity = "0.18";
-text.style.transform = "translate(-50%,-250%)";
-text.style.opacity = "0";
-statusDiv.style.opacity = "0";
-document.querySelector(".progress-container").style.opacity = "0";
-document.querySelector(".hint").style.opacity = "0";
-}, 1000);
-
-let flashes = 0;
-const fx = setInterval(()=>{
-document.body.classList.add("flash");
-setTimeout(()=> document.body.classList.remove("flash"), 80);
-flashes++;
-if(flashes > 12){
-clearInterval(fx);
-setTimeout(()=> window.location.href = "deeper.html", 2500);
+function activate() {
+    activated = true;
+    statusDiv.innerText = "СОВПАДЕНИЕ ПОДТВЕРЖДЕНО";
+    
+    const text = document.getElementById("text");
+    const bg = document.getElementById("bg");
+    const noise = document.getElementById("noise");
+    
+    setTimeout(() => {
+        bg.style.background = "#1a0a0a";
+        noise.style.opacity = "0.2";
+        text.style.transform = "translate(-50%, -250%)";
+        text.style.opacity = "0";
+        statusDiv.style.opacity = "0";
+        document.querySelector(".progress-container").style.opacity = "0";
+        document.querySelector(".hint").style.opacity = "0";
+    }, 200);
+    
+    let flashes = 0;
+    const fx = setInterval(() => {
+        document.body.classList.add("flash");
+        setTimeout(() => document.body.classList.remove("flash"), 80);
+        flashes++;
+        if (flashes > 12) {
+            clearInterval(fx);
+            setTimeout(() => window.location.href = "deeper.html", 2000);
+        }
+    }, 200);
 }
-}, 250);
-}
 
-// Мышь
 canvas.addEventListener("mousemove", (e) => {
-erase(e.clientX, e.clientY);
+    erase(e.clientX, e.clientY);
 });
 
-// Тач (мобильные)
 canvas.addEventListener("touchmove", (e) => {
-e.preventDefault();
-erase(e.touches[0].clientX, e.touches[0].clientY);
+    e.preventDefault();
+    erase(e.touches[0].clientX, e.touches[0].clientY);
 });
 
 window.addEventListener("resize", () => {
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-ctx.fillStyle = "black";
-ctx.fillRect(0, 0, canvas.width, canvas.height);
-revealed = 0;
-activated = false;
-progressBar.style.width = "0%";
+    resizeCanvas();
+    erasedPixels = 0;
+    activated = false;
+    progressBar.style.width = "0%";
+    statusDiv.innerText = "ЗАПИСЬ ПОВРЕЖДЕНА";
 });
 </script>
 
