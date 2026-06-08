@@ -5,317 +5,428 @@
 <title>loop</title>
 
 <style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        user-select: none;
+    }
 
-body{
-margin:0;
-overflow:hidden;
-background:black;
-cursor:none;
-font-family:monospace;
-color:white;
-transition:3s;
-}
+    body {
+        margin: 0;
+        overflow: hidden;
+        background: black;
+        font-family: 'Courier New', monospace;
+        color: white;
+        cursor: default;
+        height: 100vh;
+        position: relative;
+    }
 
-#bg{
-position:absolute;
-width:100%;
-height:100%;
-background:black;
-transition:4s;
-}
+    /* Фон */
+    #bg {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle at center, #0a0a0a 0%, #000000 100%);
+        transition: all 1s ease;
+    }
 
-#text{
+    /* Шум */
+    #noise {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background-image: url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
+        opacity: 0.06;
+        mix-blend-mode: screen;
+        pointer-events: none;
+        transition: 0.5s;
+    }
 
-position:absolute;
+    /* Основной контейнер с текстом */
+    .text-container {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 80%;
+        max-width: 750px;
+        text-align: center;
+        z-index: 10;
+        opacity: 0;
+        transition: opacity 1.5s ease;
+    }
 
-top:50%;
-left:50%;
+    .quote {
+        font-size: 20px;
+        line-height: 2;
+        letter-spacing: 3px;
+        color: rgba(255,255,255,0.85);
+        text-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
 
-transform:translate(-50%,-50%);
+    .quote-number {
+        font-size: 16px;
+        margin-top: 40px;
+        letter-spacing: 8px;
+        color: #8a7a5a;
+    }
 
-width:70%;
+    /* Защитный слой (затемнение + текст-заглушка) */
+    .cover-layer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.92);
+        backdrop-filter: blur(12px);
+        z-index: 20;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        transition: all 0.5s ease;
+        cursor: pointer;
+    }
 
-max-width:800px;
+    .cover-layer.hidden {
+        opacity: 0;
+        visibility: hidden;
+        backdrop-filter: blur(0px);
+        background: rgba(0,0,0,0);
+        pointer-events: none;
+    }
 
-text-align:center;
+    .cover-title {
+        font-size: 24px;
+        letter-spacing: 8px;
+        color: #d4c5a0;
+        margin-bottom: 30px;
+        text-shadow: 0 0 10px rgba(212,197,160,0.3);
+    }
 
-font-size:18px;
+    .cover-text {
+        font-size: 14px;
+        letter-spacing: 4px;
+        color: #a0a0a0;
+        margin-bottom: 40px;
+        max-width: 500px;
+        padding: 0 20px;
+    }
 
-line-height:2;
+    .progress-container {
+        width: 250px;
+        height: 2px;
+        background: rgba(255,255,255,0.1);
+        margin: 20px auto;
+        border-radius: 2px;
+        overflow: hidden;
+    }
 
-letter-spacing:2px;
+    .progress-bar {
+        width: 0%;
+        height: 100%;
+        background: #d4c5a0;
+        transition: width 0.05s linear;
+        box-shadow: 0 0 5px #d4c5a0;
+    }
 
-opacity:.85;
+    .cover-hint {
+        font-size: 10px;
+        letter-spacing: 3px;
+        color: #6a5a4a;
+        margin-top: 30px;
+        opacity: 0.5;
+        transition: 0.2s;
+    }
 
-user-select:none;
+    .cover-hint:hover {
+        opacity: 1;
+    }
 
-transition:4s;
+    /* Статус */
+    #status {
+        position: fixed;
+        bottom: 30px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-size: 10px;
+        letter-spacing: 5px;
+        opacity: 0.2;
+        z-index: 15;
+        transition: 0.3s;
+        pointer-events: none;
+    }
 
-}
+    /* Вспышка */
+    .flash {
+        animation: flashAnim 0.08s;
+    }
 
-#cover{
+    @keyframes flashAnim {
+        50% { opacity: 0; }
+    }
 
-position:absolute;
-width:100%;
-height:100%;
+    /* Пульсация */
+    .pulse {
+        animation: pulseAnim 0.3s ease-out;
+    }
 
-}
+    @keyframes pulseAnim {
+        0% { filter: brightness(1); }
+        50% { filter: brightness(1.3); }
+        100% { filter: brightness(1); }
+    }
 
-#noise{
+    /* Анимация исчезновения текста */
+    .fade-out-text {
+        animation: textFadeOut 1s forwards;
+    }
 
-position:absolute;
-width:100%;
-height:100%;
-
-background-image:url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
-
-opacity:.08;
-
-mix-blend-mode:screen;
-
-pointer-events:none;
-
-transition:3s;
-
-}
-
-#status{
-
-position:absolute;
-
-bottom:50px;
-
-width:100%;
-
-text-align:center;
-
-font-size:11px;
-
-letter-spacing:6px;
-
-opacity:.15;
-
-transition:4s;
-
-}
-
-.flash{
-animation:flash .08s;
-}
-
-@keyframes flash{
-
-50%{
-opacity:0;
-}
-
-}
-
+    @keyframes textFadeOut {
+        0% { opacity: 0.85; transform: translate(-50%, -50%); }
+        100% { opacity: 0; transform: translate(-50%, -150%); }
+    }
 </style>
 </head>
-
 <body>
 
 <div id="bg"></div>
-
-<div id="text">
-
-И было сказано:
-
-<br><br>
-
-«Не ищи выход.
-
-Потому что выход становится входом.
-
-Не ищи начало.
-
-Потому что начало уже произошло.
-
-Кто увидел знак,
-тот увидел лишь знак.
-
-Кто увидел повторение,
-тот приблизился к пониманию».
-
-<br><br>
-
-216
-
-</div>
-
-<canvas id="cover"></canvas>
-
 <div id="noise"></div>
 
-<div id="status">
-ЗАПИСЬ ПОВРЕЖДЕНА
+<div class="text-container" id="textContainer">
+    <div class="quote">
+        И было сказано:
+        <br><br>
+        «Не ищи выход.<br>
+        Потому что выход становится входом.<br>
+        Не ищи начало.<br>
+        Потому что начало уже произошло.<br>
+        Кто увидел знак,<br>
+        тот увидел лишь знак.<br>
+        Кто увидел повторение,<br>
+        тот приблизился к пониманию».
+    </div>
+    <div class="quote-number">216</div>
 </div>
 
+<div class="cover-layer" id="coverLayer">
+    <div class="cover-title">ЗАЩИТНЫЙ СЛОЙ</div>
+    <div class="cover-text">необходимо снять защиту для доступа к тексту</div>
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div class="cover-hint" id="coverHint">[ НАЖМИТЕ И УДЕРЖИВАЙТЕ ]</div>
+</div>
+
+<div id="status">ЗАПИСЬ ПОВРЕЖДЕНА</div>
+
 <script>
-
-const canvas =
-document.getElementById("cover");
-
-const ctx =
-canvas.getContext("2d");
-
-canvas.width =
-window.innerWidth;
-
-canvas.height =
-window.innerHeight;
-
-ctx.fillStyle = "black";
-ctx.fillRect(
-0,
-0,
-canvas.width,
-canvas.height
-);
-
-let revealed = 0;
-let activated = false;
-
-const status =
-document.getElementById("status");
-
-function erase(x,y){
-
-if(activated) return;
-
-ctx.globalCompositeOperation =
-"destination-out";
-
-ctx.beginPath();
-
-ctx.arc(
-x,
-y,
-28,
-0,
-Math.PI*2
-);
-
-ctx.fill();
-
-revealed++;
-
-if(revealed > 150){
-
-status.innerText =
-"ВОССТАНОВЛЕНИЕ";
-
-}
-
-if(revealed > 400){
-
-status.innerText =
-"ЧТЕНИЕ";
-
-}
-
-if(revealed > 800){
-
-activate();
-
-}
-
-}
-
-canvas.addEventListener(
-"mousemove",
-e=>{
-
-erase(
-e.clientX,
-e.clientY
-);
-
-});
-
-canvas.addEventListener(
-"touchmove",
-e=>{
-
-erase(
-e.touches[0].clientX,
-e.touches[0].clientY
-);
-
-});
-
-function activate(){
-
-activated = true;
-
-status.innerText =
-"СОВПАДЕНИЕ ПОДТВЕРЖДЕНО";
-
-const text =
-document.getElementById("text");
-
-setTimeout(()=>{
-
-document.body.style.background =
-"#200";
-
-document.getElementById("bg").style.background =
-"#200";
-
-document.getElementById("noise").style.opacity =
-"0.18";
-
-text.style.transform =
-"translate(-50%,-250%)";
-
-text.style.opacity =
-"0";
-
-status.style.opacity =
-"0";
-
-},1000);
-
-let flashes = 0;
-
-const fx =
-setInterval(()=>{
-
-document.body.classList.add(
-"flash"
-);
-
-setTimeout(()=>{
-
-document.body.classList.remove(
-"flash"
-);
-
-},80);
-
-flashes++;
-
-if(flashes > 12){
-
-clearInterval(fx);
-
-setTimeout(()=>{
-
-window.location.href =
-"deeper.html";
-
-},2500);
-
-}
-
-},250);
-
-}
-
+    // ============================================
+    // ЭЛЕМЕНТЫ
+    // ============================================
+    const coverLayer = document.getElementById("coverLayer");
+    const progressBar = document.getElementById("progressBar");
+    const coverHint = document.getElementById("coverHint");
+    const statusDiv = document.getElementById("status");
+    const textContainer = document.getElementById("textContainer");
+    const bg = document.getElementById("bg");
+    const noise = document.getElementById("noise");
+    
+    let progress = 0;
+    let isHolding = false;
+    let holdInterval = null;
+    let activated = false;
+    
+    const REQUIRED_PROGRESS = 100;
+    
+    // ============================================
+    // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+    // ============================================
+    function doFlash() {
+        document.body.classList.add("flash");
+        setTimeout(() => {
+            document.body.classList.remove("flash");
+        }, 80);
+    }
+    
+    function doPulse() {
+        document.body.classList.add("pulse");
+        setTimeout(() => {
+            document.body.classList.remove("pulse");
+        }, 300);
+    }
+    
+    function updateProgress() {
+        progressBar.style.width = progress + "%";
+        
+        if (progress >= 30 && progress < 70) {
+            statusDiv.innerText = "ВОССТАНОВЛЕНИЕ";
+            statusDiv.style.opacity = "0.3";
+        } else if (progress >= 70 && progress < 100) {
+            statusDiv.innerText = "ЧТЕНИЕ";
+            statusDiv.style.opacity = "0.4";
+        } else if (progress >= 100) {
+            statusDiv.innerText = "СОВПАДЕНИЕ ПОДТВЕРЖДЕНО";
+            statusDiv.style.opacity = "0.6";
+        }
+    }
+    
+    function startHolding() {
+        if (activated) return;
+        if (isHolding) return;
+        
+        isHolding = true;
+        coverHint.innerText = "[ ОТПУСТИТЕ ДЛЯ ОСТАНОВКИ ]";
+        coverHint.style.opacity = "0.8";
+        
+        holdInterval = setInterval(() => {
+            if (!isHolding) return;
+            if (progress >= REQUIRED_PROGRESS) return;
+            
+            progress += 2;
+            if (progress > REQUIRED_PROGRESS) progress = REQUIRED_PROGRESS;
+            updateProgress();
+            
+            // Эффекты при прогрессии
+            if (progress % 15 === 0) {
+                doFlash();
+            }
+            if (progress % 25 === 0) {
+                doPulse();
+                noise.style.opacity = "0.12";
+                setTimeout(() => {
+                    if (!activated) noise.style.opacity = "0.06";
+                }, 300);
+            }
+            
+            if (progress >= REQUIRED_PROGRESS && !activated) {
+                activate();
+            }
+        }, 50);
+    }
+    
+    function stopHolding() {
+        if (!isHolding) return;
+        isHolding = false;
+        
+        if (holdInterval) {
+            clearInterval(holdInterval);
+            holdInterval = null;
+        }
+        
+        if (progress < REQUIRED_PROGRESS) {
+            coverHint.innerText = "[ НАЖМИТЕ И УДЕРЖИВАЙТЕ ]";
+            coverHint.style.opacity = "0.5";
+            
+            // Небольшая потеря прогресса для напряжения
+            if (progress > 10 && progress < REQUIRED_PROGRESS - 10) {
+                progress = Math.max(0, progress - 8);
+                updateProgress();
+                doFlash();
+            }
+        }
+    }
+    
+    function activate() {
+        if (activated) return;
+        activated = true;
+        
+        // Останавливаем удержание
+        if (holdInterval) {
+            clearInterval(holdInterval);
+            holdInterval = null;
+        }
+        
+        // Скрываем защитный слой
+        coverLayer.classList.add("hidden");
+        
+        // Показываем текст
+        setTimeout(() => {
+            textContainer.style.opacity = "0.95";
+        }, 200);
+        
+        // Финальные эффекты
+        doFlash();
+        doPulse();
+        
+        // Серия вспышек
+        for (let i = 0; i < 5; i++) {
+            setTimeout(() => doFlash(), i * 150);
+        }
+        
+        // Усиление шума
+        noise.style.opacity = "0.15";
+        
+        // Изменение фона
+        bg.style.background = "radial-gradient(circle at center, #1a0a0a 0%, #000000 100%)";
+        
+        // Статус
+        statusDiv.style.opacity = "0.8";
+        
+        // Запись в localStorage
+        let state = JSON.parse(localStorage.getItem('state') || '{}');
+        if (!state.loop) {
+            state.loop = { completed: 1, timestamp: Date.now() };
+        } else {
+            state.loop.completed++;
+        }
+        localStorage.setItem('state', JSON.stringify(state));
+        
+        // Переход на deeper.html через 3 секунды
+        setTimeout(() => {
+            textContainer.classList.add("fade-out-text");
+            statusDiv.style.opacity = "0";
+            noise.style.opacity = "0.25";
+            
+            setTimeout(() => {
+                window.location.href = "deeper.html";
+            }, 1000);
+        }, 2500);
+    }
+    
+    // ============================================
+    // ОБРАБОТЧИКИ СОБЫТИЙ (мышь и тач)
+    // ============================================
+    coverLayer.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        startHolding();
+    });
+    
+    window.addEventListener("mouseup", () => {
+        if (isHolding && !activated) {
+            stopHolding();
+        }
+    });
+    
+    // Touch events для мобильных
+    coverLayer.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        startHolding();
+    });
+    
+    window.addEventListener("touchend", () => {
+        if (isHolding && !activated) {
+            stopHolding();
+        }
+    });
+    
+    // Предотвращаем случайный выход при клике вне слоя
+    document.addEventListener("dragstart", (e) => e.preventDefault());
+    
+    // ============================================
+    // КОНСОЛЬНОЕ СООБЩЕНИЕ
+    // ============================================
+    console.log("%c━━━━━━━━━━━━━━━━━━━━", "color: #d4c5a0");
+    console.log("%cЗАЩИТНЫЙ СЛОЙ", "color: #8a7a5a; font-size: 12px;");
+    console.log("%cУДЕРЖИВАЙТЕ ДЛЯ ДОСТУПА", "color: #6a5a4a; font-size: 10px;");
+    console.log("%c━━━━━━━━━━━━━━━━━━━━", "color: #d4c5a0");
 </script>
 
 <script src="audio.js"></script>
-
 </body>
 </html>
