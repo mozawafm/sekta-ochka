@@ -18,7 +18,7 @@
         background: black;
         font-family: 'Courier New', monospace;
         color: white;
-        cursor: default;
+        cursor: crosshair;
         height: 100vh;
         position: relative;
     }
@@ -44,7 +44,7 @@
         transition: 0.5s;
     }
 
-    /* Основной контейнер с текстом */
+    /* Текст (скрыт под защитным слоем) */
     .text-container {
         position: absolute;
         top: 50%;
@@ -53,9 +53,10 @@
         width: 80%;
         max-width: 750px;
         text-align: center;
-        z-index: 10;
+        z-index: 5;
         opacity: 0;
         transition: opacity 1.5s ease;
+        pointer-events: none;
     }
 
     .quote {
@@ -73,81 +74,18 @@
         color: #8a7a5a;
     }
 
-    /* Защитный слой (затемнение + текст-заглушка) */
-    .cover-layer {
+    /* Canvas для стирания */
+    #coverCanvas {
         position: absolute;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0,0,0,0.92);
-        backdrop-filter: blur(12px);
         z-index: 20;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        transition: all 0.5s ease;
-        cursor: pointer;
+        cursor: crosshair;
     }
 
-    .cover-layer.hidden {
-        opacity: 0;
-        visibility: hidden;
-        backdrop-filter: blur(0px);
-        background: rgba(0,0,0,0);
-        pointer-events: none;
-    }
-
-    .cover-title {
-        font-size: 24px;
-        letter-spacing: 8px;
-        color: #d4c5a0;
-        margin-bottom: 30px;
-        text-shadow: 0 0 10px rgba(212,197,160,0.3);
-    }
-
-    .cover-text {
-        font-size: 14px;
-        letter-spacing: 4px;
-        color: #a0a0a0;
-        margin-bottom: 40px;
-        max-width: 500px;
-        padding: 0 20px;
-    }
-
-    .progress-container {
-        width: 250px;
-        height: 2px;
-        background: rgba(255,255,255,0.1);
-        margin: 20px auto;
-        border-radius: 2px;
-        overflow: hidden;
-    }
-
-    .progress-bar {
-        width: 0%;
-        height: 100%;
-        background: #d4c5a0;
-        transition: width 0.05s linear;
-        box-shadow: 0 0 5px #d4c5a0;
-    }
-
-    .cover-hint {
-        font-size: 10px;
-        letter-spacing: 3px;
-        color: #6a5a4a;
-        margin-top: 30px;
-        opacity: 0.5;
-        transition: 0.2s;
-    }
-
-    .cover-hint:hover {
-        opacity: 1;
-    }
-
-    /* Статус */
+    /* Статус и прогресс */
     #status {
         position: fixed;
         bottom: 30px;
@@ -162,7 +100,46 @@
         pointer-events: none;
     }
 
-    /* Вспышка */
+    .progress-container {
+        position: fixed;
+        bottom: 60px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 250px;
+        height: 2px;
+        background: rgba(255,255,255,0.1);
+        z-index: 25;
+        border-radius: 2px;
+        overflow: hidden;
+        opacity: 0.5;
+        transition: 0.3s;
+    }
+
+    .progress-bar {
+        width: 0%;
+        height: 100%;
+        background: #d4c5a0;
+        transition: width 0.05s linear;
+        box-shadow: 0 0 5px #d4c5a0;
+    }
+
+    /* Подсказка */
+    .hint {
+        position: fixed;
+        bottom: 20px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-size: 9px;
+        letter-spacing: 3px;
+        color: #6a5a4a;
+        opacity: 0.3;
+        z-index: 25;
+        transition: 0.3s;
+        pointer-events: none;
+    }
+
+    /* Эффекты */
     .flash {
         animation: flashAnim 0.08s;
     }
@@ -171,7 +148,6 @@
         50% { opacity: 0; }
     }
 
-    /* Пульсация */
     .pulse {
         animation: pulseAnim 0.3s ease-out;
     }
@@ -182,7 +158,6 @@
         100% { filter: brightness(1); }
     }
 
-    /* Анимация исчезновения текста */
     .fade-out-text {
         animation: textFadeOut 1s forwards;
     }
@@ -190,6 +165,17 @@
     @keyframes textFadeOut {
         0% { opacity: 0.85; transform: translate(-50%, -50%); }
         100% { opacity: 0; transform: translate(-50%, -150%); }
+    }
+
+    /* Эффект "дрожания" при стирании */
+    @keyframes slightShake {
+        0%, 100% { transform: translate(0, 0); }
+        25% { transform: translate(1px, -1px); }
+        75% { transform: translate(-1px, 1px); }
+    }
+
+    .shake {
+        animation: slightShake 0.05s infinite;
     }
 </style>
 </head>
@@ -214,158 +200,173 @@
     <div class="quote-number">216</div>
 </div>
 
-<div class="cover-layer" id="coverLayer">
-    <div class="cover-title">ЗАЩИТНЫЙ СЛОЙ</div>
-    <div class="cover-text">необходимо снять защиту для доступа к тексту</div>
-    <div class="progress-container">
-        <div class="progress-bar" id="progressBar"></div>
-    </div>
-    <div class="cover-hint" id="coverHint">[ НАЖМИТЕ И УДЕРЖИВАЙТЕ ]</div>
-</div>
+<canvas id="coverCanvas"></canvas>
 
+<div class="progress-container">
+    <div class="progress-bar" id="progressBar"></div>
+</div>
+<div class="hint" id="hint">[ стирайте защитный слой ]</div>
 <div id="status">ЗАПИСЬ ПОВРЕЖДЕНА</div>
 
 <script>
     // ============================================
-    // ЭЛЕМЕНТЫ
+    // НАСТРОЙКИ
     // ============================================
-    const coverLayer = document.getElementById("coverLayer");
+    const canvas = document.getElementById("coverCanvas");
+    const ctx = canvas.getContext("2d");
     const progressBar = document.getElementById("progressBar");
-    const coverHint = document.getElementById("coverHint");
     const statusDiv = document.getElementById("status");
+    const hint = document.getElementById("hint");
     const textContainer = document.getElementById("textContainer");
     const bg = document.getElementById("bg");
     const noise = document.getElementById("noise");
     
-    let progress = 0;
-    let isHolding = false;
-    let holdInterval = null;
+    let canvasWidth = window.innerWidth;
+    let canvasHeight = window.innerHeight;
+    let revealed = 0;
+    let totalPixels = 0;
     let activated = false;
+    let isDrawing = false;
+    let lastX = 0, lastY = 0;
     
-    const REQUIRED_PROGRESS = 100;
+    // Параметры кисти
+    const BRUSH_SIZE = 45;
+    const REQUIRED_PERCENT = 65; // Нужно стереть 65% площади
     
     // ============================================
-    // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+    // ИНИЦИАЛИЗАЦИЯ
     // ============================================
-    function doFlash() {
-        document.body.classList.add("flash");
-        setTimeout(() => {
-            document.body.classList.remove("flash");
-        }, 80);
-    }
-    
-    function doPulse() {
-        document.body.classList.add("pulse");
-        setTimeout(() => {
-            document.body.classList.remove("pulse");
-        }, 300);
-    }
-    
-    function updateProgress() {
-        progressBar.style.width = progress + "%";
+    function initCanvas() {
+        canvasWidth = window.innerWidth;
+        canvasHeight = window.innerHeight;
         
-        if (progress >= 30 && progress < 70) {
-            statusDiv.innerText = "ВОССТАНОВЛЕНИЕ";
-            statusDiv.style.opacity = "0.3";
-        } else if (progress >= 70 && progress < 100) {
-            statusDiv.innerText = "ЧТЕНИЕ";
-            statusDiv.style.opacity = "0.4";
-        } else if (progress >= 100) {
-            statusDiv.innerText = "СОВПАДЕНИЕ ПОДТВЕРЖДЕНО";
-            statusDiv.style.opacity = "0.6";
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+        
+        // Рисуем чёрный защитный слой
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+        
+        // Добавляем текстуру на защитный слой (чтобы было видно, что стираешь)
+        ctx.globalCompositeOperation = "source-over";
+        ctx.fillStyle = "rgba(30,30,40,0.3)";
+        for (let i = 0; i < 800; i++) {
+            ctx.fillRect(
+                Math.random() * canvasWidth,
+                Math.random() * canvasHeight,
+                2,
+                2
+            );
         }
+        
+        // Добавляем надпись на защитный слой
+        ctx.font = "bold 24px 'Courier New', monospace";
+        ctx.fillStyle = "rgba(80,70,50,0.4)";
+        ctx.textAlign = "center";
+        ctx.fillText("ЗАЩИТНЫЙ СЛОЙ", canvasWidth/2, canvasHeight/2);
+        
+        ctx.font = "12px 'Courier New', monospace";
+        ctx.fillStyle = "rgba(80,70,50,0.25)";
+        ctx.fillText("216", canvasWidth/2, canvasHeight/2 + 50);
+        
+        // Подсчёт общего количества пикселей для прогресса (упрощённо)
+        totalPixels = canvasWidth * canvasHeight;
     }
     
-    function startHolding() {
+    // ============================================
+    // ФУНКЦИЯ СТИРАНИЯ
+    // ============================================
+    function erase(x, y, isDrawingMotion = true) {
         if (activated) return;
-        if (isHolding) return;
+        if (x < 0 || x > canvasWidth || y < 0 || y > canvasHeight) return;
         
-        isHolding = true;
-        coverHint.innerText = "[ ОТПУСТИТЕ ДЛЯ ОСТАНОВКИ ]";
-        coverHint.style.opacity = "0.8";
+        ctx.globalCompositeOperation = "destination-out";
         
-        holdInterval = setInterval(() => {
-            if (!isHolding) return;
-            if (progress >= REQUIRED_PROGRESS) return;
+        // Рисуем круг кистью
+        ctx.beginPath();
+        ctx.arc(x, y, BRUSH_SIZE, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Добавляем случайные точки для более органичного стирания
+        for (let i = 0; i < 12; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const radius = Math.random() * BRUSH_SIZE;
+            const offsetX = Math.cos(angle) * radius;
+            const offsetY = Math.sin(angle) * radius;
+            ctx.beginPath();
+            ctx.arc(x + offsetX, y + offsetY, BRUSH_SIZE * 0.3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // Обновляем прогресс
+        if (!activated) {
+            // Имитация прогресса — считаем количество стёртых пикселей (приблизительно)
+            const erasedPixels = Math.PI * BRUSH_SIZE * BRUSH_SIZE;
+            revealed += erasedPixels;
             
-            progress += 2;
-            if (progress > REQUIRED_PROGRESS) progress = REQUIRED_PROGRESS;
-            updateProgress();
+            let percent = Math.min(100, Math.floor((revealed / totalPixels) * 100 * 2.5));
+            if (percent > REQUIRED_PERCENT) percent = REQUIRED_PERCENT;
             
-            // Эффекты при прогрессии
-            if (progress % 15 === 0) {
-                doFlash();
-            }
-            if (progress % 25 === 0) {
-                doPulse();
-                noise.style.opacity = "0.12";
-                setTimeout(() => {
-                    if (!activated) noise.style.opacity = "0.06";
-                }, 300);
-            }
+            progressBar.style.width = percent + "%";
             
-            if (progress >= REQUIRED_PROGRESS && !activated) {
+            // Обновляем статус в зависимости от прогресса
+            if (percent >= 30 && percent < 60) {
+                statusDiv.innerText = "ВОССТАНОВЛЕНИЕ";
+                statusDiv.style.opacity = "0.3";
+                hint.style.opacity = "0.4";
+            } else if (percent >= 60 && percent < REQUIRED_PERCENT) {
+                statusDiv.innerText = "ЧТЕНИЕ";
+                statusDiv.style.opacity = "0.5";
+                hint.style.opacity = "0.5";
+            } else if (percent >= REQUIRED_PERCENT) {
                 activate();
             }
-        }, 50);
-    }
-    
-    function stopHolding() {
-        if (!isHolding) return;
-        isHolding = false;
-        
-        if (holdInterval) {
-            clearInterval(holdInterval);
-            holdInterval = null;
-        }
-        
-        if (progress < REQUIRED_PROGRESS) {
-            coverHint.innerText = "[ НАЖМИТЕ И УДЕРЖИВАЙТЕ ]";
-            coverHint.style.opacity = "0.5";
             
-            // Небольшая потеря прогресса для напряжения
-            if (progress > 10 && progress < REQUIRED_PROGRESS - 10) {
-                progress = Math.max(0, progress - 8);
-                updateProgress();
-                doFlash();
+            // Эффекты при стирании
+            if (isDrawingMotion && percent > 20) {
+                if (Math.random() > 0.85) {
+                    document.body.classList.add("flash");
+                    setTimeout(() => document.body.classList.remove("flash"), 80);
+                }
+                if (Math.random() > 0.92) {
+                    noise.style.opacity = "0.12";
+                    setTimeout(() => noise.style.opacity = "0.06", 150);
+                }
             }
         }
     }
     
+    // ============================================
+    // АКТИВАЦИЯ (защитный слой стёрт)
+    // ============================================
     function activate() {
         if (activated) return;
         activated = true;
         
-        // Останавливаем удержание
-        if (holdInterval) {
-            clearInterval(holdInterval);
-            holdInterval = null;
-        }
-        
-        // Скрываем защитный слой
-        coverLayer.classList.add("hidden");
-        
         // Показываем текст
-        setTimeout(() => {
-            textContainer.style.opacity = "0.95";
-        }, 200);
+        textContainer.style.opacity = "0.95";
         
         // Финальные эффекты
-        doFlash();
-        doPulse();
+        document.body.classList.add("flash");
+        setTimeout(() => document.body.classList.remove("flash"), 80);
         
-        // Серия вспышек
-        for (let i = 0; i < 5; i++) {
-            setTimeout(() => doFlash(), i * 150);
+        for (let i = 0; i < 6; i++) {
+            setTimeout(() => {
+                document.body.classList.add("flash");
+                setTimeout(() => document.body.classList.remove("flash"), 80);
+            }, i * 120);
         }
         
         // Усиление шума
-        noise.style.opacity = "0.15";
+        noise.style.opacity = "0.18";
         
         // Изменение фона
         bg.style.background = "radial-gradient(circle at center, #1a0a0a 0%, #000000 100%)";
         
-        // Статус
+        // Плавно скрываем подсказки и прогресс
+        progressBar.parentElement.style.opacity = "0";
+        hint.style.opacity = "0";
+        statusDiv.innerText = "СОВПАДЕНИЕ ПОДТВЕРЖДЕНО";
         statusDiv.style.opacity = "0.8";
         
         // Запись в localStorage
@@ -377,53 +378,105 @@
         }
         localStorage.setItem('state', JSON.stringify(state));
         
-        // Переход на deeper.html через 3 секунды
+        // Переход на deeper.html
         setTimeout(() => {
             textContainer.classList.add("fade-out-text");
             statusDiv.style.opacity = "0";
-            noise.style.opacity = "0.25";
             
             setTimeout(() => {
                 window.location.href = "deeper.html";
             }, 1000);
-        }, 2500);
+        }, 2800);
     }
     
     // ============================================
-    // ОБРАБОТЧИКИ СОБЫТИЙ (мышь и тач)
+    // ОБРАБОТЧИКИ МЫШИ И ТАЧА
     // ============================================
-    coverLayer.addEventListener("mousedown", (e) => {
+    function handleStart(e) {
         e.preventDefault();
-        startHolding();
-    });
+        isDrawing = true;
+        const coords = getCoordinates(e);
+        lastX = coords.x;
+        lastY = coords.y;
+        erase(lastX, lastY, false);
+        
+        // Эффект дрожания
+        document.body.classList.add("shake");
+        setTimeout(() => document.body.classList.remove("shake"), 100);
+    }
     
-    window.addEventListener("mouseup", () => {
-        if (isHolding && !activated) {
-            stopHolding();
-        }
-    });
-    
-    // Touch events для мобильных
-    coverLayer.addEventListener("touchstart", (e) => {
+    function handleMove(e) {
+        if (!isDrawing || activated) return;
         e.preventDefault();
-        startHolding();
-    });
-    
-    window.addEventListener("touchend", () => {
-        if (isHolding && !activated) {
-            stopHolding();
+        
+        const coords = getCoordinates(e);
+        const x = coords.x;
+        const y = coords.y;
+        
+        // Интерполяция между точками для плавного стирания
+        const distance = Math.hypot(x - lastX, y - lastY);
+        if (distance > 1) {
+            const steps = Math.min(10, Math.ceil(distance / 5));
+            for (let step = 1; step <= steps; step++) {
+                const t = step / steps;
+                const ix = lastX + (x - lastX) * t;
+                const iy = lastY + (y - lastY) * t;
+                erase(ix, iy, true);
+            }
         }
-    });
+        
+        erase(x, y, true);
+        lastX = x;
+        lastY = y;
+    }
     
-    // Предотвращаем случайный выход при клике вне слоя
-    document.addEventListener("dragstart", (e) => e.preventDefault());
+    function handleEnd(e) {
+        isDrawing = false;
+    }
+    
+    function getCoordinates(e) {
+        let clientX, clientY;
+        if (e.touches) {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        } else {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        }
+        
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        
+        let x = (clientX - rect.left) * scaleX;
+        let y = (clientY - rect.top) * scaleY;
+        
+        x = Math.max(0, Math.min(canvasWidth, x));
+        y = Math.max(0, Math.min(canvasHeight, y));
+        
+        return { x, y };
+    }
     
     // ============================================
-    // КОНСОЛЬНОЕ СООБЩЕНИЕ
+    // ЗАПУСК
     // ============================================
+    initCanvas();
+    
+    canvas.addEventListener("mousedown", handleStart);
+    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("mouseup", handleEnd);
+    
+    canvas.addEventListener("touchstart", handleStart);
+    window.addEventListener("touchmove", handleMove);
+    window.addEventListener("touchend", handleEnd);
+    
+    // Защита от перетаскивания
+    canvas.addEventListener("dragstart", (e) => e.preventDefault());
+    
+    // Консольное сообщение
     console.log("%c━━━━━━━━━━━━━━━━━━━━", "color: #d4c5a0");
-    console.log("%cЗАЩИТНЫЙ СЛОЙ", "color: #8a7a5a; font-size: 12px;");
-    console.log("%cУДЕРЖИВАЙТЕ ДЛЯ ДОСТУПА", "color: #6a5a4a; font-size: 10px;");
+    console.log("%cСТИРАЙТЕ ЗАЩИТНЫЙ СЛОЙ", "color: #8a7a5a; font-size: 12px;");
+    console.log("%c216", "color: #6a5a4a; font-size: 10px;");
     console.log("%c━━━━━━━━━━━━━━━━━━━━", "color: #d4c5a0");
 </script>
 
