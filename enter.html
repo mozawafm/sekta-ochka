@@ -2,216 +2,387 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>question</title>
+<title>enter</title>
 
 <style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
 
-body{
-margin:0;
-background:black;
-color:white;
-font-family:monospace;
-overflow:hidden;
-display:flex;
-justify-content:center;
-align-items:center;
-height:100vh;
-cursor:none;
-}
+    body {
+        margin: 0;
+        background: black;
+        color: white;
+        font-family: 'Courier New', monospace;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        cursor: default;
+        position: relative;
+    }
 
-#container{
-text-align:center;
-width:90%;
-max-width:600px;
-}
+    /* Фон с пульсацией */
+    #bg {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle at center, #0a0a0a 0%, #000000 100%);
+        z-index: 0;
+    }
 
-#title{
-font-size:28px;
-letter-spacing:8px;
-margin-bottom:40px;
-opacity:.9;
-}
+    /* Шум */
+    #noise {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background-image: url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
+        opacity: 0.05;
+        mix-blend-mode: screen;
+        pointer-events: none;
+        z-index: 1;
+    }
 
-input{
+    /* Статический эффект (редкие помехи) */
+    .static-overlay {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: rgba(255,255,255,0.02);
+        pointer-events: none;
+        z-index: 2;
+        opacity: 0;
+        transition: opacity 0.05s;
+    }
 
-width:100%;
-max-width:420px;
+    #container {
+        position: relative;
+        text-align: center;
+        width: 90%;
+        max-width: 600px;
+        z-index: 10;
+        animation: fadeIn 2s ease;
+    }
 
-padding:15px;
+    @keyframes fadeIn {
+        0% { opacity: 0; transform: translateY(20px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
 
-background:black;
+    #title {
+        font-size: 28px;
+        letter-spacing: 10px;
+        margin-bottom: 30px;
+        opacity: 0.9;
+        color: #d4c5a0;
+        text-shadow: 0 0 10px rgba(212,197,160,0.3);
+    }
 
-border:1px solid rgba(255,255,255,.25);
+    #subtitle {
+        font-size: 11px;
+        letter-spacing: 4px;
+        margin-bottom: 40px;
+        opacity: 0.3;
+        color: #a0a0a0;
+    }
 
-color:white;
+    input {
+        width: 100%;
+        max-width: 420px;
+        padding: 16px;
+        background: rgba(0,0,0,0.7);
+        border: 1px solid rgba(212,197,160,0.3);
+        color: #d4c5a0;
+        font-family: monospace;
+        font-size: 18px;
+        text-align: center;
+        outline: none;
+        transition: all 0.3s ease;
+        letter-spacing: 2px;
+    }
 
-font-family:monospace;
+    input:focus {
+        border-color: #d4c5a0;
+        box-shadow: 0 0 15px rgba(212,197,160,0.2);
+        background: rgba(0,0,0,0.9);
+    }
 
-font-size:18px;
+    input::placeholder {
+        color: #4a4a4a;
+        letter-spacing: 4px;
+        font-size: 12px;
+    }
 
-text-align:center;
+    #msg {
+        margin-top: 25px;
+        min-height: 50px;
+        font-size: 11px;
+        letter-spacing: 3px;
+        opacity: 0.6;
+        color: #b0a0a0;
+        transition: 0.2s;
+    }
 
-outline:none;
+    /* Подсказка */
+    #hint {
+        margin-top: 20px;
+        font-size: 8px;
+        letter-spacing: 3px;
+        opacity: 0.12;
+        transition: 0.3s;
+        cursor: pointer;
+        color: #8a7a5a;
+    }
 
-}
+    #hint:hover {
+        opacity: 0.5;
+    }
 
-#msg{
+    #reset {
+        display: none;
+        margin: 30px auto 0;
+        padding: 12px 28px;
+        border: 1px solid rgba(212,197,160,0.3);
+        background: rgba(0,0,0,0.6);
+        color: #d4c5a0;
+        font-family: monospace;
+        font-size: 11px;
+        letter-spacing: 4px;
+        cursor: pointer;
+        transition: 0.25s;
+    }
 
-margin-top:25px;
+    #reset:hover {
+        background: #d4c5a0;
+        color: black;
+        border-color: #d4c5a0;
+    }
 
-min-height:20px;
+    /* Глитч-эффект для заголовка */
+    @keyframes titleGlitch {
+        0% { text-shadow: -2px 0 red, 2px 0 blue; }
+        50% { text-shadow: 2px 0 red, -2px 0 blue; }
+        100% { text-shadow: -2px 0 blue, 2px 0 red; }
+    }
 
-font-size:12px;
+    .glitch-title {
+        animation: titleGlitch 0.2s ease-in-out;
+    }
 
-letter-spacing:4px;
+    /* Вспышка */
+    .flash {
+        animation: flashAnim 0.08s;
+    }
 
-opacity:.5;
+    @keyframes flashAnim {
+        50% { opacity: 0; }
+    }
 
-}
+    /* Пульсация фона */
+    .pulse-bg {
+        animation: pulseBg 0.2s ease-out;
+    }
 
-#reset{
+    @keyframes pulseBg {
+        0% { background: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%); }
+        100% { background: radial-gradient(circle at center, #0a0a0a 0%, #000000 100%); }
+    }
 
-display:none;
+    /* Мерцающий курсор в поле ввода */
+    @keyframes blinkCursor {
+        0%, 100% { border-color: rgba(212,197,160,0.3); }
+        50% { border-color: rgba(212,197,160,0.8); }
+    }
 
-margin:30px auto 0;
-
-padding:14px 28px;
-
-border:1px solid rgba(255,255,255,.25);
-
-background:black;
-
-color:white;
-
-font-family:monospace;
-
-letter-spacing:4px;
-
-cursor:pointer;
-
-transition:.25s;
-
-}
-
-#reset:hover{
-
-background:white;
-color:black;
-
-}
-
-.flash{
-
-animation:flash .08s;
-
-}
-
-@keyframes flash{
-
-50%{
-opacity:0;
-}
-
-}
-
+    input {
+        animation: blinkCursor 2s infinite;
+    }
 </style>
 </head>
-
 <body>
 
+<div id="bg"></div>
+<div id="noise"></div>
+<div class="static-overlay" id="static"></div>
+
 <div id="container">
+    <div id="title">ОТВЕТ?</div>
+    <div id="subtitle">━━━━━━━━━━━━━━━━━━━━</div>
 
-<div id="title">
-ВОПРОС
-</div>
-
-<input
-id="answer"
-type="text"
-autocomplete="off"
-spellcheck="false"
->
-
-<div id="msg"></div>
-
-<button id="reset">
-ОБНУЛИТЬ
-</button>
-
+    <input id="answer" type="text" autocomplete="off" spellcheck="false" placeholder="...">
+    <div id="msg"></div>
+    <div id="hint">[найди ответ]</div>
+    <button id="reset">ОБНУЛИТЬ</button>
 </div>
 
 <script>
+    // ============================================
+    // ЭЛЕМЕНТЫ
+    // ============================================
+    const input = document.getElementById("answer");
+    const msg = document.getElementById("msg");
+    const reset = document.getElementById("reset");
+    const hint = document.getElementById("hint");
+    const title = document.getElementById("title");
+    const bg = document.getElementById("bg");
+    const staticOverlay = document.getElementById("static");
 
-const input =
-document.getElementById("answer");
+    input.focus();
 
-const msg =
-document.getElementById("msg");
+    // ============================================
+    // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+    // ============================================
+    function doFlash() {
+        document.body.classList.add("flash");
+        setTimeout(() => {
+            document.body.classList.remove("flash");
+        }, 80);
+    }
 
-const reset =
-document.getElementById("reset");
+    function doPulse() {
+        bg.classList.add("pulse-bg");
+        setTimeout(() => {
+            bg.classList.remove("pulse-bg");
+        }, 200);
+    }
 
-input.focus();
+    function doStatic(duration = 150) {
+        staticOverlay.style.opacity = "0.15";
+        setTimeout(() => {
+            staticOverlay.style.opacity = "0";
+        }, duration);
+    }
 
-input.addEventListener("keydown", function(e){
+    function glitchTitle() {
+        title.classList.add("glitch-title");
+        setTimeout(() => {
+            title.classList.remove("glitch-title");
+        }, 200);
+    }
 
-if(e.key !== "Enter") return;
+    function showMessage(text, isError = false) {
+        msg.innerText = text;
+        msg.style.opacity = isError ? "0.9" : "0.6";
+        msg.style.color = isError ? "#ff8888" : "#b0a0a0";
+        
+        if (isError) {
+            doFlash();
+            doPulse();
+            doStatic();
+            glitchTitle();
+        }
+    }
 
-const value =
-input.value.trim().toLowerCase();
+    // ============================================
+    // ОСНОВНАЯ ЛОГИКА
+    // ============================================
+    input.addEventListener("keydown", function(e) {
+        if (e.key !== "Enter") return;
 
-if(value === "ответ"){
+        const value = input.value.trim().toLowerCase();
+        
+        // ВАРИАНТ 1: ответ → loop.html
+        if (value === "ответ") {
+            showMessage("ПРИНЯТО", false);
+            doFlash();
+            setTimeout(() => {
+                window.location.href = "loop.html";
+            }, 500);
+            return;
+        }
+        
+        // ВАРИАНТ 2: да → hub.html
+        if (value === "да") {
+            showMessage("СИГНАЛ ПРИНЯТ", false);
+            doFlash();
+            doPulse();
+            setTimeout(() => {
+                window.location.href = "hub.html";
+            }, 500);
+            return;
+        }
+        
+        // ВАРИАНТ 3: код тео867102 → secret.html
+        if (value === "тео867102") {
+            showMessage("ДОСТУП РАЗРЕШЁН", false);
+            localStorage.setItem("secret_access", "granted");
+            doFlash();
+            doPulse();
+            doStatic(200);
+            setTimeout(() => {
+                window.location.href = "secret.html";
+            }, 600);
+            return;
+        }
+        
+        // ОШИБКА: неверный ответ
+        showMessage("ДАННЫЕ ИСКАЖЕНЫ", true);
+        reset.style.display = "inline-block";
+        input.value = "";
+        input.focus();
+    });
 
-window.location.href =
-"loop.html";
+    // ============================================
+    // ПОДСКАЗКА
+    // ============================================
+    let hintShown = false;
+    hint.addEventListener("click", () => {
+        if (!hintShown) {
+            showMessage("[ответ] / [да] / [тео867102]", false);
+            msg.style.opacity = "0.5";
+            hintShown = true;
+            setTimeout(() => {
+                if (msg.innerText === "[ответ] / [да] / [тео867102]") {
+                    msg.innerText = "";
+                    hintShown = false;
+                }
+            }, 4000);
+        }
+    });
 
-return;
+    // ============================================
+    // КНОПКА ОБНУЛИТЬ → hub.html
+    // ============================================
+    reset.onclick = function() {
+        showMessage("СБРОС...", false);
+        doFlash();
+        setTimeout(() => {
+            window.location.href = "hub.html";
+        }, 400);
+    };
 
-}
+    // ============================================
+    // СЛУЧАЙНЫЕ ЭФФЕКТЫ ДЛЯ АТМОСФЕРЫ
+    // ============================================
+    setInterval(() => {
+        if (Math.random() > 0.92) {
+            doStatic(80);
+        }
+        if (Math.random() > 0.96) {
+            glitchTitle();
+        }
+    }, 5000);
 
-if(value === "тео867102"){
+    // ============================================
+    // LOCALSTORAGE
+    // ============================================
+    let state = JSON.parse(localStorage.getItem('state') || '{}');
+    if (!state.enter) {
+        state.enter = { visited: 1 };
+    } else {
+        state.enter.visited++;
+    }
+    localStorage.setItem('state', JSON.stringify(state));
 
-localStorage.setItem(
-"secret_access",
-"granted"
-);
-
-window.location.href =
-"secret.html";
-
-return;
-
-}
-
-msg.innerText =
-"ДАННЫЕ ИСКАЖЕНЫ";
-
-reset.style.display =
-"inline-block";
-
-document.body.classList.add("flash");
-
-setTimeout(()=>{
-
-document.body.classList.remove("flash");
-
-},100);
-
-input.value = "";
-input.focus();
-
-});
-
-reset.onclick = function(){
-
-window.location.href =
-"hub.html";
-
-};
-
+    // Консольное сообщение
+    console.log("%c━━━━━━━━━━━━━━━━━━━━", "color: #d4c5a0");
+    console.log("%cОТВЕТЬ", "color: #d4c5a0; font-size: 16px;");
+    console.log("%c━━━━━━━━━━━━━━━━━━━━", "color: #d4c5a0");
 </script>
 
 <script src="audio.js"></script>
-
 </body>
 </html>
