@@ -1,4 +1,4 @@
-// audio.js — двойной генератор 216 Гц и 432 Гц (кнопки снизу по центру)
+// audio.js — двойной генератор (кнопки снизу по центру)
 
 (function() {
     // Контейнер для кнопок
@@ -20,10 +20,10 @@
         font-family: monospace;
     `;
     
-    // Кнопка 216 Гц
+    // Кнопка 216 Гц → 0x216
     const btn216 = document.createElement('div');
     btn216.id = 'btn216';
-    btn216.innerHTML = '◉ 216 Hz';
+    btn216.innerHTML = '◉ 0x216';
     btn216.style.cssText = `
         padding: 8px 16px;
         cursor: pointer;
@@ -34,10 +34,10 @@
         border-radius: 30px;
     `;
     
-    // Кнопка 432 Гц
+    // Кнопка 432 Гц → 0x432
     const btn432 = document.createElement('div');
     btn432.id = 'btn432';
-    btn432.innerHTML = '◉ 432 Hz';
+    btn432.innerHTML = '◉ 0x432';
     btn432.style.cssText = `
         padding: 8px 16px;
         cursor: pointer;
@@ -65,7 +65,6 @@
     container.appendChild(btn216);
     container.appendChild(btn432);
     
-    // Добавляем контейнер в body, если его ещё нет
     if (!document.getElementById('audioPlayerContainer')) {
         document.body.appendChild(container);
     }
@@ -75,7 +74,6 @@
     let is216 = false, is432 = false;
     let sources216 = [], sources432 = [];
     let lfo216 = null, lfo432 = null;
-    let crackle216 = null, crackle432 = null;
     
     // Гармоники для 216 Гц
     const harmonics216 = [
@@ -146,7 +144,7 @@
         is216 = true;
         btn216.style.color = '#d4c5a0';
         btn216.style.textShadow = '0 0 8px #d4c5a0';
-        btn216.innerHTML = '⏸ 216 Hz';
+        btn216.innerHTML = '⏸ 0x216';
     }
     
     function stop216() {
@@ -157,7 +155,7 @@
         is216 = false;
         btn216.style.color = '#c4b58a';
         btn216.style.textShadow = 'none';
-        btn216.innerHTML = '◉ 216 Hz';
+        btn216.innerHTML = '◉ 0x216';
     }
     
     function init432() {
@@ -211,7 +209,7 @@
         is432 = true;
         btn432.style.color = '#d4c5a0';
         btn432.style.textShadow = '0 0 8px #d4c5a0';
-        btn432.innerHTML = '⏸ 432 Hz';
+        btn432.innerHTML = '⏸ 0x432';
     }
     
     function stop432() {
@@ -222,7 +220,7 @@
         is432 = false;
         btn432.style.color = '#c4b58a';
         btn432.style.textShadow = 'none';
-        btn432.innerHTML = '◉ 432 Hz';
+        btn432.innerHTML = '◉ 0x432';
     }
     
     btn216.addEventListener('click', (e) => {
@@ -237,11 +235,10 @@
         else stop432();
     });
     
-    // Удаляем старые обработчики, если были
     if (document.body._audioClickHandler) {
         document.body.removeEventListener('click', document.body._audioClickHandler);
         document.body._audioClickHandler = null;
     }
     
-    console.log('🎵 Двойной генератор | Кнопки снизу по центру');
+    console.log('🎵 Двойной генератор | 0x216 и 0x432');
 })();
