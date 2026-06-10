@@ -2,24 +2,30 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Книга Озарения — 216 / 432</title>
+<title>Книга Озарения</title>
+
 <style>
+    /* Morrowind-стиль */
+    @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap');
+    
     * {
         margin: 0;
         padding: 0;
         box-sizing: border-box;
+        user-select: none;
     }
 
     body {
-        background: #0a0a0f;
-        font-family: 'Courier New', 'Lucida Console', monospace;
+        background: #1a1510;
+        font-family: 'MedievalSharp', 'Courier New', monospace;
         min-height: 100vh;
-        padding: 20px;
+        padding: 30px 20px;
         position: relative;
         overflow-x: hidden;
+        cursor: default;
     }
 
-    /* Шум и винтаж */
+    /* Старая бумажная текстура */
     body::before {
         content: "";
         position: fixed;
@@ -27,38 +33,44 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noise)" opacity="0.06"/></svg>');
+        background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noise)" opacity="0.12"/></svg>');
         background-repeat: repeat;
         pointer-events: none;
         z-index: 100;
-        opacity: 0.5;
+        opacity: 0.6;
     }
 
+    /* Шум */
     .vintage-noise {
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background-image: url('https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif');
+        background-image: url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
         opacity: 0.04;
         pointer-events: none;
         z-index: 101;
         mix-blend-mode: multiply;
     }
 
-    /* Книжный контейнер */
+    /* Книжный контейнер (как свиток из Морровинда) */
     .book {
-        max-width: 1000px;
-        margin: 40px auto;
-        background: #f5eedc;
-        background: linear-gradient(145deg, #f5eedc 0%, #ece2cc 100%);
-        border: 1px solid #c4b58a;
-        box-shadow: 0 30px 50px rgba(0,0,0,0.4), inset 0 0 60px rgba(100,70,30,0.1);
-        padding: 50px 50px 80px 50px;
+        max-width: 950px;
+        margin: 30px auto;
+        background: #e8dcc8;
+        background: linear-gradient(145deg, #e8dcc8 0%, #d8ccb0 100%);
+        border: 1px solid #a09070;
+        box-shadow: 
+            0 20px 40px rgba(0,0,0,0.5),
+            inset 0 0 30px rgba(80,60,30,0.2),
+            0 0 0 6px #2a2418,
+            0 0 0 10px #1a1510;
+        padding: 45px 50px 60px 50px;
         position: relative;
         z-index: 50;
         transform: rotate(0.2deg);
+        border-radius: 4px;
     }
 
     .book::before {
@@ -68,106 +80,116 @@
         left: 0;
         right: 0;
         bottom: 0;
-        box-shadow: inset 0 0 50px rgba(0,0,0,0.08);
+        box-shadow: inset 0 0 50px rgba(0,0,0,0.1);
         pointer-events: none;
+        border-radius: 4px;
     }
 
     /* Заголовок */
     .book-header {
         text-align: center;
-        border-bottom: 2px dashed #b8a880;
-        padding-bottom: 30px;
+        border-bottom: 2px solid #a09070;
+        padding-bottom: 25px;
         margin-bottom: 35px;
     }
 
     .book-header h1 {
-        font-size: 2.5em;
-        letter-spacing: 12px;
+        font-size: 2.4em;
+        letter-spacing: 6px;
         color: #3a2a1a;
         font-weight: normal;
+        font-family: 'MedievalSharp', monospace;
         text-transform: uppercase;
-        word-break: keep-all;
+        text-shadow: 2px 2px 3px rgba(0,0,0,0.1);
     }
 
     .book-header h2 {
         font-size: 0.85em;
-        color: #8a7a5a;
-        letter-spacing: 5px;
+        color: #6a5a3a;
+        letter-spacing: 4px;
         margin-top: 12px;
         font-weight: normal;
+        font-family: 'MedievalSharp', monospace;
     }
 
-    /* Навигация по главам */
+    /* Навигация по главам — как старые закладки */
     .chapter-nav {
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
         gap: 8px;
-        margin: 30px 0 40px;
-        padding: 15px 0;
-        border-top: 1px solid #d4c5a0;
-        border-bottom: 1px solid #d4c5a0;
+        margin: 30px 0 35px;
+        padding: 12px 0;
+        border-top: 1px solid #b8a880;
+        border-bottom: 1px solid #b8a880;
     }
 
     .chapter-btn {
-        background: #e8e0cc;
-        border: 1px solid #b8a880;
-        color: #4a3a2a;
+        background: #c8b898;
+        border: 1px solid #8a7a5a;
+        color: #2a1a0a;
         padding: 6px 14px;
-        font-family: monospace;
-        font-size: 0.75em;
+        font-family: 'MedievalSharp', monospace;
+        font-size: 0.8em;
         cursor: pointer;
         transition: 0.15s;
-        box-shadow: inset 0 1px 0 #fff8e8, 0 1px 2px rgba(0,0,0,0.1);
+        box-shadow: inset 0 1px 0 #e8d8b8, 0 1px 3px rgba(0,0,0,0.2);
+        letter-spacing: 1px;
     }
 
     .chapter-btn:hover {
-        background: #d4c5a0;
-        border-color: #8a7a5a;
+        background: #b8a070;
+        border-color: #6a5a3a;
         transform: scale(1.02);
+        color: #1a0a00;
     }
 
     .chapter-btn.active {
         background: #8a7a5a;
-        color: #fcf8e8;
+        color: #f8ecd8;
         border-color: #5a4a3a;
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);
     }
 
     /* Содержание */
     .chapter-content {
-        line-height: 1.75;
-        color: #2a2418;
-        min-height: 300px;
+        line-height: 1.7;
+        color: #2a1a0a;
+        min-height: 350px;
+        font-family: 'MedievalSharp', monospace;
     }
 
     .chapter-title {
-        font-size: 1.5em;
-        color: #5a3a1a;
-        margin: 20px 0 25px 0;
-        padding-left: 18px;
-        border-left: 3px solid #b8a060;
+        font-size: 1.6em;
+        color: #4a2a0a;
+        margin: 15px 0 25px 0;
+        padding-left: 20px;
+        border-left: 3px solid #a08050;
+        font-weight: bold;
+        letter-spacing: 1px;
     }
 
     .chapter-text p {
         margin-bottom: 18px;
         text-align: justify;
-        font-size: 0.96em;
+        font-size: 1em;
     }
 
     .verse {
         font-style: italic;
-        color: #6a5a3a;
-        border-left: 2px solid #b8a060;
+        color: #5a4a2a;
+        border-left: 2px solid #a08050;
         padding: 8px 0 8px 25px;
         margin: 20px 0;
-        background: rgba(180,150,80,0.05);
+        background: rgba(160,128,80,0.08);
+        font-size: 0.95em;
     }
 
     .psalm {
-        background: rgba(100,70,30,0.08);
+        background: rgba(160,128,80,0.1);
         padding: 16px 22px;
         margin: 22px 0;
-        border: 1px solid #d4c5a0;
+        border: 1px solid #b8a070;
     }
 
     /* Анимация печати в конце */
@@ -177,46 +199,50 @@
         font-family: monospace;
         font-size: 1.1em;
         letter-spacing: 6px;
+        color: #6a5a3a;
     }
 
-    /* Двойной плеер внутри книги */
+    /* Двойной плеер внутри книги — в стиле Морровинда */
     .book-player {
         display: flex;
         justify-content: center;
-        gap: 30px;
+        gap: 35px;
         margin-top: 50px;
         padding-top: 30px;
-        border-top: 2px dashed #c4b58a;
+        border-top: 2px solid #b8a070;
         flex-wrap: wrap;
     }
 
     .freq-btn {
-        background: #2a2418;
-        border: 1px solid #8a7a5a;
-        padding: 12px 28px;
+        background: #3a2a1a;
+        border: 1px solid #a09060;
+        padding: 10px 28px;
         cursor: pointer;
-        font-family: monospace;
+        font-family: 'MedievalSharp', monospace;
         font-size: 1.1em;
-        font-weight: bold;
+        font-weight: normal;
         letter-spacing: 3px;
         transition: 0.2s;
         display: inline-flex;
         align-items: center;
-        gap: 12px;
-        color: #c4b58a;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        gap: 10px;
+        color: #d4c5a0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+        text-shadow: 1px 1px 0 rgba(0,0,0,0.5);
     }
 
     .freq-btn:hover {
-        background: #3a3022;
+        background: #5a4a2a;
         border-color: #d4c5a0;
+        transform: scale(1.02);
     }
 
     .freq-btn.playing {
-        background: #5a4a3a;
-        color: #fcf8e8;
+        background: #8a7a4a;
+        color: #1a0a00;
         border-color: #d4c5a0;
-        box-shadow: 0 0 12px rgba(212,197,160,0.3);
+        box-shadow: 0 0 12px rgba(212,197,160,0.4);
+        text-shadow: none;
     }
 
     /* Кнопка выхода */
@@ -228,12 +254,13 @@
         backdrop-filter: blur(8px);
         padding: 8px 18px;
         font-size: 0.7em;
-        color: #b0a080;
+        color: #b8a880;
         cursor: pointer;
         border: 1px solid #6a5a4a;
         transition: 0.2s;
         z-index: 200;
-        font-family: monospace;
+        font-family: 'MedievalSharp', monospace;
+        letter-spacing: 2px;
     }
 
     .exit-book:hover {
@@ -254,6 +281,18 @@
         z-index: 1000;
         transition: opacity 0.04s;
     }
+
+    /* Скролл */
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #2a1a0a;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #a09060;
+        border-radius: 4px;
+    }
 </style>
 </head>
 <body>
@@ -270,18 +309,18 @@
     <div class="chapter-nav" id="chapterNav"></div>
     <div class="chapter-content" id="chapterContent"></div>
 
-    <!-- Встроенный двойной плеер -->
+    <!-- Встроенный двойной плеер с 0x216 и 0x432 -->
     <div class="book-player">
         <div id="btn216" class="freq-btn">
-            <span>◉</span> 216 Hz
+            <span>◉</span> 0x216
         </div>
         <div id="btn432" class="freq-btn">
-            <span>◉</span> 432 Hz
+            <span>◉</span> 0x432
         </div>
     </div>
 </div>
 
-<div class="exit-book" id="exitBook">[выйти из книги]</div>
+<div class="exit-book" id="exitBook">[покинуть книгу]</div>
 
 <script>
     // ============================================
@@ -315,14 +354,13 @@
     let is216 = false, is432 = false;
     let sources216 = [], sources432 = [];
     let lfo216 = null, lfo432 = null;
-    let crackle216 = null, crackle432 = null;
 
     const flashDiv = document.getElementById('flash');
     const btn216 = document.getElementById('btn216');
     const btn432 = document.getElementById('btn432');
 
     function doFlash() {
-        flashDiv.style.opacity = '0.25';
+        flashDiv.style.opacity = '0.2';
         setTimeout(() => { flashDiv.style.opacity = '0'; }, 80);
     }
 
@@ -387,7 +425,7 @@
         
         is216 = true;
         btn216.classList.add('playing');
-        btn216.querySelector('span').innerHTML = '◉';
+        btn216.querySelector('span').innerHTML = '⏸';
         doFlash();
     }
 
@@ -462,7 +500,7 @@
         
         is432 = true;
         btn432.classList.add('playing');
-        btn432.querySelector('span').innerHTML = '◉';
+        btn432.querySelector('span').innerHTML = '⏸';
         doFlash();
     }
 
@@ -538,6 +576,7 @@
         if (!is216) start216();
         else stop216();
     });
+    
     btn432.addEventListener('click', (e) => {
         e.stopPropagation();
         if (!is432) start432();
