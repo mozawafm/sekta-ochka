@@ -25,7 +25,7 @@
         canvas {
             border: 4px solid #3a3a50;
             background: #000;
-            image-rendering: pixelated; /* Сохраняет четкость пикселей */
+            image-rendering: pixelated;
         }
         .hud {
             position: absolute;
@@ -45,171 +45,171 @@
 <body>
 
     <div id="gameContainer">
-        <canvas id="segaCanvas" width="320" height="224"></canvas> <!-- Разрешение Sega MD -->
+        <canvas id="segaCanvas" width="320" height="224"></canvas>
         <div class="hud">
             <div>SCORE: <span id="score">000000</span></div>
             <div>SPD: <span id="speedUi">0</span> KM/H</div>
         </div>
     </div>
     <div style="margin-top: 15px; text-align: center; color: #8a8ab0; font-size: 13px;">
-        Управление: ◄ ► (Стрелки) — Поворот | ▲ (Вверх) — Газ | ▼ (Вниз) — Тормоз
+        Управление: ◄ ► (Стрелки) — Руль | ▲ (Вверх) — Газ | ▼ (Вниз) — Тормоз
     </div>
 
     <script>
         const canvas = document.getElementById('segaCanvas');
         const ctx = canvas.getContext('2d');
-        
-        // Отключаем сглаживание для создания пиксель-арта
         ctx.imageSmoothingEnabled = false;
 
         // Состояние игры
-        let playerX = 0; // Позиция игрока на дороге (-1 до 1)
-        let position = 0; // Прогресс движения по трассе
+        let playerX = 0; 
+        let position = 0; 
         let speed = 0;
-        const maxSpeed = 200;
+        const maxSpeed = 160;
         let score = 0;
         let gameOver = false;
-        let skyOffset = 0; // Для параллакса неба
+        let skyOffset = 0; 
 
-        // Настройки дороги
+        // Настройки псевдо-3D дороги
         const roadWidth = 2000;
         const segmentLength = 200;
         const cameraHeight = 1000;
-        const drawDistance = 40; // Сколько сегментов вперед рисовать
+        const drawDistance = 40; 
         
-        // Генерация трассы (изгибы)
+        // Генерация геометрии трассы
         const segments = [];
         for (let i = 0; i < 500; i++) {
             segments.push({
-                curve: Math.sin(i / 10) * 2 * (i > 50 ? 1 : 0), // Плавные повороты
-                sprites: Math.random() > 0.7 ? (Math.random() > 0.5 ? 1 : -1) : 0 // 1 - пальма справа, -1 - слева
+                curve: Math.sin(i / 12) * 2.5 * (i > 30 ? 1 : 0), 
+                sprite: Math.random() > 0.75 ? (Math.random() > 0.5 ? 1 : -1) : 0 
             });
         }
 
         // Встречные машины
         const cars = [
-            { pos: 1000, x: -0.5, speed: 60, color: '#e69100' },
-            { pos: 3000, x: 0.3, speed: 80, color: '#0094e6' },
-            { pos: 5000, x: -0.2, speed: 70, color: '#11a300' }
+            { pos: 1500, x: -0.4, speed: 50, color: '#e69100' },
+            { pos: 4000, x: 0.4, speed: 65, color: '#0094e6' },
+            { pos: 7000, x: -0.1, speed: 55, color: '#11a300' }
         ];
 
-        // Кнопки управления
+        // Управление
         const keys = { ArrowLeft: false, ArrowRight: false, ArrowUp: false, ArrowDown: false };
         window.addEventListener('keydown', e => { if (e.key in keys) keys[e.key] = true; });
         window.addEventListener('keyup', e => { if (e.key in keys) keys[e.key] = false; });
 
-        // Проекция 3D точек на 2D экран (математика псевдо-3D гонок 90-х)
+        // Математика проекции 3D в 2D
         function project(p, cameraX, cameraZ, width, height) {
             const scale = cameraHeight / (p.z - cameraZ);
             const x = Math.round((width / 2) + (scale * (p.x - cameraX) * width / 2));
             const y = Math.round((height / 2) - (scale * p.y * height / 2));
             const w = Math.round(scale * roadWidth * width / 2);
-            return { x, y, w };
+            return { x, y, w, scale };
         }
 
-        // Отрисовка кастомных пиксельных спрайтов 16-бит
+        // Отрисовка 16-битных пальм
         function drawPalm(ctx, x, y, scale) {
-            const w = 40 * scale;
-            const h = 80 * scale;
-            if (w < 2 || h < 2) return;
+            const w = 45 * scale;
+            const h = 85 * scale;
+            if (w < 4 || h < 4) return;
             
             ctx.save();
-            ctx.translate(x - w/2, y - h);
+            ctx.translate(x - w / 2, y - h);
             // Ствол
-            ctx.fillStyle = '#65350f';
-            ctx.fillRect(w * 0.45, h * 0.3, w * 0.1, h * 0.7);
-            // Листья (Слоеная ретро-текстура)
-            ctx.fillStyle = '#005e1a';
-            ctx.fillRect(w * 0.1, h * 0.1, w * 0.8, h * 0.25);
-            ctx.fillStyle = '#009e2d';
-            ctx.fillRect(w * 0.2, h * 0.15, w * 0.6, h * 0.15);
-            ctx.fillStyle = '#39e66b';
-            ctx.fillRect(w * 0.3, h * 0.18, w * 0.4, h * 0.07);
+            ctx.fillStyle = '#542b0c';
+            ctx.fillRect(w * 0.43, h * 0.2, w * 0.14, h * 0.8);
+            // Листья (ретро-слои)
+            ctx.fillStyle = '#004a14';
+            ctx.fillRect(w * 0.05, h * 0.05, w * 0.9, h * 0.3);
+            ctx.fillStyle = '#008c23';
+            ctx.fillRect(w * 0.15, h * 0.1, w * 0.7, h * 0.2);
+            ctx.fillStyle = '#2be65f';
+            ctx.fillRect(w * 0.3, h * 0.13, w * 0.4, h * 0.1);
             ctx.restore();
         }
 
+        // Отрисовка спрайта машины
         function drawCarSprite(ctx, x, y, scale, color, isPlayer = false) {
-            const w = 55 * scale;
-            const h = 30 * scale;
-            if (w < 4 || h < 2) return;
+            const w = 60 * scale;
+            const h = 32 * scale;
+            if (w < 5 || h < 3) return;
 
             ctx.save();
-            ctx.translate(x - w/2, y - h);
+            ctx.translate(x - w / 2, y - h);
 
-            // Тень под машиной
-            ctx.fillStyle = 'rgba(0,0,0,0.4)';
-            ctx.fillRect(-w*0.1, h*0.8, w * 1.2, h*0.3);
+            // Тень
+            ctx.fillStyle = 'rgba(0,0,0,0.35)';
+            ctx.fillRect(-w * 0.05, h * 0.85, w * 1.1, h * 0.2);
 
-            // Корпус
+            // Корпус машины
             ctx.fillStyle = color;
-            ctx.fillRect(0, h * 0.4, w, h * 0.45); // Основная часть
-            ctx.fillRect(w * 0.1, h * 0.2, w * 0.8, h * 0.25); // Кабина
+            ctx.fillRect(0, h * 0.4, w, h * 0.45); 
+            ctx.fillRect(w * 0.12, h * 0.18, w * 0.76, h * 0.25); 
 
-            // Детали (Стиль Сега: контрастные обводки и неоновые цвета)
-            ctx.fillStyle = '#111'; // Колеса
-            ctx.fillRect(0, h * 0.7, w * 0.18, h * 0.25);
-            ctx.fillRect(w * 0.82, h * 0.7, w * 0.18, h * 0.25);
+            // Стекла
+            ctx.fillStyle = '#5ce1e6'; 
+            ctx.fillRect(w * 0.18, h * 0.22, w * 0.64, h * 0.16);
 
-            ctx.fillStyle = '#00d0ff'; // Стекло заднее/лобовое
-            ctx.fillRect(w * 0.18, h * 0.25, w * 0.64, h * 0.15);
+            // Колеса
+            ctx.fillStyle = '#1a1a24'; 
+            ctx.fillRect(w * 0.02, h * 0.65, w * 0.16, h * 0.3);
+            ctx.fillRect(w * 0.82, h * 0.65, w * 0.16, h * 0.3);
 
-            // Спойлер гоночный
-            ctx.fillStyle = '#222';
-            ctx.fillRect(-w * 0.05, h * 0.3, w * 1.1, h * 0.08);
+            // Спойлер
+            ctx.fillStyle = '#111';
+            ctx.fillRect(-w * 0.04, h * 0.28, w * 1.08, h * 0.08);
 
-            // Огни фар/Стоп-сигналы
-            ctx.fillStyle = isPlayer ? '#ff0033' : '#ffea00'; 
-            ctx.fillRect(w * 0.05, h * 0.45, w * 0.12, h * 0.1);
-            ctx.fillRect(w * 0.83, h * 0.45, w * 0.12, h * 0.1);
+            // Фары
+            ctx.fillStyle = isPlayer ? '#ff2200' : '#ffea00'; 
+            ctx.fillRect(w * 0.05, h * 0.46, w * 0.14, h * 0.12);
+            ctx.fillRect(w * 0.81, h * 0.46, w * 0.14, h * 0.12);
 
             ctx.restore();
         }
 
-        // Основной движок обновления
+        // Обновление состояния
         function update() {
             if (gameOver) return;
 
-            // Логика скорости
-            if (keys.ArrowUp) speed = Math.min(speed + 2, maxSpeed);
-            else if (keys.ArrowDown) speed = Math.max(speed - 4, 0);
-            else speed = Math.max(speed - 1, 0); // Трение
+            // Управление скоростью
+            if (keys.ArrowUp) speed = Math.min(speed + 1.5, maxSpeed);
+            else if (keys.ArrowDown) speed = Math.max(speed - 3, 0);
+            else speed = Math.max(speed - 0.5, 0);
 
             // Поворот руля
             const currentSegment = segments[Math.floor(position / segmentLength) % segments.length];
             if (keys.ArrowLeft && speed > 0) {
-                playerX -= 0.04 * (speed / maxSpeed);
-                skyOffset += 2;
+                playerX -= 0.035 * (speed / maxSpeed);
+                skyOffset += 1.5;
             }
             if (keys.ArrowRight && speed > 0) {
-                playerX += 0.04 * (speed / maxSpeed);
-                skyOffset -= 2;
+                playerX += 0.035 * (speed / maxSpeed);
+                skyOffset -= 1.5;
             }
 
-            // Центробежная сила на поворотах
-            playerX -= (speed / maxSpeed) * currentSegment.curve * 0.015;
+            // Физика центробежной силы в повороте
+            playerX -= (speed / maxSpeed) * currentSegment.curve * 0.012;
 
-            // Движение вперед
+            // Движение вперед по трассе
             position += speed;
+            
             if (speed > 0) {
-                score += Math.round(speed / 10);
+                score += Math.round(speed / 15);
                 document.getElementById('score').innerText = String(score).padStart(6, '0');
             }
             document.getElementById('speedUi').innerText = Math.round(speed);
 
-            // Ограничение игрока пределами обочины
-            if (playerX < -2 || playerX > 2) {
-                speed = Math.max(speed - 5, 10); // Замедление по грязи
+            // Замедление на обочине
+            if (playerX < -1 || playerX > 1) {
+                if (speed > 40) speed -= 2;
             }
 
-            // Обновление трафика ИИ
+            // Логика машин ИИ
             cars.forEach(car => {
                 car.pos += car.speed;
-                // Зацикливание машин вокруг трассы
-                if (car.pos > position + 20000) car.pos -= 30000;
-                if (car.pos < position - 5000) car.pos += 30000;
+                if (car.pos > position + 15000) car.pos -= 20000;
+                if (car.pos < position - 2000) car.pos += 20000;
 
-                // Хитбокс коллизии (Проверка столкновения)
-                if (Math.abs(position - car.pos) < 150 && Math.abs(playerX - car.x) < 0.35) {
+                // Проверка аварии (коллизия)
+                if (Math.abs(position - car.pos) < 160 && Math.abs(playerX - car.x) < 0.38) {
                     gameOver = true;
                 }
             });
@@ -218,43 +218,40 @@
             requestAnimationFrame(update);
         }
 
-        // Рендеринг кадра
+        // Рендеринг графики
         function render() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // 1. НЕБО (Параллакс градиент в стиле Synthwave/Sega)
+            // 1. ЗАДНИЙ ПЛАН (Параллакс Небо и Горы)
             skyOffset = skyOffset % canvas.width;
-            ctx.fillStyle = '#0d001a';
+            ctx.fillStyle = '#0a0014'; 
             ctx.fillRect(0, 0, canvas.width, canvas.height / 2);
             
-            // Фиолетовые полосы заката
-            ctx.fillStyle = '#26004d';
-            ctx.fillRect(0, canvas.height * 0.25, canvas.width, canvas.height * 0.15);
-            ctx.fillStyle = '#590099';
-            ctx.fillRect(0, canvas.height * 0.37, canvas.width, canvas.height * 0.08);
+            // Розово-фиолетовый закат Sega Киберпанк
+            ctx.fillStyle = '#2b004a';
+            ctx.fillRect(0, canvas.height * 0.23, canvas.width, canvas.height * 0.15);
+            ctx.fillStyle = '#67008a';
+            ctx.fillRect(0, canvas.height * 0.35, canvas.width, canvas.height * 0.08);
 
-            // Горы на горизонте с параллаксом
-            ctx.fillStyle = '#120024';
-            for (let i = -1; i < 3; i++) {
-                let gx = (i * 150) + (skyOffset * 0.5);
+            // Горы
+            ctx.fillStyle = '#140026';
+            for (let i = -2; i < 4; i++) {
+                let gx = (i * 140) + (skyOffset * 0.4);
                 ctx.beginPath();
                 ctx.moveTo(gx, canvas.height / 2);
-                ctx.lineTo(gx + 75, canvas.height / 2 - 30);
-                ctx.lineTo(gx + 150, canvas.height / 2);
+                ctx.lineTo(gx + 70, canvas.height / 2 - 25);
+                ctx.lineTo(gx + 140, canvas.height / 2);
                 ctx.fill();
             }
 
-            // 2. ОТРИСОВКА ДОРОГИ (Псевдо-3D сканирование линий)
+            // 2. ДОРОГА И СПРАЙТЫ ОКРУЖЕНИЯ
             const startSegment = Math.floor(position / segmentLength);
             let percent = (position % segmentLength) / segmentLength;
             
             let dx = -(segments[startSegment].curve * percent);
             let sumX = 0;
 
-            let maxAnkerY = canvas.height;
-
-            // Отрисовка сзади наперед (художественный алгоритм)
-            const drawQueue = [];
+            const spritesToDraw = [];
 
             for (let n = 0; n < drawDistance; n++) {
                 const i = (startSegment + n) % segments.length;
@@ -263,16 +260,15 @@
                 const p1 = { x: sumX, y: 0, z: (startSegment + n) * segmentLength };
                 const p2 = { x: sumX + segment.curve, y: 0, z: (startSegment + n + 1) * segmentLength };
                 
-Используйте код с осторожностью.sumX += segment.curve;const proj1 = project(p1, playerX * roadWidth - dx * roadWidth, position, canvas.width, canvas.height);const proj2 = project(p2, playerX * roadWidth - (dx + segment.curve) * roadWidth, position, canvas.width, canvas.height);dx += segment.curve;// Отсечение невидимогоif (proj1.y >= canvas.height || proj2.y >= proj1.y || proj2.y < canvas.height / 2) continue;// Цвета классической «зебры» Sega (чередование полос)const isEven = Math.floor((startSegment + n) / 3) % 2 === 0;const grassColor = isEven ? '#128033' : '#005e1a';const roadColor  = isEven ? '#424254' : '#30303e';const rumbleColor = isEven ? '#e60000' : '#ffffff';// Зелень по бокамctx.fillStyle = grassColor;ctx.fillRect(0, proj2.y, canvas.width, proj1.y - proj2.y);// Обочина (Rumble strips)ctx.fillStyle = rumbleColor;ctx.beginPath();ctx.moveTo(proj1.x - proj1.w * 1.06, proj1.y);ctx.lineTo(proj1.x + proj1.w * 1.06, proj1.y);ctx.lineTo(proj2.x + proj2.w * 1.06, proj2.y);ctx.lineTo(proj2.x - proj2.w * 1.06, proj2.y);ctx.fill();// Полотно дорогиctx.fillStyle = roadColor;ctx.beginPath();ctx.moveTo(proj1.x - proj1.w, proj1.y);ctx.lineTo(proj1.x + proj1.w, proj1.y);ctx.lineTo(proj2.x + proj2.w, proj2.y);ctx.lineTo(proj2.x - proj2.w, proj2.y);ctx.fill();// Разделительная прерывистая линияif (isEven) {ctx.fillStyle = '#ffffff';ctx.beginPath();ctx.moveTo(proj1.x - proj1.w0.02, proj1.y);ctx.lineTo(proj1.x + proj1.w0.02, proj1.y);ctx.lineTo(proj2.x + proj2.w0.02, proj2.y);ctx.lineTo(proj2.x - proj2.w0.02, proj2.y);ctx.fill();}// Сохраняем элементы окружения для отрисовки поверх дорогиconst scale = cameraHeight / (p1.z - position);if (segment.sprites !== 0) {const side = segment.sprites;const spriteX = proj1.x + side * proj1.w * 1.4;drawQueue.push({ type: 'palm', x: spriteX, y: proj1.y, s: scale });}}// 3. ТРАФИК (Машины ИИ)cars.forEach(car => {if (car.pos > position && car.pos < position + drawDistance * segmentLength) {const p = { x: car.x * roadWidth, y: 0, z: car.pos };const proj = project(p, playerX * roadWidth, position, canvas.width, canvas.height);const scale = cameraHeight / (car.pos - position);drawQueue.push({ type: 'car', x: proj.x, y: proj.y, s: scale, color: car.color, isPlayer: false });}});// Отрисовка объектов с правильной глубиной (от дальних к ближним)for (let i = drawQueue.length - 1; i >= 0; i--) {const item = drawQueue[i];if (item.type === 'palm') drawPalm(ctx, item.x, item.y, item.s * 12);if (item.type === 'car') drawCarSprite(ctx, item.x, item.y, item.s * 10, item.color, false);}// 4. ИГРОК (Отрисовывается всегда на переднем плане по центру снизу)const playerScale = cameraHeight / (cameraHeight);// Визуальный наклон машины при поворотеlet pX = canvas.width / 2;if (keys.ArrowLeft) pX -= 3;if (keys.ArrowRight) pX += 3;drawCarSprite(ctx, pX, canvas.height - 10, playerScale * 18, '#ff0044', true);// Экран Game Overif (gameOver) {ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';ctx.fillRect(0, 0, canvas.width, canvas.height);ctx.fillStyle = '#ff3333';ctx.font = 'bold 20px Courier New';ctx.textAlign = 'center';ctx.fillText('CRASH GAME OVER', canvas.width / 2, canvas.height / 2 - 10);ctx.fillStyle = '#00ffff';ctx.font = '12px Courier New';ctx.fillText('Нажмите F5 для рестарта', canvas.width / 2, canvas.height / 2 + 15);}}// Запуск движкаupdate();
-### Что здесь воссоздает атмосферу Sega Mega Drive:
-1. **Разрешение экрана 320x224:** Настоящий стандарт большинства хитов Sega (NTSC режим).
-2. **Псевдо-3D скроллинг линий:** Код делит экран горизонтально на линии и вычисляет перспективу, сужая и расширяя полотно. Точно так же работала легендарная *Lotus Turbo Challenge* на МегаДрайве.
-3. **Параллакс:** Небо и горы движутся с разной скоростью относительно машины, давая иллюзию объема ландшафта.
-4. **Пиксельный рендеринг:** Стилизованный ретро-шейдинг деталей машин и пальм.
+                sumX += segment.curve;
 
-<FollowUp>
-Если хотите улучшить проект, скажите:
-* Добавить ли **музыку и звуки** (чиптюн в стиле звукового процессора Sega Yamaha YM2612)?
-* Добавить ли **выбор из нескольких машин** с разными характеристиками?
-* Сделать ли полноценную **смену трасс / уровней** при прохождении дистанции?
-</FollowUp>
+                const proj1 = project(p1, playerX * roadWidth - dx * roadWidth, position, canvas.width, canvas.height);
+                const proj2 = project(p2, playerX * roadWidth - (dx + segment.curve) * roadWidth, position, canvas.width, canvas.height);
+                
+                dx += segment.curve;
+
+                if (proj1.y >= canvas.height || proj2.y >= proj1.y || proj2.y < canvas.height / 2) continue;
+
+                const isEven = Math.floor((startSegment + n) / 3) % 2 === 0;
+                const grassColor = isEven ? '#0a6324' : '#044217';
+                const roadColor  = isEven ? '#424254' : '#353542';
