@@ -4,40 +4,46 @@
     <meta charset="UTF-8">
     <title>DJ Son — Club Battle</title>
     <style>
+        /* Подключаем шрифт, но делаем фолбэк на моноширинный, если он не загрузится */
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
         body {
             margin: 0;
             padding: 0;
-            background-color: #111;
+            background-color: #050505; /* Почти черный фон страницы */
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             overflow: hidden;
-            font-family: 'Press Start 2P', cursive; /* Пиксельный шрифт */
+            font-family: 'Press Start 2P', 'Courier New', monospace; /* Фолбэк шрифт */
             color: white;
+            user-select: none; /* Запрет выделения текста */
         }
 
-        #game-container {
+        #game-wrapper {
             position: relative;
             width: 900px;
             height: 500px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
-            border: 4px solid #333;
+            box-shadow: 0 0 30px rgba(255, 0, 85, 0.2);
+            border: 4px solid #222;
             background-color: #000;
+            overflow: hidden; /* Важно: обрезаем всё, что выходит за рамки */
         }
 
         canvas {
             display: block;
-            image-rendering: pixelated; /* Важно для четкости пикселей */
+            image-rendering: pixelated; /* Четкие пиксели */
+            width: 100%;
+            height: 100%;
         }
 
-        /* Эффект старого монитора (шум) */
-        .scanlines {
+        /* Эффекты экрана */
+        .crt-overlay {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
             background-size: 100% 2px, 3px 100%;
             pointer-events: none;
             z-index: 10;
@@ -46,26 +52,28 @@
         .vignette {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: radial-gradient(circle, rgba(0,0,0,0) 60%, rgba(0,0,0,0.6) 100%);
+            background: radial-gradient(circle, rgba(0,0,0,0) 60%, rgba(0,0,0,0.8) 100%);
             pointer-events: none;
             z-index: 11;
         }
 
+        /* Интерфейс */
         #ui-layer {
             position: absolute;
-            top: 10px;
-            left: 10px;
-            right: 10px;
+            top: 15px;
+            left: 15px;
+            right: 15px;
             display: flex;
             justify-content: space-between;
             z-index: 20;
             text-shadow: 2px 2px 0 #000;
             font-size: 14px;
+            pointer-events: none;
         }
 
         #status-bar {
             position: absolute;
-            bottom: 10px;
+            bottom: 15px;
             left: 0;
             width: 100%;
             text-align: center;
@@ -73,79 +81,107 @@
             font-size: 12px;
             z-index: 20;
             text-shadow: 1px 1px 0 #000;
+            pointer-events: none;
         }
 
-        #start-screen, #game-over-screen {
+        /* Экраны меню */
+        .screen {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
+            background: rgba(0,0,0,0.9);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 30;
             text-align: center;
+            transition: opacity 0.3s;
         }
 
-        h1 { color: #ff0055; text-shadow: 4px 4px 0 #fff; margin-bottom: 20px; font-size: 40px; }
-        p { line-height: 1.5; color: #ccc; font-size: 12px; max-width: 600px; }
+        .hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        h1 { 
+            color: #ff0055; 
+            text-shadow: 4px 4px 0 #fff; 
+            margin-bottom: 20px; 
+            font-size: 36px; 
+            line-height: 1.2;
+        }
+        
+        p { 
+            line-height: 1.6; 
+            color: #aaa; 
+            font-size: 12px; 
+            max-width: 600px; 
+            margin: 0 auto 20px auto;
+        }
         
         button {
-            margin-top: 30px;
+            margin-top: 20px;
             padding: 15px 30px;
-            font-family: 'Press Start 2P', cursive;
+            font-family: inherit;
             font-size: 16px;
             background: #ff0055;
             color: white;
             border: 4px solid white;
             cursor: pointer;
-            transition: transform 0.1s;
+            transition: all 0.1s;
+            text-transform: uppercase;
         }
-        button:hover { transform: scale(1.1); background: #ff3377; }
+        button:hover { 
+            transform: scale(1.05); 
+            background: #ff3377; 
+            box-shadow: 0 0 15px #ff0055;
+        }
         button:active { transform: scale(0.95); }
 
-        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-<div id="game-container">
+<div id="game-wrapper">
     <canvas id="gameCanvas" width="900" height="500"></canvas>
     
     <!-- Эффекты -->
-    <div class="scanlines"></div>
+    <div class="crt-overlay"></div>
     <div class="vignette"></div>
 
-    <!-- Интерфейс -->
+    <!-- UI -->
     <div id="ui-layer">
         <div id="health-display">❤️❤️❤️❤️❤️</div>
         <div id="level-name">КЛУБ "ХАЙХЭТ"</div>
         <div id="score-display">🎵 ТРЕКИ: 0</div>
     </div>
-    <div id="status-bar">Управление: СТРЕЛКИ - Движение/Прыжок | ПРОБЕЛ - Атака</div>
+    <div id="status-bar">СТРЕЛКИ: Движение | ПРОБЕЛ: Атака</div>
 
-    <!-- Экраны меню -->
-    <div id="start-screen">
-        <h1>DJ SON<br><span style="font-size:20px; color:white;">CLUB BATTLE</span></h1>
-        <p>Добро пожаловать в клуб "Хайхэт".<br>Собери все треки и победи Мерзкого Диджея!</p>
-        <button onclick="startGame()">НАЧАТЬ РЕЙВ</button>
+    <!-- Стартовый экран -->
+    <div id="start-screen" class="screen">
+        <h1>DJ SON<br><span style="font-size:18px; color:white;">CLUB BATTLE</span></h1>
+        <p>Собери треки, избегай алкашей и победи Мерзкого Диджея!<br>Управление: Стрелки + Пробел</p>
+        <button id="btn-start">НАЧАТЬ РЕЙВ</button>
     </div>
 
-    <div id="game-over-screen" class="hidden">
-        <h1 id="go-title">GAME OVER</h1>
-        <p id="go-msg">Рейв провален...</p>
-        <button onclick="resetGame()">RESTART</button>
+    <!-- Экран проигрыша/победы -->
+    <div id="end-screen" class="screen hidden">
+        <h1 id="end-title">GAME OVER</h1>
+        <p id="end-msg">Рейв провален...</p>
+        <button id="btn-restart">RESTART</button>
     </div>
 </div>
 
 <script>
-/**
- * DJ SON - CLUB BATTLE
- * 16-bit Platformer Engine
- */
+console.log("DJ Son Game Script Loaded"); // Отладка
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
+
+// Проверка контекста
+if (!ctx) {
+    alert("Ошибка: Ваш браузер не поддерживает Canvas!");
+}
 
 // --- КОНФИГУРАЦИЯ ---
 const GAME_WIDTH = 900;
@@ -153,44 +189,120 @@ const GAME_HEIGHT = 500;
 const WORLD_WIDTH = 3500;
 const GRAVITY = 0.7;
 const FRICTION = 0.8;
-const JUMP_FORCE = -12; // Чуть сильнее для динамики
+const JUMP_FORCE = -12;
 const SPEED = 4.5;
 
-// Состояние игры
-let gameState = 'MENU'; // MENU, PLAYING, BOSS_FIGHT, GAME_OVER, WIN
+let gameState = 'MENU';
 let frameCount = 0;
 let score = 0;
 let cameraX = 0;
+let animationId = null;
 
-// Ввод
-const keys = {
-    ArrowRight: false,
-    ArrowLeft: false,
-    ArrowUp: false,
-    Space: false
-};
+const keys = { ArrowRight: false, ArrowLeft: false, ArrowUp: false, Space: false };
 
-// --- СПРАЙТЫ И ГРАФИКА ---
+// --- ГРАФИКА (СПРАЙТЫ) ---
+const C = { R:'#D32F2F', W:'#FFFFFF', K:'#111111', S:'#FFCCBC', G:'#424242', D:'#8D6E63', T:' ' };
 
-// Функция для рисования пиксельного спрайта из массива цветов
-function drawPixelSprite(ctx, x, y, pixelMap, scale = 2, flip = false) {
-    const rows = pixelMap.length;
-    const cols = pixelMap[0].length;
-    
+// Спрайт Диджея (Idle)
+const SPRITE_DJ_IDLE = [
+    [C.T,C.T,C.T,C.T,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.T,C.T,C.T,C.T,C.T],
+    [C.T,C.T,C.T,C.K,C.K,C.D,C.D,C.D,C.D,C.K,C.K,C.K,C.T,C.T,C.T,C.T],
+    [C.T,C.T,C.K,C.D,C.D,C.D,C.S,C.S,C.S,C.D,C.D,C.K,C.K,C.T,C.T,C.T],
+    [C.T,C.K,C.D,C.S,C.S,C.S,C.S,C.S,C.S,C.S,C.D,C.D,C.K,C.K,C.T,C.T],
+    [C.T,C.K,C.D,C.S,C.S,C.S,C.S,C.S,C.S,C.S,C.D,C.D,C.K,C.G,C.G,C.T],
+    [C.T,C.K,C.D,C.S,C.S,C.S,C.S,C.S,C.S,C.S,C.D,C.D,C.K,C.G,C.G,C.T],
+    [C.T,C.T,C.K,C.D,C.D,C.D,C.D,C.D,C.D,C.D,C.D,C.K,C.G,C.G,C.T,C.T],
+    [C.T,C.T,C.T,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.T,C.T,C.T],
+    [C.T,C.T,C.T,C.K,C.R,C.R,C.R,C.W,C.R,C.R,C.R,C.K,C.T,C.T,C.T,C.T],
+    [C.T,C.T,C.T,C.K,C.R,C.R,C.R,C.W,C.R,C.R,C.R,C.K,C.T,C.T,C.T,C.T],
+    [C.T,C.T,C.T,C.K,C.R,C.R,C.R,C.W,C.R,C.R,C.R,C.K,C.T,C.T,C.T,C.T],
+    [C.T,C.T,C.T,C.K,C.R,C.R,C.R,C.W,C.R,C.R,C.R,C.K,C.T,C.T,C.T,C.T],
+    [C.T,C.T,C.T,C.K,C.K,C.K,C.K,C.W,C.K,C.K,C.K,C.K,C.T,C.T,C.T,C.T],
+    [C.T,C.T,C.T,C.K,C.K,C.K,C.K,C.W,C.K,C.K,C.K,C.K,C.T,C.T,C.T,C.T],
+    [C.T,C.T,C.T,C.K,C.K,C.K,C.K,C.W,C.K,C.K,C.K,C.K,C.T,C.T,C.T,C.T],
+    [C.T,C.T,C.T,C.K,C.K,C.K,C.K,C.W,C.K,C.K,C.K,C.K,C.T,C.T,C.T,C.T]
+];
+
+// Спрайт Атаки
+const SPRITE_DJ_ATTACK = [
+    [C.T,C.T,C.T,C.T,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.T,C.T,C.T,C.T,C.T,C.T,C.T,C.T,C.T],
+    [C.T,C.T,C.T,C.K,C.K,C.D,C.D,C.D,C.D,C.K,C.K,C.K,C.T,C.T,C.T,C.T,C.T,C.T,C.T,C.T],
+    [C.T,C.T,C.K,C.D,C.D,C.D,C.S,C.S,C.S,C.D,C.D,C.K,C.K,C.T,C.T,C.T,C.T,C.T,C.T,C.T],
+    [C.T,C.K,C.D,C.S,C.S,C.S,C.S,C.S,C.S,C.S,C.D,C.D,C.K,C.K,C.T,C.T,C.T,C.T,C.T,C.T],
+    [C.T,C.K,C.D,C.S,C.S,C.S,C.S,C.S,C.S,C.S,C.D,C.D,C.K,C.G,C.G,C.T,C.T,C.T,C.T,C.T],
+    [C.T,C.K,C.D,C.S,C.S,C.S,C.S,C.S,C.S,C.S,C.D,C.D,C.K,C.G,C.G,C.T,C.T,C.T,C.T,C.T],
+    [C.T,C.T,C.K,C.D,C.D,C.D,C.D,C.D,C.D,C.D,C.D,C.K,C.G,C.G,C.T,C.T,C.T,C.T,C.T,C.T],
+    [C.T,C.T,C.T,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.T,C.T,C.T,C.T,C.T,C.T,C.T],
+    [C.T,C.T,C.T,C.K,C.R,C.R,C.R,C.W,C.R,C.R,C.R,C.K,C.R,C.R,C.R,C.R,C.R,C.R,C.R,C.R],
+    [C.T,C.T,C.T,C.K,C.R,C.R,C.R,C.W,C.R,C.R,C.R,C.K,C.R,C.R,C.R,C.R,C.R,C.R,C.R,C.R],
+    [C.T,C.T,C.T,C.K,C.R,C.R,C.R,C.W,C.R,C.R,C.R,C.K,C.R,C.R,C.R,C.R,C.R,C.R,C.R,C.R],
+    [C.T,C.T,C.T,C.K,C.R,C.R,C.R,C.W,C.R,C.R,C.R,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K],
+    [C.T,C.T,C.T,C.K,C.K,C.K,C.K,C.W,C.K,C.K,C.K,C.K,C.T,C.T,C.T,C.T,C.T,C.T,C.T,C.T],
+    [C.T,C.T,C.T,C.K,C.K,C.K,C.K,C.W,C.K,C.K,C.K,C.K,C.T,C.T,C.T,C.T,C.T,C.T,C.T,C.T],
+    [C.T,C.T,C.T,C.K,C.K,C.K,C.K,C.W,C.K,C.K,C.K,C.K,C.T,C.T,C.T,C.T,C.T,C.T,C.T,C.T],
+    [C.T,C.T,C.T,C.K,C.K,C.K,C.K,C.W,C.K,C.K,C.K,C.K,C.T,C.T,C.T,C.T,C.T,C.T,C.T,C.T]
+];
+
+// Враги
+const SPRITE_ALKASH = [
+    [C.T,C.T,C.T,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.T,C.T,C.T,C.T],
+    [C.T,C.T,C.K,C.D,C.D,C.D,C.D,C.D,C.D,C.D,C.K,C.T,C.T,C.T],
+    [C.T,C.K,C.D,C.S,C.S,C.S,C.S,C.S,C.S,C.S,C.D,C.K,C.T,C.T],
+    [C.T,C.K,C.D,C.S,C.S,C.S,C.S,C.S,C.S,C.S,C.D,C.K,C.T,C.T],
+    [C.T,C.T,C.K,C.D,C.D,C.D,C.D,C.D,C.D,C.D,C.K,C.T,C.T,C.T],
+    [C.T,C.T,C.T,C.K,C.G,C.G,C.G,C.G,C.G,C.G,C.K,C.T,C.T,C.T],
+    [C.T,C.T,C.K,C.G,C.G,'#1976D2',C.G,C.G,C.G,C.G,C.G,C.K,C.T,C.T],
+    [C.T,C.T,C.K,C.G,C.G,'#1976D2',C.G,C.G,C.G,C.G,C.G,C.K,C.T,C.T],
+    [C.T,C.T,C.K,C.G,C.G,C.G,C.G,C.G,C.G,C.G,C.G,C.K,C.T,C.T],
+    [C.T,C.T,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.T,C.T],
+    [C.T,C.T,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.T,C.T]
+];
+
+const SPRITE_TUSOVSHIK = [
+    [C.T,C.T,C.T,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.T,C.T,C.T,C.T],
+    [C.T,C.T,C.K,'#FFEB3B','#FFEB3B','#FFEB3B','#FFEB3B','#FFEB3B','#FFEB3B','#FFEB3B',C.K,C.T,C.T,C.T],
+    [C.T,C.K,'#FFEB3B',C.S,C.S,C.S,C.S,C.S,C.S,C.S,'#FFEB3B',C.K,C.T,C.T],
+    [C.T,C.K,'#FFEB3B',C.S,C.S,C.S,C.S,C.S,C.S,C.S,'#FFEB3B',C.K,C.T,C.T],
+    [C.T,C.T,C.K,'#FFEB3B','#FFEB3B','#FFEB3B','#FFEB3B','#FFEB3B','#FFEB3B','#FFEB3B',C.K,C.T,C.T,C.T],
+    [C.T,C.T,C.T,C.K,'#E91E63','#E91E63','#E91E63','#E91E63','#E91E63','#E91E63',C.K,C.T,C.T,C.T],
+    [C.T,C.T,C.K,'#E91E63','#E91E63','#E91E63','#E91E63','#E91E63','#E91E63','#E91E63','#E91E63',C.K,C.T,C.T],
+    [C.T,C.T,C.K,'#E91E63','#E91E63','#E91E63','#E91E63','#E91E63','#E91E63','#E91E63','#E91E63',C.K,C.T,C.T],
+    [C.T,C.T,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.T,C.T,C.T],
+    [C.T,C.T,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.T,C.T,C.T]
+];
+
+const SPRITE_BOSS = [
+    [C.T,C.T,C.T,C.T,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.T,C.T,C.T,C.T,C.T,C.T],
+    [C.T,C.T,C.T,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.T,C.T,C.T,C.T,C.T],
+    [C.T,C.T,C.K,C.K,C.S,C.S,C.S,C.S,C.S,C.S,C.S,C.S,C.S,C.K,C.K,C.K,C.T,C.T,C.T,C.T],
+    [C.T,C.K,C.K,C.S,C.S,C.S,C.S,C.S,C.S,C.S,C.S,C.S,C.S,C.S,C.K,C.K,C.K,C.T,C.T,C.T],
+    [C.T,C.K,C.K,C.S,C.S,C.S,C.S,C.S,C.S,C.S,C.S,C.S,C.S,C.S,C.K,C.K,C.K,C.T,C.T,C.T],
+    [C.T,C.K,C.K,C.S,C.S,C.S,C.S,C.S,C.S,C.S,C.S,C.S,C.S,C.S,C.K,C.K,C.K,C.T,C.T,C.T],
+    [C.T,C.T,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.T,C.T,C.T,C.T,C.T],
+    [C.T,C.T,C.T,C.K,'#212121','#212121','#212121','#212121','#212121','#212121','#212121','#212121','#212121',C.K,C.T,C.T,C.T,C.T,C.T,C.T],
+    [C.T,C.T,C.T,C.K,'#212121','#212121','#212121','#212121','#212121','#212121','#212121','#212121','#212121',C.K,C.T,C.T,C.T,C.T,C.T,C.T],
+    [C.T,C.T,C.T,C.K,'#212121','#212121','#212121','#212121','#212121','#212121','#212121','#212121','#212121',C.K,C.T,C.T,C.T,C.T,C.T,C.T],
+    [C.T,C.T,C.T,C.K,'#212121','#212121','#212121','#212121','#212121','#212121','#212121','#212121','#212121',C.K,C.T,C.T,C.T,C.T,C.T,C.T],
+    [C.T,C.T,C.T,C.K,'#212121','#212121','#212121','#212121','#212121','#212121','#212121','#212121','#212121',C.K,C.T,C.T,C.T,C.T,C.T,C.T],
+    [C.T,C.T,C.T,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.T,C.T,C.T,C.T,C.T,C.T],
+    [C.T,C.T,C.T,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.K,C.T,C.T,C.T,C.T,C.T,C.T]
+];
+
+function drawPixelSprite(ctx, x, y, map, scale = 2, flip = false) {
+    const rows = map.length;
+    const cols = map[0].length;
     ctx.save();
     if (flip) {
         ctx.translate(x + cols * scale, y);
         ctx.scale(-1, 1);
-        x = 0; 
-        y = 0;
+        x = 0; y = 0;
     } else {
         ctx.translate(x, y);
     }
-
     for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
-            const color = pixelMap[r][c];
-            if (color !== ' ') {
+            const color = map[r][c];
+            if (color !== C.T && color !== ' ') {
                 ctx.fillStyle = color;
                 ctx.fillRect(c * scale, r * scale, scale, scale);
             }
@@ -199,136 +311,23 @@ function drawPixelSprite(ctx, x, y, pixelMap, scale = 2, flip = false) {
     ctx.restore();
 }
 
-// Цветовая палитра
-const C = {
-    R: '#D32F2F', // Красный (олимпийка)
-    W: '#FFFFFF', // Белый
-    K: '#111111', // Черный (штаны, волосы)
-    S: '#FFCCBC', // Кожа
-    G: '#424242', // Серый (наушники)
-    D: '#8D6E63', // Коричневый (волосы/борода)
-    T: ' '        // Прозрачный
-};
-
-// Спрайт Диджея Сна (Idle / Стоя) - на основе предоставленного изображения
-// Примерно 16x20 пикселей
-const SPRITE_DJ_IDLE = [
-    [T,T,T,T,K,K,K,K,K,K,K,T,T,T,T,T],
-    [T,T,T,K,K,D,D,D,D,K,K,K,T,T,T,T],
-    [T,T,K,D,D,D,S,S,S,D,D,K,K,T,T,T],
-    [T,K,D,S,S,S,S,S,S,S,D,D,K,K,T,T],
-    [T,K,D,S,S,S,S,S,S,S,D,D,K,G,G,T],
-    [T,K,D,S,S,S,S,S,S,S,D,D,K,G,G,T],
-    [T,T,K,D,D,D,D,D,D,D,D,K,G,G,T,T],
-    [T,T,T,K,K,K,K,K,K,K,K,K,K,T,T,T],
-    [T,T,T,K,R,R,R,W,R,R,R,K,T,T,T,T],
-    [T,T,T,K,R,R,R,W,R,R,R,K,T,T,T,T],
-    [T,T,T,K,R,R,R,W,R,R,R,K,T,T,T,T],
-    [T,T,T,K,R,R,R,W,R,R,R,K,T,T,T,T],
-    [T,T,T,K,K,K,K,W,K,K,K,K,T,T,T,T],
-    [T,T,T,K,K,K,K,W,K,K,K,K,T,T,T,T],
-    [T,T,T,K,K,K,K,W,K,K,K,K,T,T,T,T],
-    [T,T,T,K,K,K,K,W,K,K,K,K,T,T,T,T],
-    [T,T,T,K,K,K,K,W,K,K,K,K,T,T,T,T],
-    [T,T,T,K,K,K,K,W,K,K,K,K,T,T,T,T]
-];
-
-// Спрайт Атаки (рука вперед)
-const SPRITE_DJ_ATTACK = [
-    [T,T,T,T,K,K,K,K,K,K,K,T,T,T,T,T,T,T,T,T],
-    [T,T,T,K,K,D,D,D,D,K,K,K,T,T,T,T,T,T,T,T],
-    [T,T,K,D,D,D,S,S,S,D,D,K,K,T,T,T,T,T,T,T],
-    [T,K,D,S,S,S,S,S,S,S,D,D,K,K,T,T,T,T,T,T],
-    [T,K,D,S,S,S,S,S,S,S,D,D,K,G,G,T,T,T,T,T],
-    [T,K,D,S,S,S,S,S,S,S,D,D,K,G,G,T,T,T,T,T],
-    [T,T,K,D,D,D,D,D,D,D,D,K,G,G,T,T,T,T,T,T],
-    [T,T,T,K,K,K,K,K,K,K,K,K,K,T,T,T,T,T,T,T],
-    [T,T,T,K,R,R,R,W,R,R,R,K,R,R,R,R,R,R,R,R], // Рука вытянута
-    [T,T,T,K,R,R,R,W,R,R,R,K,R,R,R,R,R,R,R,R],
-    [T,T,T,K,R,R,R,W,R,R,R,K,R,R,R,R,R,R,R,R],
-    [T,T,T,K,R,R,R,W,R,R,R,K,K,K,K,K,K,K,K,K],
-    [T,T,T,K,K,K,K,W,K,K,K,K,T,T,T,T,T,T,T,T],
-    [T,T,T,K,K,K,K,W,K,K,K,K,T,T,T,T,T,T,T,T],
-    [T,T,T,K,K,K,K,W,K,K,K,K,T,T,T,T,T,T,T,T],
-    [T,T,T,K,K,K,K,W,K,K,K,K,T,T,T,T,T,T,T,T]
-];
-
-// Спрайт Врага: Алкаш
-const SPRITE_ALKASH = [
-    [T,T,T,K,K,K,K,K,K,K,T,T,T,T],
-    [T,T,K,D,D,D,D,D,D,D,K,T,T,T],
-    [T,K,D,S,S,S,S,S,S,S,D,K,T,T],
-    [T,K,D,S,S,S,S,S,S,S,D,K,T,T],
-    [T,T,K,D,D,D,D,D,D,D,K,T,T,T],
-    [T,T,T,K,G,G,G,G,G,G,K,T,T,T],
-    [T,T,K,G,G,B,G,G,G,G,G,K,T,T], // B - бутылка (синий)
-    [T,T,K,G,G,B,G,G,G,G,G,K,T,T],
-    [T,T,K,G,G,G,G,G,G,G,G,K,T,T],
-    [T,T,K,K,K,K,K,K,K,K,K,K,T,T],
-    [T,T,K,K,K,K,K,K,K,K,K,K,T,T]
-];
-const PALETTE_ALKASH = {...C, B: '#1976D2'};
-
-// Спрайт Врага: Тусовщик
-const SPRITE_TUSOVSHIK = [
-    [T,T,T,K,K,K,K,K,K,K,T,T,T,T],
-    [T,T,K,Y,Y,Y,Y,Y,Y,Y,K,T,T,T],
-    [T,K,Y,S,S,S,S,S,S,S,Y,K,T,T],
-    [T,K,Y,S,S,S,S,S,S,S,Y,K,T,T],
-    [T,T,K,Y,Y,Y,Y,Y,Y,Y,K,T,T,T],
-    [T,T,T,K,P,P,P,P,P,P,K,T,T,T],
-    [T,T,K,P,P,P,P,P,P,P,P,K,T,T],
-    [T,T,K,P,P,P,P,P,P,P,P,K,T,T],
-    [T,T,K,K,K,K,K,K,K,K,K,K,T,T],
-    [T,T,K,K,K,K,K,K,K,K,K,K,T,T]
-];
-const PALETTE_TUSOVSHIK = {...C, Y: '#FFEB3B', P: '#E91E63'};
-
-// Спрайт Босса: Мерзкий Диджей
-const SPRITE_BOSS = [
-    [T,T,T,T,K,K,K,K,K,K,K,K,K,K,T,T,T,T,T,T],
-    [T,T,T,K,K,K,K,K,K,K,K,K,K,K,K,T,T,T,T,T],
-    [T,T,K,K,S,S,S,S,S,S,S,S,S,K,K,K,T,T,T,T],
-    [T,K,K,S,S,S,S,S,S,S,S,S,S,S,K,K,K,T,T,T],
-    [T,K,K,S,S,S,S,S,S,S,S,S,S,S,K,K,K,T,T,T],
-    [T,K,K,S,S,S,S,S,S,S,S,S,S,S,K,K,K,T,T,T],
-    [T,T,K,K,K,K,K,K,K,K,K,K,K,K,K,T,T,T,T,T],
-    [T,T,T,K,L,L,L,L,L,L,L,L,L,K,T,T,T,T,T,T],
-    [T,T,T,K,L,L,L,L,L,L,L,L,L,K,T,T,T,T,T,T],
-    [T,T,T,K,L,L,L,L,L,L,L,L,L,K,T,T,T,T,T,T],
-    [T,T,T,K,L,L,L,L,L,L,L,L,L,K,T,T,T,T,T,T],
-    [T,T,T,K,L,L,L,L,L,L,L,L,L,K,T,T,T,T,T,T],
-    [T,T,T,K,K,K,K,K,K,K,K,K,K,K,T,T,T,T,T,T],
-    [T,T,T,K,K,K,K,K,K,K,K,K,K,K,T,T,T,T,T,T]
-];
-const PALETTE_BOSS = {...C, L: '#212121'}; // Темно-серая куртка
-
-
 // --- КЛАССЫ ---
 
 class Entity {
     constructor(x, y, w, h) {
-        this.x = x;
-        this.y = y;
-        this.w = w;
-        this.h = h;
-        this.vx = 0;
-        this.vy = 0;
+        this.x = x; this.y = y; this.w = w; this.h = h;
+        this.vx = 0; this.vy = 0;
         this.grounded = false;
         this.facingRight = true;
         this.dead = false;
-        this.hp = 1;
-        this.maxHp = 1;
+        this.hp = 1; this.maxHp = 1;
         this.flashTime = 0;
     }
-
     update() {
-        // Гравитация
         this.vy += GRAVITY;
         this.x += this.vx;
         this.y += this.vy;
-
-        // Проверка пола (упрощенная)
+        // Пол
         if (this.y + this.h > GAME_HEIGHT - 50) {
             this.y = GAME_HEIGHT - 50 - this.h;
             this.vy = 0;
@@ -336,18 +335,11 @@ class Entity {
         } else {
             this.grounded = false;
         }
-
-        // Границы мира
+        // Границы
         if (this.x < 0) this.x = 0;
         if (this.x > WORLD_WIDTH - this.w) this.x = WORLD_WIDTH - this.w;
-
         if (this.flashTime > 0) this.flashTime--;
     }
-
-    draw(ctx, camX) {
-        // Переопределяется в подклассах
-    }
-
     takeDamage(amount) {
         this.hp -= amount;
         this.flashTime = 10;
@@ -357,39 +349,25 @@ class Entity {
 
 class Player extends Entity {
     constructor() {
-        super(100, 300, 32, 40); // Размеры хитбокса
-        this.hp = 5;
-        this.maxHp = 5;
+        super(100, 300, 32, 40);
+        this.hp = 5; this.maxHp = 5;
         this.attackCooldown = 0;
         this.isAttacking = false;
         this.invincibleTime = 0;
     }
-
     update() {
-        // Управление
-        if (keys.ArrowRight) {
-            this.vx = SPEED;
-            this.facingRight = true;
-        } else if (keys.ArrowLeft) {
-            this.vx = -SPEED;
-            this.facingRight = false;
-        } else {
-            this.vx *= FRICTION;
-        }
+        if (keys.ArrowRight) { this.vx = SPEED; this.facingRight = true; }
+        else if (keys.ArrowLeft) { this.vx = -SPEED; this.facingRight = false; }
+        else { this.vx *= FRICTION; }
 
         if (keys.ArrowUp && this.grounded) {
             this.vy = JUMP_FORCE;
             this.grounded = false;
-            playSound('jump');
         }
 
-        // Атака
         if (keys.Space && this.attackCooldown === 0) {
             this.isAttacking = true;
             this.attackCooldown = 20;
-            playSound('attack');
-            
-            // Проверка попадания по врагам
             checkPlayerAttack(this);
         }
 
@@ -397,20 +375,12 @@ class Player extends Entity {
             this.attackCooldown--;
             if (this.attackCooldown < 10) this.isAttacking = false;
         }
-
         if (this.invincibleTime > 0) this.invincibleTime--;
-
         super.update();
     }
-
     draw(ctx, camX) {
-        if (this.invincibleTime > 0 && Math.floor(frameCount / 4) % 2 === 0) return; // Мигание при уроне
-
+        if (this.invincibleTime > 0 && Math.floor(frameCount / 4) % 2 === 0) return;
         let sprite = this.isAttacking ? SPRITE_DJ_ATTACK : SPRITE_DJ_IDLE;
-        let palette = C;
-        
-        // Масштабирование спрайта под размер игрока
-        // Спрайт ~16x18, игрок 32x40. Scale ~2.
         drawPixelSprite(ctx, this.x - camX, this.y, sprite, 2, !this.facingRight);
     }
 }
@@ -422,77 +392,48 @@ class Enemy extends Entity {
         this.patrolStart = x;
         this.patrolDist = 150;
         this.dir = 1;
-        
-        if (type === 'alkash') {
-            this.hp = 3;
-            this.speed = 1;
-            this.scoreValue = 10;
-        } else if (type === 'tusovshik') {
-            this.hp = 1;
-            this.speed = 3;
-            this.scoreValue = 20;
-        } else if (type === 'pedovka') {
-            this.hp = 2;
-            this.speed = 2;
-            this.yBase = y;
-            this.angle = 0;
-        }
+        if (type === 'alkash') { this.hp = 3; this.speed = 1; this.scoreValue = 10; }
+        else if (type === 'tusovshik') { this.hp = 1; this.speed = 3; this.scoreValue = 20; }
+        else if (type === 'pedovka') { this.hp = 2; this.speed = 2; this.yBase = y; this.angle = 0; }
     }
-
     update() {
         if (this.dead) return;
-
-        if (this.type === 'alkash') {
-            this.x += this.speed * this.dir;
-            if (Math.abs(this.x - this.patrolStart) > this.patrolDist) {
-                this.dir *= -1;
-                this.facingRight = this.dir > 0;
-            }
-        } else if (this.type === 'tusovshik') {
-            this.x += this.speed * this.dir;
-            if (Math.abs(this.x - this.patrolStart) > this.patrolDist) {
-                this.dir *= -1;
-                this.facingRight = this.dir > 0;
-            }
-        } else if (this.type === 'pedovka') {
+        if (this.type === 'pedovka') {
             this.angle += 0.05;
             this.x += Math.sin(this.angle) * 2;
             this.y = this.yBase + Math.cos(this.angle * 2) * 30;
+        } else {
+            this.x += this.speed * this.dir;
+            if (Math.abs(this.x - this.patrolStart) > this.patrolDist) {
+                this.dir *= -1;
+                this.facingRight = this.dir > 0;
+            }
         }
 
-        // Коллизия с игроком
         if (!player.dead && checkCollision(this, player)) {
             if (player.invincibleTime === 0) {
                 player.takeDamage(1);
                 player.invincibleTime = 60;
                 player.vy = -5;
                 player.vx = (player.x < this.x) ? -5 : 5;
-                playSound('hit');
                 updateUI();
                 if (player.hp <= 0) gameOver();
             }
         }
-
         super.update();
     }
-
     draw(ctx, camX) {
         if (this.dead) return;
         if (this.flashTime > 0 && Math.floor(frameCount / 2) % 2 === 0) return;
-
-        let sprite, palette;
-        if (this.type === 'alkash') { sprite = SPRITE_ALKASH; palette = PALETTE_ALKASH; }
-        else if (this.type === 'tusovshik') { sprite = SPRITE_TUSOVSHIK; palette = PALETTE_TUSOVSHIK; }
         
-        // Для простоты pedovka рисуется как квадрат или другой спрайт, но используем алкаша с фильтром для примера
         if (this.type === 'pedovka') {
              ctx.fillStyle = '#9C27B0';
              ctx.fillRect(this.x - camX, this.y, this.w, this.h);
-             // Глаза
              ctx.fillStyle = '#FFF';
              ctx.fillRect(this.x - camX + 5, this.y + 5, 5, 5);
              ctx.fillRect(this.x - camX + 20, this.y + 5, 5, 5);
         } else {
+            let sprite = this.type === 'alkash' ? SPRITE_ALKASH : SPRITE_TUSOVSHIK;
             drawPixelSprite(ctx, this.x - camX, this.y, sprite, 2, !this.facingRight);
         }
     }
@@ -501,20 +442,13 @@ class Enemy extends Entity {
 class Boss extends Entity {
     constructor() {
         super(WORLD_WIDTH - 200, GAME_HEIGHT - 150, 60, 80);
-        this.hp = 20;
-        this.maxHp = 20;
-        this.state = 'IDLE'; // IDLE, MOVE_LEFT, MOVE_RIGHT, THROW
-        this.timer = 0;
-        this.dir = -1;
+        this.hp = 20; this.maxHp = 20;
+        this.state = 'IDLE'; this.timer = 0; this.dir = -1;
         this.projectiles = [];
     }
-
     update() {
         if (this.dead) return;
-
         this.timer++;
-
-        // Логика поведения
         if (this.state === 'IDLE') {
             if (this.timer > 60) {
                 this.state = Math.random() > 0.5 ? 'MOVE_LEFT' : 'MOVE_RIGHT';
@@ -528,28 +462,17 @@ class Boss extends Entity {
                 this.timer = 0;
             }
         } else if (this.state === 'THROW') {
-            if (this.timer % 40 === 0) {
-                this.throwVinyl();
-            }
-            if (this.timer > 120) {
-                this.state = 'IDLE';
-                this.timer = 0;
-            }
+            if (this.timer % 40 === 0) this.throwVinyl();
+            if (this.timer > 120) { this.state = 'IDLE'; this.timer = 0; }
         }
 
-        // Обновление снарядов
         for (let i = this.projectiles.length - 1; i >= 0; i--) {
             let p = this.projectiles[i];
-            p.x += p.vx;
-            p.y += p.vy;
-            p.vy += 0.2; // Гравитация пластинки
-            
-            // Удар об игрока
+            p.x += p.vx; p.y += p.vy; p.vy += 0.2;
             if (checkCollision({x: p.x, y: p.y, w: 20, h: 20}, player)) {
                 if (player.invincibleTime === 0) {
                     player.takeDamage(1);
                     player.invincibleTime = 60;
-                    playSound('hit');
                     updateUI();
                     if (player.hp <= 0) gameOver();
                 }
@@ -559,51 +482,33 @@ class Boss extends Entity {
             }
         }
 
-        // Коллизия тела босса
         if (!player.dead && checkCollision(this, player)) {
              if (player.invincibleTime === 0) {
                 player.takeDamage(1);
                 player.invincibleTime = 60;
-                playSound('hit');
                 updateUI();
                 if (player.hp <= 0) gameOver();
             }
         }
     }
-
     throwVinyl() {
-        this.projectiles.push({
-            x: this.x + (this.dir > 0 ? this.w : -20),
-            y: this.y + 20,
-            vx: this.dir * 6,
-            vy: -4
-        });
-        playSound('throw');
+        this.projectiles.push({ x: this.x + (this.dir > 0 ? this.w : -20), y: this.y + 20, vx: this.dir * 6, vy: -4 });
     }
-
     draw(ctx, camX) {
         if (this.dead) return;
         if (this.flashTime > 0 && Math.floor(frameCount / 2) % 2 === 0) return;
-
-        // Рисуем босса
         drawPixelSprite(ctx, this.x - camX, this.y, SPRITE_BOSS, 3, this.dir < 0);
-
-        // Полоска здоровья
+        
         ctx.fillStyle = 'red';
         ctx.fillRect(this.x - camX, this.y - 20, 60, 5);
         ctx.fillStyle = '#0f0';
         ctx.fillRect(this.x - camX, this.y - 20, 60 * (this.hp / this.maxHp), 5);
 
-        // Рисуем пластинки
         ctx.fillStyle = '#111';
         for (let p of this.projectiles) {
-            ctx.beginPath();
-            ctx.arc(p.x - camX + 10, p.y + 10, 10, 0, Math.PI*2);
-            ctx.fill();
+            ctx.beginPath(); ctx.arc(p.x - camX + 10, p.y + 10, 10, 0, Math.PI*2); ctx.fill();
             ctx.fillStyle = '#fff';
-            ctx.beginPath();
-            ctx.arc(p.x - camX + 10, p.y + 10, 3, 0, Math.PI*2);
-            ctx.fill();
+            ctx.beginPath(); ctx.arc(p.x - camX + 10, p.y + 10, 3, 0, Math.PI*2); ctx.fill();
             ctx.fillStyle = '#111';
         }
     }
@@ -615,74 +520,44 @@ class Item extends Entity {
         this.collected = false;
         this.floatOffset = 0;
     }
-
     update() {
         if (this.collected) return;
         this.floatOffset += 0.1;
         this.y += Math.sin(this.floatOffset) * 0.5;
-
         if (checkCollision(this, player)) {
             this.collected = true;
             score += 5;
-            playSound('collect');
             updateUI();
         }
     }
-
     draw(ctx, camX) {
         if (this.collected) return;
-        
-        // Золотой диск
         ctx.fillStyle = '#FFD700';
-        ctx.beginPath();
-        ctx.arc(this.x - camX + 10, this.y + 10, 10, 0, Math.PI*2);
-        ctx.fill();
-        
-        // Блик
+        ctx.beginPath(); ctx.arc(this.x - camX + 10, this.y + 10, 10, 0, Math.PI*2); ctx.fill();
         ctx.fillStyle = '#FFF';
-        ctx.beginPath();
-        ctx.arc(this.x - camX + 7, this.y + 7, 3, 0, Math.PI*2);
-        ctx.fill();
+        ctx.beginPath(); ctx.arc(this.x - camX + 7, this.y + 7, 3, 0, Math.PI*2); ctx.fill();
     }
 }
 
-// --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ---
-let player;
-let enemies = [];
-let items = [];
-let boss;
-let particles = [];
+// --- ЛОГИКА ИГРЫ ---
 
-// --- ФИЗИКА И КОЛЛИЗИИ ---
+let player, enemies, items, boss, particles;
 
-function checkCollision(rect1, rect2) {
-    return (rect1.x < rect2.x + rect2.w &&
-            rect1.x + rect1.w > rect2.x &&
-            rect1.y < rect2.y + rect2.h &&
-            rect1.y + rect1.h > rect2.y);
+function checkCollision(r1, r2) {
+    return (r1.x < r2.x + r2.w && r1.x + r1.w > r2.x && r1.y < r2.y + r2.h && r1.y + r1.h > r2.y);
 }
 
-function checkPlayerAttack(player) {
-    // Хитбокс атаки (перед игроком)
-    let attackBox = {
-        x: player.facingRight ? player.x + player.w : player.x - 30,
-        y: player.y,
-        w: 30,
-        h: player.h
-    };
-
-    // Проверка врагов
+function checkPlayerAttack(p) {
+    let ab = { x: p.facingRight ? p.x + p.w : p.x - 30, y: p.y, w: 30, h: p.h };
     for (let e of enemies) {
-        if (!e.dead && checkCollision(attackBox, e)) {
+        if (!e.dead && checkCollision(ab, e)) {
             e.takeDamage(1);
             createParticles(e.x + e.w/2, e.y + e.h/2, '#fff');
             if (e.dead) score += e.scoreValue;
             updateUI();
         }
     }
-
-    // Проверка босса
-    if (boss && !boss.dead && checkCollision(attackBox, boss)) {
+    if (boss && !boss.dead && checkCollision(ab, boss)) {
         boss.takeDamage(1);
         createParticles(boss.x + boss.w/2, boss.y + boss.h/2, '#f00');
         updateUI();
@@ -691,167 +566,112 @@ function checkPlayerAttack(player) {
 }
 
 function createParticles(x, y, color) {
-    for(let i=0; i<5; i++) {
-        particles.push({
-            x: x, y: y,
-            vx: (Math.random() - 0.5) * 5,
-            vy: (Math.random() - 0.5) * 5,
-            life: 20,
-            color: color
-        });
-    }
+    for(let i=0; i<5; i++) particles.push({ x, y, vx: (Math.random()-0.5)*5, vy: (Math.random()-0.5)*5, life: 20, color });
 }
 
-// --- ИНИЦИАЛИЗАЦИЯ УРОВНЯ ---
-
 function initLevel() {
+    console.log("Initializing Level...");
     player = new Player();
-    enemies = [];
-    items = [];
-    particles = [];
-    boss = null;
-    score = 0;
-    cameraX = 0;
+    enemies = []; items = []; particles = []; boss = null; score = 0; cameraX = 0;
     
-    // Генерация врагов
     for (let i = 0; i < 15; i++) {
         let x = 400 + i * 200;
         let type = Math.random() > 0.6 ? 'tusovshik' : (Math.random() > 0.5 ? 'alkash' : 'pedovka');
         let y = type === 'pedovka' ? 200 : GAME_HEIGHT - 80;
         enemies.push(new Enemy(x, y, type));
     }
-
-    // Генерация треков
-    for (let i = 0; i < 10; i++) {
-        let x = 300 + i * 300;
-        let y = 250 + Math.random() * 100;
-        items.push(new Item(x, y));
-    }
-
-    // Босс спавнится в конце
+    for (let i = 0; i < 10; i++) items.push(new Item(300 + i * 300, 250 + Math.random() * 100));
     boss = new Boss();
-    
     updateUI();
 }
-
-// --- ОСНОВНОЙ ЦИКЛ ---
 
 function gameLoop() {
     if (gameState !== 'PLAYING' && gameState !== 'BOSS_FIGHT') return;
 
     ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-    // Фон клуба (параллакс можно добавить позже, пока статичный градиент)
+    // Фон
     let grad = ctx.createLinearGradient(0, 0, 0, GAME_HEIGHT);
-    grad.addColorStop(0, '#1a0b2e');
-    grad.addColorStop(1, '#4a148c');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-
-    // Декорации (колонны, неон)
-    ctx.fillStyle = 'rgba(255, 0, 255, 0.1)';
-    for(let i=0; i<WORLD_WIDTH; i+=400) {
-        if (i - cameraX > -100 && i - cameraX < GAME_WIDTH + 100)
-            ctx.fillRect(i - cameraX, 0, 50, GAME_HEIGHT);
-    }
+    grad.addColorStop(0, '#1a0b2e'); grad.addColorStop(1, '#4a148c');
+    ctx.fillStyle = grad; ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
     // Камера
     cameraX = player.x - GAME_WIDTH / 3;
     if (cameraX < 0) cameraX = 0;
     if (cameraX > WORLD_WIDTH - GAME_WIDTH) cameraX = WORLD_WIDTH - GAME_WIDTH;
 
-    // Логика активации босса
+    // Босс-триггер
     if (player.x > WORLD_WIDTH - 600 && !boss.dead) {
         gameState = 'BOSS_FIGHT';
         document.getElementById('level-name').innerText = "БОСС: МЕРЗКИЙ ДИДЖЕЙ";
         document.getElementById('level-name').style.color = "red";
     }
 
-    // Обновление и отрисовка
-    items.forEach(item => { item.update(); item.draw(ctx, cameraX); });
-    enemies.forEach(enemy => { enemy.update(); enemy.draw(ctx, cameraX); });
-    
-    if (boss) {
-        boss.update();
-        boss.draw(ctx, cameraX);
-    }
-
-    player.update();
-    player.draw(ctx, cameraX);
+    items.forEach(i => { i.update(); i.draw(ctx, cameraX); });
+    enemies.forEach(e => { e.update(); e.draw(ctx, cameraX); });
+    if (boss) { boss.update(); boss.draw(ctx, cameraX); }
+    player.update(); player.draw(ctx, cameraX);
 
     // Частицы
     for (let i = particles.length - 1; i >= 0; i--) {
-        let p = particles[i];
-        p.x += p.vx;
-        p.y += p.vy;
-        p.life--;
-        ctx.fillStyle = p.color;
-        ctx.fillRect(p.x - cameraX, p.y, 4, 4);
+        let p = particles[i]; p.x += p.vx; p.y += p.vy; p.life--;
+        ctx.fillStyle = p.color; ctx.fillRect(p.x - cameraX, p.y, 4, 4);
         if (p.life <= 0) particles.splice(i, 1);
     }
 
     // Пол
-    ctx.fillStyle = '#222';
-    ctx.fillRect(0, GAME_HEIGHT - 50, GAME_WIDTH, 50);
-    // Линии на полу
-    ctx.strokeStyle = '#444';
-    ctx.beginPath();
-    for(let i=0; i<GAME_WIDTH; i+=50) {
-        ctx.moveTo(i, GAME_HEIGHT-50);
-        ctx.lineTo(i-20, GAME_HEIGHT);
-    }
+    ctx.fillStyle = '#222'; ctx.fillRect(0, GAME_HEIGHT - 50, GAME_WIDTH, 50);
+    ctx.strokeStyle = '#444'; ctx.beginPath();
+    for(let i=0; i<GAME_WIDTH; i+=50) { ctx.moveTo(i, GAME_HEIGHT-50); ctx.lineTo(i-20, GAME_HEIGHT); }
     ctx.stroke();
 
     frameCount++;
-    requestAnimationFrame(gameLoop);
+    animationId = requestAnimationFrame(gameLoop);
 }
 
-// --- UI И СОБЫТИЯ ---
-
 function updateUI() {
-    let hearts = '';
-    for(let i=0; i<player.hp; i++) hearts += '❤️';
+    let hearts = ''; for(let i=0; i<player.hp; i++) hearts += '❤️';
     document.getElementById('health-display').innerText = hearts;
     document.getElementById('score-display').innerText = `🎵 ТРЕКИ: ${score}`;
 }
 
 function startGame() {
+    console.log("Game Started!");
     document.getElementById('start-screen').classList.add('hidden');
-    document.getElementById('game-over-screen').classList.add('hidden');
+    document.getElementById('end-screen').classList.add('hidden');
     gameState = 'PLAYING';
+    document.getElementById('level-name').innerText = 'КЛУБ "ХАЙХЭТ"';
+    document.getElementById('level-name').style.color = "white";
     initLevel();
+    if (animationId) cancelAnimationFrame(animationId);
     gameLoop();
 }
 
 function gameOver() {
     gameState = 'GAME_OVER';
-    document.getElementById('game-over-screen').classList.remove('hidden');
-    document.getElementById('go-title').innerText = "GAME OVER";
-    document.getElementById('go-msg').innerText = "Рейв провален... Попробуй еще раз!";
+    document.getElementById('end-screen').classList.remove('hidden');
+    document.getElementById('end-title').innerText = "GAME OVER";
+    document.getElementById('end-msg').innerText = "Рейв провален... Попробуй еще раз!";
 }
 
 function winGame() {
     gameState = 'WIN';
     setTimeout(() => {
-        // Переход на final.html (эмуляция)
         alert("ПОБЕДА! Ты спас рейв!");
-        // window.location.href = 'final.html'; 
+        // window.location.href = 'final.html'; // Раскомментируйте для перехода
         resetGame();
     }, 1000);
 }
 
-function resetGame() {
-    startGame();
-}
+function resetGame() { startGame(); }
 
-// Обработчики клавиш
+// Обработчики
 window.addEventListener('keydown', e => {
     if (e.code === 'ArrowRight') keys.ArrowRight = true;
     if (e.code === 'ArrowLeft') keys.ArrowLeft = true;
     if (e.code === 'ArrowUp') keys.ArrowUp = true;
     if (e.code === 'Space') keys.Space = true;
 });
-
 window.addEventListener('keyup', e => {
     if (e.code === 'ArrowRight') keys.ArrowRight = false;
     if (e.code === 'ArrowLeft') keys.ArrowLeft = false;
@@ -859,12 +679,11 @@ window.addEventListener('keyup', e => {
     if (e.code === 'Space') keys.Space = false;
 });
 
-// Заглушка для звука
-function playSound(type) {
-    // Здесь можно подключить Web Audio API
-    // console.log(`Sound: ${type}`);
-}
+// Привязка кнопок
+document.getElementById('btn-start').addEventListener('click', startGame);
+document.getElementById('btn-restart').addEventListener('click', resetGame);
 
+console.log("Event listeners attached.");
 </script>
 </body>
 </html>
