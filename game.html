@@ -17,7 +17,7 @@
 
         #arcade-cabinet {
             position: relative;
-            width: 960px; height: 540px; /* 16:9 aspect ratio */
+            width: 960px; height: 540px;
             background: #000;
             border: 10px solid #222;
             box-shadow: 0 0 50px rgba(0,0,0,0.8);
@@ -25,22 +25,20 @@
 
         canvas {
             display: block; width: 100%; height: 100%;
-            image-rendering: pixelated; /* CRITICAL for retro look */
+            image-rendering: pixelated;
         }
 
         /* UI Overlay */
         #ui-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            z-index: 10;
+            pointer-events: none; z-index: 10;
         }
 
         .hud-top {
             display: flex; justify-content: space-between;
             padding: 20px 40px;
             text-shadow: 2px 2px 0 #000;
-            font-size: 20px;
-            color: #fff;
+            font-size: 20px; color: #fff;
         }
 
         .health-bar-container {
@@ -49,7 +47,8 @@
             position: relative;
         }
         .health-fill {
-            height: 100%; background: linear-gradient(90deg, #ff0055, #ff5500);
+            height: 100%; 
+            background: linear-gradient(90deg, #ff0055, #ff5500);
             width: 100%; transition: width 0.2s;
         }
 
@@ -87,13 +86,17 @@
         .controls-hint {
             margin-top: 20px; font-size: 12px; color: #aaa; line-height: 1.6;
         }
-        .key { color: #fff; border: 1px solid #666; padding: 2px 6px; border-radius: 4px; background: #222; }
+        .key { 
+            color: #fff; border: 1px solid #666; 
+            padding: 2px 6px; border-radius: 4px; 
+            background: #222; 
+        }
     </style>
 </head>
 <body>
 
 <div id="arcade-cabinet">
-    <canvas id="gameCanvas" width="480" height="270"></canvas> <!-- Native resolution 480x270 scaled up -->
+    <canvas id="gameCanvas" width="480" height="270"></canvas>
     
     <div id="ui-layer">
         <div class="hud-top">
@@ -125,17 +128,13 @@
 <script>
 /**
  * ENGINE: SEGA GENESIS STYLE BEAT 'EM UP
- * Особенности: Z-sorting (глубина), тени, большие спрайты, параллакс
+ * Исправленная версия
  */
 
 const cvs = document.getElementById('gameCanvas');
 const ctx = cvs.getContext('2d');
-// Нативное разрешение для пиксель-арта (растягивается CSS до 960x540)
 const GW = 480; 
 const GH = 270; 
-
-// --- GRAPHICS ASSETS (Procedural Pixel Art) ---
-// Рисуем сложные спрайты программно, чтобы не грузить картинки
 
 const PALETTE = {
     white: '#FFFFFF', grey: '#BDBDBD', darkGrey: '#616161', black: '#111111',
@@ -145,104 +144,89 @@ const PALETTE = {
     bossPurple: '#4A148C'
 };
 
-// Функция рисования "Майкла Джексона" (Диджея Сна)
+// --- ИСПРАВЛЕННАЯ ФУНКЦИЯ ОТРИСОВКИ ГЕРОЯ ---
 function drawHero(ctx, x, y, facingRight, state, frame) {
     ctx.save();
-    // Отражение по горизонтали
     if (!facingRight) {
         ctx.translate(x, 0);
         ctx.scale(-1, 1);
-        x = 0; // Локальные координаты после трансформации
+        x = 0; 
     } else {
-        ctx.translate(x - GW/2, 0); // Центрируем относительно камеры
+        ctx.translate(x - GW/2, 0); 
     }
     
-    // Y - это позиция ног на "полу". Рисуем вверх от Y.
     const groundY = y;
-    
-    // Анимация дыхания/ходьбы
     let bounce = 0;
     if (state === 'walk') bounce = Math.sin(frame * 0.5) * 2;
     if (state === 'idle') bounce = Math.sin(Date.now() * 0.005) * 1;
 
-    // ТЕНЬ (Критично для 2.5D)
+    // ТЕНЬ
     ctx.fillStyle = 'rgba(0,0,0,0.4)';
     ctx.beginPath();
     ctx.ellipse(0, groundY, 14, 5, 0, 0, Math.PI*2);
     ctx.fill();
 
-    const bodyY = groundY - 55 + bounce; // Высота тела
+    const bodyY = groundY - 55 + bounce;
 
-    // --- НОГИ (Белые брюки) ---
+    // НОГИ
     ctx.fillStyle = PALETTE.white;
-    // Левая нога
     ctx.fillRect(-8, groundY - 25, 7, 25);
-    // Правая нога (анимация шага)
-    let legR offset = (state === 'walk') ? Math.sin(frame * 0.5) * 5 : 0;
+    
+    // ИСПРАВЛЕНИЕ ЗДЕСЬ: legRoffset слитно
+    let legRoffset = (state === 'walk') ? Math.sin(frame * 0.5) * 5 : 0;
     ctx.fillRect(1, groundY - 25 + legRoffset, 7, 25 - legRoffset);
     
-    // Туфли (Черные)
     ctx.fillStyle = PALETTE.black;
     ctx.fillRect(-9, groundY - 4, 9, 4);
     ctx.fillRect(0, groundY - 4 + legRoffset, 9, 4);
 
-    // --- ТОРС (Белый пиджак с красной рубашкой) ---
+    // ТОРС
     ctx.fillStyle = PALETTE.white;
-    ctx.fillRect(-12, bodyY, 24, 30); // Пиджак
+    ctx.fillRect(-12, bodyY, 24, 30);
     
-    // Красная рубашка/галстук (V-образный вырез)
     ctx.fillStyle = PALETTE.red;
     ctx.beginPath();
     ctx.moveTo(-4, bodyY); ctx.lineTo(4, bodyY); ctx.lineTo(0, bodyY + 15);
     ctx.fill();
 
-    // Пояс (Золотой)
     ctx.fillStyle = PALETTE.gold;
     ctx.fillRect(-12, bodyY + 28, 24, 3);
 
-    // Руки
+    // РУКИ
     ctx.fillStyle = PALETTE.white;
     if (state === 'attack') {
-        // Удар рукой вперед
-        ctx.fillRect(10, bodyY + 5, 15, 6); // Предплечье
+        ctx.fillRect(10, bodyY + 5, 15, 6);
         ctx.fillStyle = PALETTE.skin;
-        ctx.fillRect(25, bodyY + 5, 6, 6); // Кулак
+        ctx.fillRect(25, bodyY + 5, 6, 6);
     } else {
-        // Обычные руки
-        ctx.fillRect(-16, bodyY + 2, 5, 20); // Левая
-        ctx.fillRect(11, bodyY + 2, 5, 20);  // Правая
-        // Кисти
+        ctx.fillRect(-16, bodyY + 2, 5, 20);
+        ctx.fillRect(11, bodyY + 2, 5, 20);
         ctx.fillStyle = PALETTE.skin;
         ctx.fillRect(-16, bodyY + 22, 5, 5);
         ctx.fillRect(11, bodyY + 22, 5, 5);
     }
 
-    // --- ГОЛОВА ---
-    // Шея
+    // ГОЛОВА
     ctx.fillStyle = PALETTE.skinShadow;
     ctx.fillRect(-3, bodyY - 5, 6, 5);
 
-    // Лицо
     ctx.fillStyle = PALETTE.skin;
     ctx.fillRect(-7, bodyY - 20, 14, 16);
     
-    // Волосы (Черные, кудрявые силуэт)
     ctx.fillStyle = PALETTE.black;
-    ctx.fillRect(-8, bodyY - 24, 16, 8); // Верх
-    ctx.fillRect(-9, bodyY - 20, 3, 10); // Бакенбарды
+    ctx.fillRect(-8, bodyY - 24, 16, 8);
+    ctx.fillRect(-9, bodyY - 20, 3, 10);
     ctx.fillRect(6, bodyY - 20, 3, 10);
 
-    // Наушники (Золотые/Черные) - Отсылка к первому запросу
     ctx.fillStyle = PALETTE.gold;
-    ctx.fillRect(-10, bodyY - 18, 3, 10); // Левая чашка
-    ctx.fillRect(7, bodyY - 18, 3, 10);  // Правая чашка
+    ctx.fillRect(-10, bodyY - 18, 3, 10);
+    ctx.fillRect(7, bodyY - 18, 3, 10);
     ctx.fillStyle = PALETTE.black;
-    ctx.fillRect(-10, bodyY - 22, 20, 3); // Оголовье
+    ctx.fillRect(-10, bodyY - 22, 20, 3);
 
     ctx.restore();
 }
 
-// Враг: Алкаш/Панк в синем
 function drawEnemy(ctx, x, y, facingRight, frame) {
     ctx.save();
     if (!facingRight) { ctx.translate(x, 0); ctx.scale(-1, 1); x = 0; }
@@ -252,24 +236,20 @@ function drawEnemy(ctx, x, y, facingRight, frame) {
     const bounce = Math.sin(frame * 0.3) * 1;
     const bodyY = groundY - 50 + bounce;
 
-    // Тень
     ctx.fillStyle = 'rgba(0,0,0,0.4)';
     ctx.beginPath(); ctx.ellipse(0, groundY, 12, 4, 0, 0, Math.PI*2); ctx.fill();
 
-    // Ноги (Синие джинсы)
     ctx.fillStyle = PALETTE.enemyBlue;
     ctx.fillRect(-7, groundY - 22, 6, 22);
     ctx.fillRect(1, groundY - 22, 6, 22);
     
-    // Торс (Рваная майка)
     ctx.fillStyle = '#5C6BC0';
     ctx.fillRect(-10, bodyY, 20, 25);
     
-    // Голова
     ctx.fillStyle = PALETTE.enemySkin;
     ctx.fillRect(-6, bodyY - 18, 12, 14);
-    // Волосы (Ирокез или лохматые)
-    ctx.fillStyle = '#2E7D32'; // Зеленые волосы
+    
+    ctx.fillStyle = '#2E7D32';
     ctx.fillRect(-7, bodyY - 22, 14, 6);
     ctx.fillRect(-5, bodyY - 26, 10, 4);
 
@@ -283,24 +263,21 @@ let score = 0;
 let cameraX = 0;
 let frameCount = 0;
 
-// Игрок
 const player = {
-    x: 100, y: 200, // X - горизонталь, Y - глубина (0 - дальний план, GH - ближний)
+    x: 100, y: 200,
     hp: 100, maxHp: 100,
     speed: 2,
     facingRight: true,
-    state: 'idle', // idle, walk, attack
+    state: 'idle',
     attackTimer: 0,
     invincible: 0
 };
 
-// Враги
 let enemies = [];
 class Enemy {
     constructor(x, y) {
         this.x = x; this.y = y;
         this.hp = 30;
-        this.state = 'chase';
         this.speed = 1.2;
         this.dead = false;
         this.flash = 0;
@@ -309,7 +286,6 @@ class Enemy {
         if (this.dead) return;
         if (this.flash > 0) this.flash--;
 
-        // AI: Идти к игроку
         const dx = player.x - this.x;
         const dy = player.y - this.y;
         const dist = Math.sqrt(dx*dx + dy*dy);
@@ -318,7 +294,6 @@ class Enemy {
             this.x += (dx / dist) * this.speed;
             this.y += (dy / dist) * this.speed;
         } else {
-            // Атака игрока
             if (player.invincible === 0 && Math.random() < 0.02) {
                 player.hp -= 5;
                 player.invincible = 30;
@@ -327,14 +302,12 @@ class Enemy {
             }
         }
 
-        // Коллизия с атакой игрока
         if (player.state === 'attack' && player.attackTimer > 10 && player.attackTimer < 15) {
-            // Простая проверка хитбокса
             if (Math.abs(this.x - player.x) < 40 && Math.abs(this.y - player.y) < 20) {
                 if (this.flash === 0) {
                     this.hp -= 10;
                     this.flash = 10;
-                    this.x += (this.x > player.x) ? 10 : -10; // Отталкивание
+                    this.x += (this.x > player.x) ? 10 : -10;
                     score += 100;
                     updateUI();
                     if (this.hp <= 0) {
@@ -350,14 +323,12 @@ class Enemy {
 function initLevel() {
     player.x = 100; player.y = 200; player.hp = 100;
     enemies = [];
-    // Создаем врагов на разной глубине
     for(let i=0; i<5; i++) {
         enemies.push(new Enemy(300 + i*150, 150 + Math.random()*80));
     }
     updateUI();
 }
 
-// Управление
 const keys = {};
 window.addEventListener('keydown', e => keys[e.code] = true);
 window.addEventListener('keyup', e => keys[e.code] = false);
@@ -388,25 +359,20 @@ function endGame(win) {
     document.getElementById('end-title').style.color = win ? "#00e5ff" : "#ff0055";
 }
 
-// --- MAIN LOOP ---
-
 function loop() {
     if (gameState !== 'PLAY') return;
 
-    // 1. Логика игрока
     let moving = false;
     if (keys['ArrowLeft']) { player.x -= player.speed; player.facingRight = false; moving = true; }
     if (keys['ArrowRight']) { player.x += player.speed; player.facingRight = true; moving = true; }
-    if (keys['ArrowUp']) { player.y -= player.speed * 0.7; moving = true; } // Медленнее по диагонали
+    if (keys['ArrowUp']) { player.y -= player.speed * 0.7; moving = true; }
     if (keys['ArrowDown']) { player.y += player.speed * 0.7; moving = true; }
 
-    // Ограничения пола/стен
-    if (player.y < 130) player.y = 130; // Горизонт
+    if (player.y < 130) player.y = 130;
     if (player.y > GH - 10) player.y = GH - 10;
     if (player.x < cameraX) player.x = cameraX;
-    if (player.x > cameraX + GW) player.x = cameraX + GW; // Не даем уйти за экран слишком далеко
+    if (player.x > cameraX + GW) player.x = cameraX + GW;
 
-    // Атака
     if (keys['Space'] && player.attackTimer === 0) {
         player.state = 'attack';
         player.attackTimer = 20;
@@ -419,19 +385,25 @@ function loop() {
     }
     if (player.invincible > 0) player.invincible--;
 
-    // Камера (следит за игроком плавно)
     let targetCamX = player.x - GW / 2;
     if (targetCamX < 0) targetCamX = 0;
     cameraX += (targetCamX - cameraX) * 0.1;
 
-    // Обновление врагов
     enemies.forEach(e => e.update());
 
-    // 2. Рендеринг (Отрисовка)
-    ctx.fillStyle = '#1a1a2e'; // Темно-синий фон клуба
+    // РЕНДЕРИНГ
+    ctx.fillStyle = '#1a1a2e';
     ctx.fillRect(0, 0, GW, GH);
 
-    // Параллакс заднего плана (Кирпичная стена)
+    // Неон на стене
+    ctx.fillStyle = '#ff0055';
+    ctx.fillRect(50 - (cameraX*0.2)%GW, 40, 20, 60);
+    ctx.fillStyle = '#00e5ff';
+    ctx.fillRect(250 - (cameraX*0.2)%GW, 40, 20, 60);
+    ctx.fillStyle = '#d500f9';
+    ctx.fillRect(450 - (cameraX*0.2)%GW, 40, 20, 60);
+
+    // Кирпичная стена
     ctx.fillStyle = '#111';
     for(let i=0; i<GW/40 + 2; i++) {
         let brickX = (i * 40 - cameraX * 0.5) % (GW + 40);
@@ -440,14 +412,14 @@ function loop() {
         ctx.fillRect(brickX + 20, 122, 38, 20);
     }
 
-    // Пол (Сцена)
+    // Пол
     let grad = ctx.createLinearGradient(0, 130, 0, GH);
     grad.addColorStop(0, '#2a1b3d');
     grad.addColorStop(1, '#4a148c');
     ctx.fillStyle = grad;
     ctx.fillRect(0, 130, GW, GH - 130);
 
-    // Сетка на полу (для ощущения перспективы)
+    // Сетка пола
     ctx.strokeStyle = 'rgba(255,255,255,0.1)';
     ctx.beginPath();
     for(let i=0; i<GW; i+=40) {
@@ -456,26 +428,21 @@ function loop() {
     }
     ctx.stroke();
 
-    // --- Z-SORTING (Сортировка по глубине Y) ---
-    // Собираем все объекты в список
+    // Z-SORTING
     let renderList = [];
     
-    // Добавляем игрока
     renderList.push({
-        type: 'player',
-        y: player.y,
+        type: 'player', y: player.y,
         draw: () => {
             if (player.invincible > 0 && Math.floor(Date.now()/50)%2===0) return;
             drawHero(ctx, player.x - cameraX + GW/2, player.y, player.facingRight, player.state, frameCount);
         }
     });
 
-    // Добавляем врагов
     enemies.forEach(e => {
         if (!e.dead) {
             renderList.push({
-                type: 'enemy',
-                y: e.y,
+                type: 'enemy', y: e.y,
                 draw: () => {
                     if (e.flash > 0 && Math.floor(Date.now()/50)%2===0) ctx.globalAlpha = 0.5;
                     drawEnemy(ctx, e.x - cameraX + GW/2, e.y, e.x > player.x, frameCount);
@@ -485,16 +452,12 @@ function loop() {
         }
     });
 
-    // Сортируем: кто ниже (больше Y), тот рисуется последним (перекрывает других)
     renderList.sort((a, b) => a.y - b.y);
-
-    // Рисуем всё
     renderList.forEach(obj => obj.draw());
 
     frameCount++;
     requestAnimationFrame(loop);
 }
-
 </script>
 </body>
 </html>
