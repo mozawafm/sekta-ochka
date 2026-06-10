@@ -2,461 +2,401 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>DJ Son - Moonwalker Style</title>
+    <title>DJ Son - Club Battle (Moonwalker Engine)</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
         body {
-            margin: 0; padding: 0;
-            background-color: #050505;
+            margin: 0; padding: 0; background: #000;
             display: flex; justify-content: center; align-items: center;
-            height: 100vh; overflow: hidden;
-            font-family: 'Press Start 2P', cursive;
-            color: white; user-select: none;
+            height: 100vh; overflow: hidden; font-family: 'Press Start 2P', cursive;
         }
 
-        #arcade-cabinet {
-            position: relative;
-            width: 960px; height: 540px;
-            background: #000;
-            border: 10px solid #222;
-            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+        #cabinet {
+            position: relative; width: 960px; height: 540px;
+            border: 12px solid #1a1a1a; box-shadow: 0 0 60px rgba(255,0,85,0.3);
+            background: #050505;
         }
 
-        canvas {
-            display: block; width: 100%; height: 100%;
-            image-rendering: pixelated;
-        }
+        canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
 
-        /* UI Overlay */
-        #ui-layer {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 10;
-        }
-
-        .hud-top {
-            display: flex; justify-content: space-between;
-            padding: 20px 40px;
-            text-shadow: 2px 2px 0 #000;
-            font-size: 20px; color: #fff;
-        }
-
-        .health-bar-container {
-            width: 200px; height: 20px;
-            background: #333; border: 2px solid #fff;
-            position: relative;
-        }
-        .health-fill {
-            height: 100%; 
-            background: linear-gradient(90deg, #ff0055, #ff5500);
-            width: 100%; transition: width 0.2s;
-        }
-
-        .score-box { color: #ffd700; }
-
-        /* Screens */
+        /* UI */
+        .ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+        .hud { display: flex; justify-content: space-between; padding: 25px 40px; color: #fff; text-shadow: 3px 3px 0 #000; font-size: 18px; }
+        .hp-bar { width: 220px; height: 24px; background: #222; border: 3px solid #fff; margin-top: 8px; }
+        .hp-fill { height: 100%; background: linear-gradient(90deg, #ff0055, #ff5500); width: 100%; transition: width 0.1s; }
+        
         .screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            z-index: 20; text-align: center;
+            background: rgba(0,0,0,0.9); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 20; text-align: center;
         }
         .hidden { display: none !important; }
-
-        h1 { 
-            font-size: 50px; margin-bottom: 10px;
-            color: #fff; text-shadow: 4px 4px 0 #ff0055;
-            letter-spacing: -2px;
-        }
+        
+        h1 { font-size: 56px; color: #fff; text-shadow: 5px 5px 0 #ff0055; margin: 0 0 15px 0; letter-spacing: -3px; }
+        h2 { font-size: 22px; color: #aaa; margin-bottom: 40px; font-weight: normal; }
         
         button {
-            margin-top: 40px;
-            padding: 15px 40px;
-            font-family: inherit; font-size: 24px;
-            background: #ff0055; color: #fff;
-            border: 4px solid #fff;
-            cursor: pointer;
-            box-shadow: 5px 5px 0 #000;
-            transition: transform 0.1s;
+            padding: 18px 45px; font-family: inherit; font-size: 22px;
+            background: #ff0055; color: #fff; border: 4px solid #fff;
+            cursor: pointer; box-shadow: 6px 6px 0 #000; transition: all 0.1s;
         }
         button:hover { transform: scale(1.05); background: #ff3377; }
-        button:active { transform: translate(2px, 2px); box-shadow: 3px 3px 0 #000; }
+        button:active { transform: translate(3px, 3px); box-shadow: 3px 3px 0 #000; }
 
-        .controls-hint {
-            margin-top: 20px; font-size: 12px; color: #aaa; line-height: 1.6;
-        }
-        .key { 
-            color: #fff; border: 1px solid #666; 
-            padding: 2px 6px; border-radius: 4px; 
-            background: #222; 
-        }
+        .hint { margin-top: 25px; font-size: 11px; color: #777; line-height: 1.8; }
+        kbd { background: #222; border: 1px solid #555; padding: 3px 7px; border-radius: 4px; color: #fff; }
     </style>
 </head>
 <body>
 
-<div id="arcade-cabinet">
-    <canvas id="gameCanvas" width="480" height="270"></canvas>
+<div id="cabinet">
+    <canvas id="cv" width="480" height="270"></canvas>
     
-    <div id="ui-layer">
-        <div class="hud-top">
+    <div class="ui-layer">
+        <div class="hud">
             <div>
-                <div style="font-size:12px; color:#aaa; margin-bottom:5px;">DJ SON LIFE</div>
-                <div class="health-bar-container"><div id="hp-bar" class="health-fill"></div></div>
+                <div style="font-size:11px; color:#888; margin-bottom:4px;">DJ SON LIFE</div>
+                <div class="hp-bar"><div id="hp" class="hp-fill"></div></div>
             </div>
-            <div class="score-box">SCORE: <span id="score-val">000000</span></div>
+            <div style="color:#ffd700;">SCORE: <span id="sc">000000</span></div>
         </div>
     </div>
 
-    <div id="start-screen" class="screen">
-        <h1>DJ SON<br><span style="font-size:24px; color:#ccc;">CLUB WALKER</span></h1>
+    <div id="start-scr" class="screen">
+        <h1>DJ SON</h1>
+        <h2>CLUB BATTLE EDITION</h2>
         <button id="btn-start">INSERT COIN</button>
-        <div class="controls-hint">
-            <span class="key">←</span> <span class="key">→</span> Движение <br>
-            <span class="key">↑</span> <span class="key">↓</span> Глубина сцены <br>
-            <span class="key">SPACE</span> Удар / Прыжок
+        <div class="hint">
+            <kbd>←</kbd> <kbd>→</kbd> Движение &nbsp;&nbsp; 
+            <kbd>↑</kbd> <kbd>↓</kbd> Глубина сцены<br>
+            <kbd>SPACE</kbd> Удар рукой
         </div>
     </div>
 
-    <div id="end-screen" class="screen hidden">
-        <h1 id="end-title">GAME OVER</h1>
-        <p id="end-msg" style="color:#ccc; margin-bottom:20px;">The party is over...</p>
-        <button id="btn-restart">TRY AGAIN</button>
+    <div id="end-scr" class="screen hidden">
+        <h1 id="end-t">GAME OVER</h1>
+        <p id="end-m" style="color:#aaa; margin-bottom:25px;">Рейв провален...</p>
+        <button id="btn-re">TRY AGAIN</button>
     </div>
 </div>
 
 <script>
 /**
- * ENGINE: SEGA GENESIS STYLE BEAT 'EM UP
- * Исправленная версия
+ * MOONWALKER ENGINE v2.0
+ * Полноценная послойная анимация спрайтов
  */
 
-const cvs = document.getElementById('gameCanvas');
-const ctx = cvs.getContext('2d');
-const GW = 480; 
-const GH = 270; 
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+const W = 480, H = 270;
 
-const PALETTE = {
-    white: '#FFFFFF', grey: '#BDBDBD', darkGrey: '#616161', black: '#111111',
-    skin: '#FFCCBC', skinShadow: '#D89F90',
-    red: '#D32F2F', gold: '#FFD700',
-    enemyBlue: '#1A237E', enemySkin: '#8D6E63',
-    bossPurple: '#4A148C'
+// --- ЦВЕТОВАЯ ПАЛИТРА DJ SON ---
+const C = {
+    r: '#D32F2F', rd: '#B71C1C', // Красная куртка (светлая/темная)
+    w: '#FFFFFF', g: '#E0E0E0',  // Белые полосы и свет
+    b: '#111111', bl: '#263238', // Черные штаны (основа/блик)
+    s: '#FFCCBC', sd: '#E0A996', // Кожа (основа/тень)
+    h: '#212121', hm: '#616161', // Наушники (черные/металл)
+    hr: '#D32F2F',               // Акцент на наушниках
+    e: '#3E2723', eh: '#5D4037'  // Волосы/борода
 };
 
-// --- ИСПРАВЛЕННАЯ ФУНКЦИЯ ОТРИСОВКИ ГЕРОЯ ---
-function drawHero(ctx, x, y, facingRight, state, frame) {
+// --- ПРОЦЕДУРНЫЙ СПРАЙТ DJ SON (ПОСЛОЙНАЯ ОТРИСОВКА) ---
+function drawHero(x, y, dir, state, frame) {
     ctx.save();
-    if (!facingRight) {
-        ctx.translate(x, 0);
-        ctx.scale(-1, 1);
-        x = 0; 
-    } else {
-        ctx.translate(x - GW/2, 0); 
-    }
+    // Отражение для движения влево
+    if (dir < 0) { ctx.translate(x, 0); ctx.scale(-1, 1); x = 0; }
+    else { ctx.translate(x - W/2, 0); }
+
+    const gy = y; // Уровень земли
+    let bob = 0;
+    if (state === 'walk') bob = Math.sin(frame * 0.6) * 2;
+    if (state === 'idle') bob = Math.sin(Date.now() * 0.004) * 1;
+
+    // 1. ТЕНЬ НА ПОЛУ
+    ctx.fillStyle = 'rgba(0,0,0,0.45)';
+    ctx.beginPath(); ctx.ellipse(0, gy, 16, 6, 0, 0, Math.PI*2); ctx.fill();
+
+    const by = gy - 60 + bob; // Базовая Y точка тела
+
+    // 2. НОГИ (Черные штаны с бликами)
+    // Левая нога
+    ctx.fillStyle = C.b; ctx.fillRect(-9, gy-28, 8, 28);
+    ctx.fillStyle = C.bl; ctx.fillRect(-7, gy-26, 2, 12); // Блик
     
-    const groundY = y;
-    let bounce = 0;
-    if (state === 'walk') bounce = Math.sin(frame * 0.5) * 2;
-    if (state === 'idle') bounce = Math.sin(Date.now() * 0.005) * 1;
+    // Правая нога (анимация шага)
+    let rLeg = (state==='walk') ? Math.sin(frame*0.6)*6 : 0;
+    ctx.fillStyle = C.b; ctx.fillRect(1, gy-28+rLeg, 8, 28-rLeg);
+    ctx.fillStyle = C.bl; ctx.fillRect(3, gy-26+rLeg, 2, 12);
 
-    // ТЕНЬ
-    ctx.fillStyle = 'rgba(0,0,0,0.4)';
-    ctx.beginPath();
-    ctx.ellipse(0, groundY, 14, 5, 0, 0, Math.PI*2);
-    ctx.fill();
+    // Кроссовки (Белые с красной полосой)
+    ctx.fillStyle = C.w;
+    ctx.fillRect(-10, gy-5, 10, 5); ctx.fillRect(0, gy-5+rLeg, 10, 5);
+    ctx.fillStyle = C.r;
+    ctx.fillRect(-10, gy-3, 10, 2); ctx.fillRect(0, gy-3+rLeg, 10, 2);
 
-    const bodyY = groundY - 55 + bounce;
-
-    // НОГИ
-    ctx.fillStyle = PALETTE.white;
-    ctx.fillRect(-8, groundY - 25, 7, 25);
+    // 3. ТОРС (Красная олимпийка)
+    ctx.fillStyle = C.r; ctx.fillRect(-13, by, 26, 32);
+    // Тени по бокам куртки
+    ctx.fillStyle = C.rd; ctx.fillRect(-13, by+20, 4, 12); ctx.fillRect(9, by+20, 4, 12);
     
-    // ИСПРАВЛЕНИЕ ЗДЕСЬ: legRoffset слитно
-    let legRoffset = (state === 'walk') ? Math.sin(frame * 0.5) * 5 : 0;
-    ctx.fillRect(1, groundY - 25 + legRoffset, 7, 25 - legRoffset);
+    // БЕЛЫЕ ПОЛОСЫ (Фирменный стиль)
+    ctx.fillStyle = C.w;
+    ctx.fillRect(-13, by+8, 26, 4);  // Грудь
+    ctx.fillRect(-13, by+26, 26, 3); // Низ
     
-    ctx.fillStyle = PALETTE.black;
-    ctx.fillRect(-9, groundY - 4, 9, 4);
-    ctx.fillRect(0, groundY - 4 + legRoffset, 9, 4);
+    // Молния/Замок
+    ctx.fillStyle = C.hm; ctx.fillRect(-1, by+2, 2, 24);
 
-    // ТОРС
-    ctx.fillStyle = PALETTE.white;
-    ctx.fillRect(-12, bodyY, 24, 30);
-    
-    ctx.fillStyle = PALETTE.red;
-    ctx.beginPath();
-    ctx.moveTo(-4, bodyY); ctx.lineTo(4, bodyY); ctx.lineTo(0, bodyY + 15);
-    ctx.fill();
-
-    ctx.fillStyle = PALETTE.gold;
-    ctx.fillRect(-12, bodyY + 28, 24, 3);
-
-    // РУКИ
-    ctx.fillStyle = PALETTE.white;
+    // 4. РУКИ
     if (state === 'attack') {
-        ctx.fillRect(10, bodyY + 5, 15, 6);
-        ctx.fillStyle = PALETTE.skin;
-        ctx.fillRect(25, bodyY + 5, 6, 6);
+        // УДАР: рука вытянута вперед
+        ctx.fillStyle = C.r; ctx.fillRect(11, by+6, 18, 7); // Рукав
+        ctx.fillStyle = C.w; ctx.fillRect(11, by+10, 18, 2); // Полоса на рукаве
+        ctx.fillStyle = C.s; ctx.fillRect(27, by+6, 7, 7);   // Кулак
+        // Эффект удара
+        ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.fillRect(14, by+4, 14, 11);
     } else {
-        ctx.fillRect(-16, bodyY + 2, 5, 20);
-        ctx.fillRect(11, bodyY + 2, 5, 20);
-        ctx.fillStyle = PALETTE.skin;
-        ctx.fillRect(-16, bodyY + 22, 5, 5);
-        ctx.fillRect(11, bodyY + 22, 5, 5);
+        // ОБЫЧНОЕ ПОЛОЖЕНИЕ
+        ctx.fillStyle = C.r; 
+        ctx.fillRect(-17, by+4, 6, 22); // Левая рука
+        ctx.fillRect(11, by+4, 6, 22);  // Правая рука
+        ctx.fillStyle = C.w;
+        ctx.fillRect(-17, by+10, 6, 2); ctx.fillRect(11, by+10, 6, 2); // Полосы
+        ctx.fillStyle = C.s;
+        ctx.fillRect(-17, by+24, 6, 6); ctx.fillRect(11, by+24, 6, 6); // Кисти
     }
 
-    // ГОЛОВА
-    ctx.fillStyle = PALETTE.skinShadow;
-    ctx.fillRect(-3, bodyY - 5, 6, 5);
-
-    ctx.fillStyle = PALETTE.skin;
-    ctx.fillRect(-7, bodyY - 20, 14, 16);
+    // 5. ГОЛОВА И ШЕЯ
+    ctx.fillStyle = C.sd; ctx.fillRect(-4, by-6, 8, 6); // Шея (тень)
+    ctx.fillStyle = C.s; ctx.fillRect(-8, by-22, 16, 18); // Лицо
     
-    ctx.fillStyle = PALETTE.black;
-    ctx.fillRect(-8, bodyY - 24, 16, 8);
-    ctx.fillRect(-9, bodyY - 20, 3, 10);
-    ctx.fillRect(6, bodyY - 20, 3, 10);
+    // Борода / Щетина
+    ctx.fillStyle = C.e; 
+    ctx.fillRect(-8, by-10, 16, 6); ctx.fillRect(-10, by-14, 4, 8); ctx.fillRect(6, by-14, 4, 8);
+    
+    // Глаза (серьезный взгляд)
+    ctx.fillStyle = '#FFF'; ctx.fillRect(2, by-16, 6, 4);
+    ctx.fillStyle = '#000'; ctx.fillRect(4, by-15, 2, 2);
+    // Бровь
+    ctx.fillStyle = C.e; ctx.fillRect(2, by-18, 6, 2);
 
-    ctx.fillStyle = PALETTE.gold;
-    ctx.fillRect(-10, bodyY - 18, 3, 10);
-    ctx.fillRect(7, bodyY - 18, 3, 10);
-    ctx.fillStyle = PALETTE.black;
-    ctx.fillRect(-10, bodyY - 22, 20, 3);
+    // Волосы
+    ctx.fillStyle = C.e; ctx.fillRect(-9, by-26, 18, 8);
+    ctx.fillStyle = C.eh; ctx.fillRect(-7, by-24, 4, 2); // Блик
+
+    // 6. НАУШНИКИ (Объемные)
+    // Оголовье
+    ctx.fillStyle = C.h; ctx.fillRect(-11, by-30, 22, 4);
+    ctx.fillStyle = C.hm; ctx.fillRect(-9, by-28, 18, 2);
+    // Чашки
+    ctx.fillStyle = C.h; ctx.fillRect(-12, by-20, 5, 14); ctx.fillRect(7, by-20, 5, 14);
+    // Детали чашек
+    ctx.fillStyle = C.hr; ctx.fillRect(-11, by-16, 3, 6); ctx.fillRect(8, by-16, 3, 6);
+    ctx.fillStyle = C.hm; ctx.fillRect(-10, by-14, 2, 2); ctx.fillRect(9, by-14, 2, 2);
 
     ctx.restore();
 }
 
-function drawEnemy(ctx, x, y, facingRight, frame) {
+// --- ВРАГ: АЛКАШ / ПАНК ---
+function drawEnemy(x, y, dir, frame, flash) {
     ctx.save();
-    if (!facingRight) { ctx.translate(x, 0); ctx.scale(-1, 1); x = 0; }
-    else { ctx.translate(x - GW/2, 0); }
+    if (dir < 0) { ctx.translate(x, 0); ctx.scale(-1, 1); x = 0; }
+    else { ctx.translate(x - W/2, 0); }
 
-    const groundY = y;
-    const bounce = Math.sin(frame * 0.3) * 1;
-    const bodyY = groundY - 50 + bounce;
+    if (flash > 0 && Math.floor(Date.now()/40)%2===0) ctx.globalAlpha = 0.4;
 
-    ctx.fillStyle = 'rgba(0,0,0,0.4)';
-    ctx.beginPath(); ctx.ellipse(0, groundY, 12, 4, 0, 0, Math.PI*2); ctx.fill();
+    const gy = y; const bob = Math.sin(frame*0.4)*1; const by = gy-55+bob;
 
-    ctx.fillStyle = PALETTE.enemyBlue;
-    ctx.fillRect(-7, groundY - 22, 6, 22);
-    ctx.fillRect(1, groundY - 22, 6, 22);
+    // Тень
+    ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.beginPath(); ctx.ellipse(0,gy,14,5,0,0,Math.PI*2); ctx.fill();
+
+    // Ноги (грязные джинсы)
+    ctx.fillStyle = '#37474F'; ctx.fillRect(-8,gy-24,7,24); ctx.fillRect(1,gy-24,7,24);
     
-    ctx.fillStyle = '#5C6BC0';
-    ctx.fillRect(-10, bodyY, 20, 25);
-    
-    ctx.fillStyle = PALETTE.enemySkin;
-    ctx.fillRect(-6, bodyY - 18, 12, 14);
-    
-    ctx.fillStyle = '#2E7D32';
-    ctx.fillRect(-7, bodyY - 22, 14, 6);
-    ctx.fillRect(-5, bodyY - 26, 10, 4);
+    // Торс (зеленая куртка)
+    ctx.fillStyle = '#33691E'; ctx.fillRect(-11,by,22,28);
+    ctx.fillStyle = '#1B5E20'; ctx.fillRect(-11,by+18,22,10); // Тень низа
 
-    ctx.restore();
+    // Голова
+    ctx.fillStyle = '#8D6E63'; ctx.fillRect(-7,by-18,14,16);
+    // Небритость
+    ctx.fillStyle = '#5D4037'; ctx.fillRect(-7,by-8,14,6);
+    // Шапка
+    ctx.fillStyle = '#4E342E'; ctx.fillRect(-8,by-22,16,6); ctx.fillRect(-10,by-20,3,8); ctx.fillRect(7,by-20,3,8);
+
+    // Бутылка в руке
+    ctx.fillStyle = '#1976D2'; ctx.fillRect(12,by+8,6,10);
+    ctx.fillStyle = '#FFF'; ctx.fillRect(12,by+10,6,3);
+
+    ctx.globalAlpha = 1; ctx.restore();
 }
 
-// --- GAME LOGIC ---
+// --- ИГРОВАЯ ЛОГИКА ---
 
-let gameState = 'MENU';
-let score = 0;
-let cameraX = 0;
-let frameCount = 0;
+let state = 'MENU', score = 0, camX = 0, fr = 0;
+let keys = {};
 
-const player = {
-    x: 100, y: 200,
-    hp: 100, maxHp: 100,
-    speed: 2,
-    facingRight: true,
-    state: 'idle',
-    attackTimer: 0,
-    invincible: 0
+const P = {
+    x: 100, y: 200, hp: 100, spd: 2.2, dir: 1,
+    st: 'idle', atkT: 0, inv: 0
 };
 
 let enemies = [];
 class Enemy {
     constructor(x, y) {
-        this.x = x; this.y = y;
-        this.hp = 30;
-        this.speed = 1.2;
-        this.dead = false;
-        this.flash = 0;
+        this.x=x; this.y=y; this.hp=30; this.spd=1.3;
+        this.dead=false; this.fl=0;
     }
     update() {
-        if (this.dead) return;
-        if (this.flash > 0) this.flash--;
-
-        const dx = player.x - this.x;
-        const dy = player.y - this.y;
-        const dist = Math.sqrt(dx*dx + dy*dy);
-
-        if (dist > 30) {
-            this.x += (dx / dist) * this.speed;
-            this.y += (dy / dist) * this.speed;
-        } else {
-            if (player.invincible === 0 && Math.random() < 0.02) {
-                player.hp -= 5;
-                player.invincible = 30;
-                updateUI();
-                if (player.hp <= 0) endGame(false);
-            }
+        if(this.dead) return;
+        if(this.fl>0) this.fl--;
+        
+        const dx=P.x-this.x, dy=P.y-this.y;
+        const d=Math.sqrt(dx*dx+dy*dy);
+        
+        if(d>35) { this.x+=(dx/d)*this.spd; this.y+=(dy/d)*this.spd; }
+        else if(P.inv===0 && Math.random()<0.03) {
+            P.hp-=5; P.inv=30; updUI();
+            if(P.hp<=0) end(false);
         }
 
-        if (player.state === 'attack' && player.attackTimer > 10 && player.attackTimer < 15) {
-            if (Math.abs(this.x - player.x) < 40 && Math.abs(this.y - player.y) < 20) {
-                if (this.flash === 0) {
-                    this.hp -= 10;
-                    this.flash = 10;
-                    this.x += (this.x > player.x) ? 10 : -10;
-                    score += 100;
-                    updateUI();
-                    if (this.hp <= 0) {
-                        this.dead = true;
-                        score += 500;
-                    }
-                }
+        // Hit detection
+        if(P.st==='attack' && P.atkT>8 && P.atkT<14) {
+            if(Math.abs(this.x-P.x)<45 && Math.abs(this.y-P.y)<25 && this.fl===0) {
+                this.hp-=10; this.fl=10; this.x+=(this.x>P.x?12:-12);
+                score+=100; updUI();
+                if(this.hp<=0){this.dead=true; score+=500;}
             }
         }
     }
 }
 
-function initLevel() {
-    player.x = 100; player.y = 200; player.hp = 100;
-    enemies = [];
-    for(let i=0; i<5; i++) {
-        enemies.push(new Enemy(300 + i*150, 150 + Math.random()*80));
+// Генератор волн врагов
+let waveTimer = 0;
+function spawnWave() {
+    for(let i=0; i<3+Math.floor(score/1000); i++) {
+        const ex = P.x + 200 + Math.random()*300;
+        const ey = 140 + Math.random()*100;
+        enemies.push(new Enemy(ex, ey));
     }
-    updateUI();
 }
 
-const keys = {};
-window.addEventListener('keydown', e => keys[e.code] = true);
-window.addEventListener('keyup', e => keys[e.code] = false);
+function init() {
+    P.x=100; P.y=200; P.hp=100; P.inv=0; P.atkT=0;
+    enemies=[]; score=0; camX=0; waveTimer=0;
+    spawnWave(); updUI();
+}
 
-document.getElementById('btn-start').onclick = () => {
-    document.getElementById('start-screen').classList.add('hidden');
-    gameState = 'PLAY';
-    initLevel();
-    loop();
+window.addEventListener('keydown', e=>keys[e.code]=true);
+window.addEventListener('keyup', e=>keys[e.code]=false);
+
+document.getElementById('btn-start').onclick = ()=>{
+    document.getElementById('start-scr').classList.add('hidden');
+    state='PLAY'; init(); loop();
 };
-document.getElementById('btn-restart').onclick = () => {
-    document.getElementById('end-screen').classList.add('hidden');
-    gameState = 'PLAY';
-    initLevel();
-    loop();
+document.getElementById('btn-re').onclick = ()=>{
+    document.getElementById('end-scr').classList.add('hidden');
+    state='PLAY'; init(); loop();
 };
 
-function updateUI() {
-    document.getElementById('hp-bar').style.width = Math.max(0, player.hp) + '%';
-    document.getElementById('score-val').innerText = score.toString().padStart(6, '0');
+function updUI() {
+    document.getElementById('hp').style.width = Math.max(0,P.hp)+'%';
+    document.getElementById('sc').innerText = score.toString().padStart(6,'0');
 }
 
-function endGame(win) {
-    gameState = 'OVER';
-    const s = document.getElementById('end-screen');
-    s.classList.remove('hidden');
-    document.getElementById('end-title').innerText = win ? "STAGE CLEAR!" : "GAME OVER";
-    document.getElementById('end-title').style.color = win ? "#00e5ff" : "#ff0055";
+function end(win) {
+    state='OVER';
+    const s=document.getElementById('end-scr'); s.classList.remove('hidden');
+    document.getElementById('end-t').innerText = win?"STAGE CLEAR!":"GAME OVER";
+    document.getElementById('end-t').style.color = win?"#00e5ff":"#ff0055";
+    document.getElementById('end-m').innerText = win?"Рейв спасен! Музыка вечна!":"Тусовка окончена...";
 }
 
+// --- ГЛАВНЫЙ ЦИКЛ ---
 function loop() {
-    if (gameState !== 'PLAY') return;
+    if(state!=='PLAY') return;
+    
+    // Логика игрока
+    let mov=false;
+    if(keys['ArrowLeft']){P.x-=P.spd; P.dir=-1; mov=true;}
+    if(keys['ArrowRight']){P.x+=P.spd; P.dir=1; mov=true;}
+    if(keys['ArrowUp']){P.y-=P.spd*0.7; mov=true;}
+    if(keys['ArrowDown']){P.y+=P.spd*0.7; mov=true;}
+    
+    P.y=Math.max(130, Math.min(H-10, P.y));
+    
+    if(keys['Space']&&P.atkT===0){P.st='attack'; P.atkT=20;}
+    if(P.atkT>0){P.atkT--; if(P.atkT===0)P.st=mov?'walk':'idle';}
+    else P.st=mov?'walk':'idle';
+    
+    if(P.inv>0) P.inv--;
 
-    let moving = false;
-    if (keys['ArrowLeft']) { player.x -= player.speed; player.facingRight = false; moving = true; }
-    if (keys['ArrowRight']) { player.x += player.speed; player.facingRight = true; moving = true; }
-    if (keys['ArrowUp']) { player.y -= player.speed * 0.7; moving = true; }
-    if (keys['ArrowDown']) { player.y += player.speed * 0.7; moving = true; }
+    // Камера
+    let tcx = P.x - W/2;
+    if(tcx<0) tcx=0;
+    camX += (tcx-camX)*0.1;
 
-    if (player.y < 130) player.y = 130;
-    if (player.y > GH - 10) player.y = GH - 10;
-    if (player.x < cameraX) player.x = cameraX;
-    if (player.x > cameraX + GW) player.x = cameraX + GW;
-
-    if (keys['Space'] && player.attackTimer === 0) {
-        player.state = 'attack';
-        player.attackTimer = 20;
-    }
-    if (player.attackTimer > 0) {
-        player.attackTimer--;
-        if (player.attackTimer === 0) player.state = moving ? 'walk' : 'idle';
-    } else {
-        player.state = moving ? 'walk' : 'idle';
-    }
-    if (player.invincible > 0) player.invincible--;
-
-    let targetCamX = player.x - GW / 2;
-    if (targetCamX < 0) targetCamX = 0;
-    cameraX += (targetCamX - cameraX) * 0.1;
-
-    enemies.forEach(e => e.update());
-
-    // РЕНДЕРИНГ
-    ctx.fillStyle = '#1a1a2e';
-    ctx.fillRect(0, 0, GW, GH);
-
-    // Неон на стене
-    ctx.fillStyle = '#ff0055';
-    ctx.fillRect(50 - (cameraX*0.2)%GW, 40, 20, 60);
-    ctx.fillStyle = '#00e5ff';
-    ctx.fillRect(250 - (cameraX*0.2)%GW, 40, 20, 60);
-    ctx.fillStyle = '#d500f9';
-    ctx.fillRect(450 - (cameraX*0.2)%GW, 40, 20, 60);
-
-    // Кирпичная стена
-    ctx.fillStyle = '#111';
-    for(let i=0; i<GW/40 + 2; i++) {
-        let brickX = (i * 40 - cameraX * 0.5) % (GW + 40);
-        if (brickX < -40) brickX += GW + 40;
-        ctx.fillRect(brickX, 100, 38, 20);
-        ctx.fillRect(brickX + 20, 122, 38, 20);
+    // Спавн новых волн
+    waveTimer++;
+    if(waveTimer > 300 && enemies.filter(e=>!e.dead).length < 2) {
+        spawnWave(); waveTimer=0;
     }
 
-    // Пол
-    let grad = ctx.createLinearGradient(0, 130, 0, GH);
-    grad.addColorStop(0, '#2a1b3d');
-    grad.addColorStop(1, '#4a148c');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 130, GW, GH - 130);
+    enemies.forEach(e=>e.update());
 
+    // === РЕНДЕРИНГ ===
+    // Фон клуба
+    ctx.fillStyle='#0a0510'; ctx.fillRect(0,0,W,H);
+    
+    // Параллакс стены
+    ctx.fillStyle='#150a20';
+    for(let i=0;i<15;i++){
+        let bx=(i*80-camX*0.3)%(W+80); if(bx<-80)bx+=W+80;
+        ctx.fillRect(bx, 40, 70, H);
+    }
+    
+    // Неоновые лампы на стене
+    const neonCols=['#ff0055','#00e5ff','#d500f9'];
+    for(let i=0;i<3;i++){
+        let nx=(i*200+50-camX*0.3)%(W+200); if(nx<-50)nx+=W+200;
+        ctx.fillStyle=neonCols[i]; ctx.globalAlpha=0.6+Math.sin(Date.now()*0.005+i)*0.2;
+        ctx.fillRect(nx, 50, 15, 70);
+    }
+    ctx.globalAlpha=1;
+
+    // Пол (сцена)
+    let gr=ctx.createLinearGradient(0,130,0,H);
+    gr.addColorStop(0,'#1a0b2e'); gr.addColorStop(1,'#4a148c');
+    ctx.fillStyle=gr; ctx.fillRect(0,130,W,H-130);
+    
     // Сетка пола
-    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-    ctx.beginPath();
-    for(let i=0; i<GW; i+=40) {
-        let x = i - (cameraX % 40);
-        ctx.moveTo(x, 130); ctx.lineTo(x - (x-GW/2)*0.8, GH);
+    ctx.strokeStyle='rgba(255,255,255,0.08)'; ctx.lineWidth=1; ctx.beginPath();
+    for(let i=0;i<W;i+=40){
+        let px=i-(camX%40);
+        ctx.moveTo(px,130); ctx.lineTo(px-(px-W/2)*0.7,H);
     }
     ctx.stroke();
 
+    // Диско-шар (мерцание)
+    ctx.fillStyle='#fff'; ctx.globalAlpha=0.1+Math.sin(Date.now()*0.01)*0.05;
+    ctx.beginPath(); ctx.arc(W/2-camX*0.1, 30, 15, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha=1;
+
     // Z-SORTING
-    let renderList = [];
+    let rl=[];
+    rl.push({y:P.y, draw:()=>{
+        if(P.inv>0&&Math.floor(Date.now()/40)%2===0)return;
+        drawHero(P.x-camX+W/2, P.y, P.dir, P.st, fr);
+    }});
     
-    renderList.push({
-        type: 'player', y: player.y,
-        draw: () => {
-            if (player.invincible > 0 && Math.floor(Date.now()/50)%2===0) return;
-            drawHero(ctx, player.x - cameraX + GW/2, player.y, player.facingRight, player.state, frameCount);
-        }
-    });
+    enemies.forEach(e=>{if(!e.dead)rl.push({y:e.y, draw:()=>drawEnemy(e.x-camX+W/2,e.y,e.x>P.x,fr,e.fl)});});
+    
+    rl.sort((a,b)=>a.y-b.y);
+    rl.forEach(o=>o.draw());
 
-    enemies.forEach(e => {
-        if (!e.dead) {
-            renderList.push({
-                type: 'enemy', y: e.y,
-                draw: () => {
-                    if (e.flash > 0 && Math.floor(Date.now()/50)%2===0) ctx.globalAlpha = 0.5;
-                    drawEnemy(ctx, e.x - cameraX + GW/2, e.y, e.x > player.x, frameCount);
-                    ctx.globalAlpha = 1.0;
-                }
-            });
-        }
-    });
-
-    renderList.sort((a, b) => a.y - b.y);
-    renderList.forEach(obj => obj.draw());
-
-    frameCount++;
-    requestAnimationFrame(loop);
+    fr++; requestAnimationFrame(loop);
 }
 </script>
 </body>
