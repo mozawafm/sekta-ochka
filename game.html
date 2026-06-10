@@ -2,457 +2,339 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>DJ Son - Moonwalker Style</title>
+    <title>DJ Son - 16-bit Beat 'em Up</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-
-        body {
-            margin: 0; padding: 0; background: #000;
-            display: flex; justify-content: center; align-items: center;
-            height: 100vh; overflow: hidden; font-family: 'Press Start 2P', cursive;
-        }
-
-        #cabinet {
-            position: relative; width: 960px; height: 540px;
-            border: 12px solid #1a1a1a; box-shadow: 0 0 60px rgba(255,0,85,0.3);
-            background: #050505;
-        }
-
+        body { margin: 0; background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: 'Press Start 2P', cursive; }
+        #arcade { position: relative; width: 960px; height: 540px; border: 12px solid #1a1a1a; box-shadow: 0 0 50px rgba(255,0,85,0.2); background: #050505; }
         canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
-
-        /* UI */
-        .ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
-        .hud { display: flex; justify-content: space-between; padding: 25px 40px; color: #fff; text-shadow: 3px 3px 0 #000; font-size: 18px; }
-        .hp-bar { width: 220px; height: 24px; background: #222; border: 3px solid #fff; margin-top: 8px; }
+        
+        .ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+        .hud { display: flex; justify-content: space-between; padding: 20px 30px; color: #fff; text-shadow: 2px 2px 0 #000; font-size: 16px; }
+        .hp-bar { width: 200px; height: 20px; background: #222; border: 2px solid #fff; margin-top: 5px; }
         .hp-fill { height: 100%; background: linear-gradient(90deg, #ff0055, #ff5500); width: 100%; transition: width 0.1s; }
         
-        .screen {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); display: flex; flex-direction: column;
-            justify-content: center; align-items: center; z-index: 20; text-align: center;
-        }
+        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 20; text-align: center; }
         .hidden { display: none !important; }
-        
-        h1 { font-size: 56px; color: #fff; text-shadow: 5px 5px 0 #ff0055; margin: 0 0 15px 0; letter-spacing: -3px; }
-        h2 { font-size: 22px; color: #aaa; margin-bottom: 40px; font-weight: normal; }
-        
-        button {
-            padding: 18px 45px; font-family: inherit; font-size: 22px;
-            background: #ff0055; color: #fff; border: 4px solid #fff;
-            cursor: pointer; box-shadow: 6px 6px 0 #000; transition: all 0.1s;
-        }
+        h1 { font-size: 48px; color: #fff; text-shadow: 4px 4px 0 #ff0055; margin: 0 0 10px 0; letter-spacing: -2px; }
+        button { margin-top: 30px; padding: 15px 40px; font-family: inherit; font-size: 20px; background: #ff0055; color: #fff; border: 4px solid #fff; cursor: pointer; box-shadow: 4px 4px 0 #000; }
         button:hover { transform: scale(1.05); background: #ff3377; }
-        button:active { transform: translate(3px, 3px); box-shadow: 3px 3px 0 #000; }
-
-        .hint { margin-top: 25px; font-size: 11px; color: #777; line-height: 1.8; }
-        kbd { background: #222; border: 1px solid #555; padding: 3px 7px; border-radius: 4px; color: #fff; }
+        button:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000; }
+        .hint { margin-top: 20px; font-size: 10px; color: #777; line-height: 1.8; }
+        kbd { background: #222; border: 1px solid #555; padding: 2px 6px; border-radius: 3px; color: #fff; }
     </style>
 </head>
 <body>
 
-<div id="cabinet">
-    <canvas id="cv" width="480" height="270"></canvas>
-    
-    <div class="ui-layer">
+<div id="arcade">
+    <canvas id="c" width="480" height="270"></canvas>
+    <div class="ui">
         <div class="hud">
-            <div>
-                <div style="font-size:11px; color:#888; margin-bottom:4px;">DJ SON LIFE</div>
-                <div class="hp-bar"><div id="hp" class="hp-fill"></div></div>
-            </div>
+            <div><div style="font-size:10px; color:#888;">DJ SON LIFE</div><div class="hp-bar"><div id="hp" class="hp-fill"></div></div></div>
             <div style="color:#ffd700;">SCORE: <span id="sc">000000</span></div>
         </div>
     </div>
 
     <div id="start-scr" class="screen">
         <h1>DJ SON</h1>
-        <h2>CLUB BATTLE EDITION</h2>
         <button id="btn-start">INSERT COIN</button>
-        <div class="hint">
-            <kbd>←</kbd> <kbd>→</kbd> Движение &nbsp;&nbsp; 
-            <kbd>↑</kbd> <kbd>↓</kbd> Глубина сцены<br>
-            <kbd>SPACE</kbd> Удар рукой
-        </div>
+        <div class="hint"><kbd>←</kbd> <kbd>→</kbd> Движение &nbsp; <kbd>↑</kbd> <kbd>↓</kbd> Глубина &nbsp; <kbd>SPACE</kbd> Удар</div>
     </div>
 
     <div id="end-scr" class="screen hidden">
         <h1 id="end-t">GAME OVER</h1>
-        <p id="end-m" style="color:#aaa; margin-bottom:25px;">Рейв провален...</p>
         <button id="btn-re">TRY AGAIN</button>
     </div>
 </div>
 
 <script>
 /**
- * MOONWALKER ENGINE v3.0
- * Использует встроенные спрайты пользователя + процедурная анимация ходьбы
+ * 16-BIT SPRITE ENGINE
+ * Полностью процедурная покадровая анимация (без внешних картинок)
  */
-
-const cv = document.getElementById('cv');
+const cv = document.getElementById('c');
 const ctx = cv.getContext('2d');
 const W = 480, H = 270;
 
-// --- ВСТРОЕННЫЕ СПРАЙТЫ (BASE64) ---
-// Я конвертировал твои картинки в формат, который браузер понимает без загрузки файлов.
-const IMG_FRONT = new Image();
-IMG_FRONT.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAAFHklEQVRYhe2XT0gbQRjGn91NNm5MjDGxUbFQqBQKXrx48OLFi1ePXr169OjRo0ePHj169OjRo0ePHj169OjRo0ePHj169OjRo0ePHj169OjRo0ePHj169OjRo0ePHj169OjRo0ePHj169OjRo0ePHj169OjRo0ePHj169OjRo0ePHj169OjRo0ePHj169OjRo0ePHj169OjRo0ePHj169OjRo0ePHj169OjRo0ePHj169OjRo0ePHj169OjRo0ePHj169OjRo0ePHj169OjRo0ePHj169OjRo0ePHj169OjRo0ePHj169OjRo0ePHj169OjRo0ePHj169OjRo0ePHj169OjRo0ePHj169OjRo0ePHj169OjRo0ePHj169OjRo0ePHj169OjRo0ePHj169OjRo0ePHj169OjRo0ePHj169OjRo0ePHj169OjRo0ePHj169OjRo0ePHj169OjRo0ePHj169OjRo0ePHj1......"; 
-// ПРИМЕЧАНИЕ: Из-за ограничений длины сообщения я не могу вставить сюда 100% полный Base64 код картинок.
-// В реальном коде ниже я использую "заглушки", но логика отрисовки настроена на твои картинки.
-// Чтобы это заработало идеально, тебе нужно сохранить свои картинки как hero_front.png и hero_side.png 
-// и положить рядом с html файлом, ИЛИ использовать этот код, если я смогу уместить строки.
-
-// ДЛЯ РАБОТЫ ПРЯМО СЕЙЧАС: Я буду рисовать героя программно, НО используя точные цвета и пропорции с твоих картинок,
-// чтобы он выглядел МАКСИМАЛЬНО похоже, пока мы не подключим файлы.
-// Но я сделаю это так, как ты просил: с отдельными ногами и руками.
-
-// --- ЦВЕТА СО СПРАЙТОВ ---
-const C = {
-    skin: '#F5D0B5', skinSh: '#E0B095',
-    hair: '#3E2723', beard: '#5D4037',
-    jacketR: '#C62828', jacketW: '#FFFFFF', jacketB: '#111111',
-    pants: '#000000', shoes: '#111111',
-    hpBlack: '#212121', hpGrey: '#616161'
+// --- ПАЛИТРА ---
+const P = { 
+    _: null, // Прозрачный
+    R: '#C62828', Rd: '#8E0000', // Красный (куртка)
+    W: '#FFFFFF', G: '#E0E0E0',  // Белый/Серый (полосы)
+    B: '#111111', Bl: '#263238', // Черный (штаны, волосы)
+    S: '#F5D0B5', Sd: '#DCAE96', // Кожа
+    H: '#212121', Hm: '#616161'  // Наушники
 };
 
-// --- ФУНКЦИЯ РИСОВАНИЯ "ЖИВОГО" ГЕРОЯ (Имитация спрайта) ---
-function drawHero(x, y, dir, state, frame) {
-    ctx.save();
-    
-    // Настройка направления
-    let scaleX = 1;
-    if (dir < 0) {
-        ctx.translate(x, 0);
-        ctx.scale(-1, 1);
-        x = 0;
-    } else {
-        ctx.translate(x - W/2, 0);
-    }
+// --- МАССИВЫ СПРАЙТОВ (PIXEL ART DATA) ---
+// Каждый символ - это один пиксель цвета из палитры P
+// Размер сетки: 16x24 пикселя (масштабируется x3 в игре)
 
-    const gy = y; // Уровень земли
-    
-    // Анимационные переменные
-    let walkCycle = Math.sin(frame * 0.5); // Цикл ходьбы (-1 до 1)
-    let isWalking = (state === 'walk');
-    let isAttacking = (state === 'attack');
-    
-    // Смещения для анимации (имитация переставления ног)
-    let bodyBob = isWalking ? Math.abs(walkCycle) * 3 : 0; // Тело подпрыгивает
-    let legL_Y = isWalking ? walkCycle * 4 : 0; // Левая нога вверх/вниз
-    let legR_Y = isWalking ? -walkCycle * 4 : 0; // Правая нога наоборот
-    let armSwing = isWalking ? walkCycle * 5 : 0; // Мах руками
+const SPRITES = {
+    idle: [
+        "________________",
+        "______HHHH______",
+        "_____HBBBBH_____",
+        "____H_BBBB_H____",
+        "___H__SSSS__H___",
+        "___H__SSSS__H___",
+        "___H__SSSS__H___",
+        "____H_SSSS_H____",
+        "_____HSSSH______",
+        "______WWWW______",
+        "_____WRRRRW_____",
+        "____W_RRRR_W____",
+        "___W__RRRR__W___",
+        "___W__RRRR__W___",
+        "___W__RRRR__W___",
+        "____W_RRRR_W____",
+        "_____WRRRRW_____",
+        "______WWWW______",
+        "______BBBB______",
+        "_____B____B_____",
+        "____B______B____",
+        "____B______B____",
+        "___BB______BB___",
+        "___BB______BB___"
+    ],
+    walk1: [ // Левая нога вперед
+        "________________",
+        "______HHHH______",
+        "_____HBBBBH_____",
+        "____H_BBBB_H____",
+        "___H__SSSS__H___",
+        "___H__SSSS__H___",
+        "___H__SSSS__H___",
+        "____H_SSSS_H____",
+        "_____HSSSH______",
+        "______WWWW______",
+        "_____WRRRRW_____",
+        "____W_RRRR_W____",
+        "___W__RRRR__W___",
+        "___W__RRRR__W___",
+        "___W__RRRR__W___",
+        "____W_RRRR_W____",
+        "_____WRRRRW_____",
+        "______WWWW______",
+        "_____BBBB_______",
+        "____B____B______",
+        "___B______B_____",
+        "__B________B____",
+        "_BB________BB___",
+        "_BB________BB___"
+    ],
+    walk2: [ // Правая нога вперед
+        "________________",
+        "______HHHH______",
+        "_____HBBBBH_____",
+        "____H_BBBB_H____",
+        "___H__SSSS__H___",
+        "___H__SSSS__H___",
+        "___H__SSSS__H___",
+        "____H_SSSS_H____",
+        "_____HSSSH______",
+        "______WWWW______",
+        "_____WRRRRW_____",
+        "____W_RRRR_W____",
+        "___W__RRRR__W___",
+        "___W__RRRR__W___",
+        "___W__RRRR__W___",
+        "____W_RRRR_W____",
+        "_____WRRRRW_____",
+        "______WWWW______",
+        "_______BBBB_____",
+        "______B____B____",
+        "_____B______B___",
+        "____B________B__",
+        "___BB________BB_",
+        "___BB________BB_"
+    ],
+    walk3: [ // Ноги вместе (средний кадр)
+        "________________",
+        "______HHHH______",
+        "_____HBBBBH_____",
+        "____H_BBBB_H____",
+        "___H__SSSS__H___",
+        "___H__SSSS__H___",
+        "___H__SSSS__H___",
+        "____H_SSSS_H____",
+        "_____HSSSH______",
+        "______WWWW______",
+        "_____WRRRRW_____",
+        "____W_RRRR_W____",
+        "___W__RRRR__W___",
+        "___W__RRRR__W___",
+        "___W__RRRR__W___",
+        "____W_RRRR_W____",
+        "_____WRRRRW_____",
+        "______WWWW______",
+        "______BBBB______",
+        "_____B____B_____",
+        "____B______B____",
+        "____B______B____",
+        "___BB______BB___",
+        "___BB______BB___"
+    ],
+    attack: [ // Удар рукой
+        "________________",
+        "______HHHH______",
+        "_____HBBBBH_____",
+        "____H_BBBB_H____",
+        "___H__SSSS__H___",
+        "___H__SSSS__H___",
+        "___H__SSSS__H___",
+        "____H_SSSS_H____",
+        "_____HSSSH______",
+        "______WWWW______",
+        "_____WRRRRW_____",
+        "____W_RRRR_W____",
+        "___W__RRRR__W___",
+        "___W__RRRR__W___",
+        "___W__RRRR__W___",
+        "____W_RRRR_W____",
+        "_____WRRRRW_____",
+        "______WWWW______",
+        "______BBBB______",
+        "_____B____B_____",
+        "____B______B____",
+        "____B______B____",
+        "___BB______BB___",
+        "___BB______BB___"
+        // Примечание: для удара рука рисуется отдельно в функции drawHero
+    ]
+};
 
-    // 1. ТЕНЬ
-    ctx.fillStyle = 'rgba(0,0,0,0.5)';
-    ctx.beginPath(); ctx.ellipse(0, gy, 14, 5, 0, 0, Math.PI*2); ctx.fill();
-
-    // --- НИЖНЯЯ ЧАСТЬ (НОГИ) ---
-    // Мы рисуем ноги ОТДЕЛЬНО от тела, чтобы они "ходили"
-    
-    // Левая нога (дальняя)
-    ctx.fillStyle = C.pants;
-    ctx.fillRect(-8, gy - 25 + legL_Y, 7, 25 - legL_Y); 
-    // Кроссовок левый
-    ctx.fillStyle = C.shoes;
-    ctx.fillRect(-9, gy - 4 + legL_Y, 9, 4);
-
-    // Правая нога (ближняя)
-    ctx.fillStyle = C.pants;
-    ctx.fillRect(1, gy - 25 + legR_Y, 7, 25 - legR_Y);
-    // Полоска на штанах (белая)
-    ctx.fillStyle = C.jacketW;
-    ctx.fillRect(6, gy - 25 + legR_Y, 2, 20); 
-    // Кроссовок правый
-    ctx.fillStyle = C.shoes;
-    ctx.fillRect(0, gy - 4 + legR_Y, 9, 4);
-
-    // --- ТЕЛО (КУРТКА) ---
-    // Тело двигается чуть меньше ног (bodyBob)
-    const torsoY = gy - 55 - bodyBob; 
-    
-    // Основная красная часть
-    ctx.fillStyle = C.jacketR;
-    ctx.fillRect(-12, torsoY + 15, 24, 20);
-    
-    // Белая полоса посередине
-    ctx.fillStyle = C.jacketW;
-    ctx.fillRect(-12, torsoY + 10, 24, 5);
-    
-    // Черный верх (плечи/воротник)
-    ctx.fillStyle = C.jacketB;
-    ctx.fillRect(-12, torsoY, 24, 10);
-    
-    // Молния
-    ctx.fillStyle = '#444';
-    ctx.fillRect(-1, torsoY, 2, 35);
-
-    // --- РУКИ ---
-    // Руки тоже отдельные объекты
-    if (isAttacking) {
-        // УДАР: рука вытянута вперед
-        ctx.fillStyle = C.jacketR;
-        ctx.fillRect(10, torsoY + 12, 15, 6); // Предплечье
-        ctx.fillStyle = C.jacketW; 
-        ctx.fillRect(10, torsoY + 14, 15, 2); // Полоса
-        ctx.fillStyle = C.skin;
-        ctx.fillRect(23, torsoY + 12, 6, 6); // Кулак
-    } else {
-        // ОБЫЧНАЯ ХОДЬБА: руки качаются
-        // Дальняя рука (левая)
-        ctx.fillStyle = C.jacketB; // Плечо черное
-        ctx.fillRect(-16, torsoY + 2 + armSwing, 5, 8);
-        ctx.fillStyle = C.jacketR; // Рукав красный
-        ctx.fillRect(-16, torsoY + 10 + armSwing, 5, 12);
-        ctx.fillStyle = C.jacketW; // Манжет
-        ctx.fillRect(-16, torsoY + 20 + armSwing, 5, 2);
-        ctx.fillStyle = C.skin; // Кисть
-        ctx.fillRect(-16, torsoY + 22 + armSwing, 5, 5);
-
-        // Ближняя рука (правая)
-        ctx.fillStyle = C.jacketB;
-        ctx.fillRect(11, torsoY + 2 - armSwing, 5, 8);
-        ctx.fillStyle = C.jacketR;
-        ctx.fillRect(11, torsoY + 10 - armSwing, 5, 12);
-        ctx.fillStyle = C.jacketW;
-        ctx.fillRect(11, torsoY + 20 - armSwing, 5, 2);
-        ctx.fillStyle = C.skin;
-        ctx.fillRect(11, torsoY + 22 - armSwing, 5, 5);
-    }
-
-    // --- ГОЛОВА ---
-    // Голова слегка покачивается при ходьбе
-    const headY = torsoY - 22 - (bodyBob * 0.5);
-    
-    // Шея
-    ctx.fillStyle = C.skinSh;
-    ctx.fillRect(-3, torsoY - 4, 6, 4);
-
-    // Лицо (база)
-    ctx.fillStyle = C.skin;
-    ctx.fillRect(-8, headY, 16, 18);
-    
-    // Борода (как на спрайте)
-    ctx.fillStyle = C.beard;
-    ctx.fillRect(-8, headY + 10, 16, 8); // Низ бороды
-    ctx.fillRect(-9, headY + 6, 3, 8);   // Бакенбарды
-    ctx.fillRect(6, headY + 6, 3, 8);
-
-    // Глаза
-    ctx.fillStyle = '#FFF';
-    ctx.fillRect(2, headY + 6, 5, 3);
-    ctx.fillStyle = '#000';
-    ctx.fillRect(4, headY + 7, 2, 2);
-
-    // Волосы
-    ctx.fillStyle = C.hair;
-    ctx.fillRect(-9, headY - 4, 18, 8); // Верх
-    ctx.fillRect(-9, headY, 3, 8); // Бакенбарды волосы
-
-    // НАУШНИКИ (Крупные, как на фото)
-    ctx.fillStyle = C.hpBlack;
-    // Оголовье
-    ctx.fillRect(-10, headY - 6, 20, 4);
-    // Чашки
-    ctx.fillRect(-12, headY - 2, 5, 12); // Левая
-    ctx.fillRect(7, headY - 2, 5, 12);   // Правая
-    // Детали (серые круги)
-    ctx.fillStyle = C.hpGrey;
-    ctx.fillRect(-11, headY, 3, 8);
-    ctx.fillRect(8, headY, 3, 8);
-
-    ctx.restore();
-}
-
-// --- ВРАГ (ПРОСТОЙ СПРАЙТ) ---
-function drawEnemy(x, y, dir, frame, flash) {
+// --- ФУНКЦИЯ ОТРИСОВКИ СПРАЙТА ИЗ МАССИВА ---
+function drawSpriteMap(map, x, y, dir, isAttack) {
     ctx.save();
     if (dir < 0) { ctx.translate(x, 0); ctx.scale(-1, 1); x = 0; }
     else { ctx.translate(x - W/2, 0); }
 
-    if (flash > 0 && Math.floor(Date.now()/40)%2===0) ctx.globalAlpha = 0.4;
-
-    const gy = y; const bob = Math.sin(frame*0.4)*2; const by = gy-50+bob;
+    const scale = 3; // Масштаб пикселей
+    const rows = map.length;
+    const cols = map[0].length;
 
     // Тень
-    ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.beginPath(); ctx.ellipse(0,gy,14,5,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.beginPath(); ctx.ellipse(0, y, 14*scale/3, 5*scale/3, 0, 0, Math.PI*2); ctx.fill();
 
-    // Ноги (анимированные)
-    let legOff = Math.sin(frame*0.4)*4;
-    ctx.fillStyle = '#37474F'; 
-    ctx.fillRect(-8,gy-20+legOff,7,20-legOff); 
-    ctx.fillRect(1,gy-20-legOff,7,20+legOff);
-    
-    // Торс
-    ctx.fillStyle = '#33691E'; ctx.fillRect(-11,by,22,25);
-    
-    // Голова
-    ctx.fillStyle = '#8D6E63'; ctx.fillRect(-7,by-16,14,16);
-    ctx.fillStyle = '#5D4037'; ctx.fillRect(-7,by-6,14,6); // Борода
-    ctx.fillStyle = '#4E342E'; ctx.fillRect(-8,by-20,16,6); // Шапка
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            const char = map[r][c];
+            if (char !== '_') {
+                ctx.fillStyle = P[char] || '#FF00FF'; // Розовый если ошибка
+                ctx.fillRect(c * scale, y - (rows * scale) + (r * scale), scale, scale);
+            }
+        }
+    }
 
-    ctx.globalAlpha = 1; ctx.restore();
+    // Если атака - дорисовываем вытянутую руку поверх спрайта
+    if (isAttack) {
+        ctx.fillStyle = P.R; // Рукав
+        ctx.fillRect(cols * scale, y - (12 * scale), 6 * scale, 4 * scale);
+        ctx.fillStyle = P.W; // Полоса
+        ctx.fillRect(cols * scale, y - (11 * scale), 6 * scale, 2 * scale);
+        ctx.fillStyle = P.S; // Кулак
+        ctx.fillRect((cols + 5) * scale, y - (12 * scale), 3 * scale, 4 * scale);
+    }
+
+    ctx.restore();
 }
 
 // --- ИГРОВАЯ ЛОГИКА ---
-
 let state = 'MENU', score = 0, camX = 0, fr = 0;
 let keys = {};
 
-const P = {
+const hero = {
     x: 100, y: 200, hp: 100, spd: 2.5, dir: 1,
-    st: 'idle', atkT: 0, inv: 0
+    st: 'idle', atkT: 0, inv: 0, animFrame: 0, animTimer: 0
 };
 
 let enemies = [];
 class Enemy {
-    constructor(x, y) {
-        this.x=x; this.y=y; this.hp=30; this.spd=1.5;
-        this.dead=false; this.fl=0;
-    }
+    constructor(x, y) { this.x=x; this.y=y; this.hp=30; this.spd=1.5; this.dead=false; this.fl=0; }
     update() {
         if(this.dead) return;
         if(this.fl>0) this.fl--;
-        
-        const dx=P.x-this.x, dy=P.y-this.y;
-        const d=Math.sqrt(dx*dx+dy*dy);
-        
+        const dx=hero.x-this.x, dy=hero.y-this.y, d=Math.sqrt(dx*dx+dy*dy);
         if(d>35) { this.x+=(dx/d)*this.spd; this.y+=(dy/d)*this.spd; }
-        else if(P.inv===0 && Math.random()<0.03) {
-            P.hp-=5; P.inv=30; updUI();
-            if(P.hp<=0) end(false);
+        else if(hero.inv===0 && Math.random()<0.03) { hero.hp-=5; hero.inv=30; updUI(); if(hero.hp<=0) end(false); }
+        
+        if(hero.st==='attack' && hero.atkT>5 && hero.atkT<10 && this.fl===0 && Math.abs(this.x-hero.x)<45 && Math.abs(this.y-hero.y)<25) {
+            this.hp-=10; this.fl=10; this.x+=(this.x>hero.x?12:-12); score+=100; updUI();
+            if(this.hp<=0){this.dead=true; score+=500;}
         }
-
-        // Hit detection
-        if(P.st==='attack' && P.atkT>8 && P.atkT<14) {
-            if(Math.abs(this.x-P.x)<45 && Math.abs(this.y-P.y)<25 && this.fl===0) {
-                this.hp-=10; this.fl=10; this.x+=(this.x>P.x?12:-12);
-                score+=100; updUI();
-                if(this.hp<=0){this.dead=true; score+=500;}
-            }
-        }
+    }
+    draw() {
+        if(this.dead) return;
+        if(this.fl>0 && Math.floor(Date.now()/40)%2===0) return;
+        // Простой враг (можно заменить на такой же массив)
+        ctx.save();
+        let ex = this.x - camX + W/2;
+        if(this.x < hero.x) { ctx.translate(ex,0); ctx.scale(-1,1); ex=0; } else { ctx.translate(ex-W/2,0); }
+        ctx.fillStyle='rgba(0,0,0,0.4)'; ctx.beginPath(); ctx.ellipse(0,this.y,12,4,0,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle='#33691E'; ctx.fillRect(ex-10,this.y-45,20,25);
+        ctx.fillStyle='#8D6E63'; ctx.fillRect(ex-6,this.y-58,12,14);
+        ctx.restore();
     }
 }
 
-// Генератор волн врагов
-let waveTimer = 0;
-function spawnWave() {
-    for(let i=0; i<3+Math.floor(score/1000); i++) {
-        const ex = P.x + 200 + Math.random()*300;
-        const ey = 140 + Math.random()*100;
-        enemies.push(new Enemy(ex, ey));
-    }
-}
-
-function init() {
-    P.x=100; P.y=200; P.hp=100; P.inv=0; P.atkT=0;
-    enemies=[]; score=0; camX=0; waveTimer=0;
-    spawnWave(); updUI();
-}
+let waveT = 0;
+function spawnWave() { for(let i=0; i<3+Math.floor(score/1000); i++) enemies.push(new Enemy(hero.x+200+Math.random()*300, 140+Math.random()*100)); }
+function init() { hero.x=100; hero.y=200; hero.hp=100; hero.inv=0; hero.atkT=0; enemies=[]; score=0; camX=0; waveT=0; spawnWave(); updUI(); }
 
 window.addEventListener('keydown', e=>keys[e.code]=true);
 window.addEventListener('keyup', e=>keys[e.code]=false);
-
-document.getElementById('btn-start').onclick = ()=>{
-    document.getElementById('start-scr').classList.add('hidden');
-    state='PLAY'; init(); loop();
-};
-document.getElementById('btn-re').onclick = ()=>{
-    document.getElementById('end-scr').classList.add('hidden');
-    state='PLAY'; init(); loop();
-};
-
-function updUI() {
-    document.getElementById('hp').style.width = Math.max(0,P.hp)+'%';
-    document.getElementById('sc').innerText = score.toString().padStart(6,'0');
-}
-
-function end(win) {
-    state='OVER';
-    const s=document.getElementById('end-scr'); s.classList.remove('hidden');
-    document.getElementById('end-t').innerText = win?"STAGE CLEAR!":"GAME OVER";
-    document.getElementById('end-t').style.color = win?"#00e5ff":"#ff0055";
-    document.getElementById('end-m').innerText = win?"Рейв спасен! Музыка вечна!":"Тусовка окончена...";
-}
+document.getElementById('btn-start').onclick = ()=>{ document.getElementById('start-scr').classList.add('hidden'); state='PLAY'; init(); loop(); };
+document.getElementById('btn-re').onclick = ()=>{ document.getElementById('end-scr').classList.add('hidden'); state='PLAY'; init(); loop(); };
+function updUI() { document.getElementById('hp').style.width=Math.max(0,hero.hp)+'%'; document.getElementById('sc').innerText=score.toString().padStart(6,'0'); }
+function end(win) { state='OVER'; document.getElementById('end-scr').classList.remove('hidden'); document.getElementById('end-t').innerText=win?"STAGE CLEAR!":"GAME OVER"; document.getElementById('end-t').style.color=win?"#00e5ff":"#ff0055"; }
 
 // --- ГЛАВНЫЙ ЦИКЛ ---
 function loop() {
     if(state!=='PLAY') return;
     
-    // Логика игрока
     let mov=false;
-    if(keys['ArrowLeft']){P.x-=P.spd; P.dir=-1; mov=true;}
-    if(keys['ArrowRight']){P.x+=P.spd; P.dir=1; mov=true;}
-    if(keys['ArrowUp']){P.y-=P.spd*0.7; mov=true;}
-    if(keys['ArrowDown']){P.y+=P.spd*0.7; mov=true;}
+    if(keys['ArrowLeft']){hero.x-=hero.spd; hero.dir=-1; mov=true;}
+    if(keys['ArrowRight']){hero.x+=hero.spd; hero.dir=1; mov=true;}
+    if(keys['ArrowUp']){hero.y-=hero.spd*0.7; mov=true;}
+    if(keys['ArrowDown']){hero.y+=hero.spd*0.7; mov=true;}
+    hero.y=Math.max(130, Math.min(H-10, hero.y));
     
-    P.y=Math.max(130, Math.min(H-10, P.y));
-    
-    if(keys['Space']&&P.atkT===0){P.st='attack'; P.atkT=20;}
-    if(P.atkT>0){P.atkT--; if(P.atkT===0)P.st=mov?'walk':'idle';}
-    else P.st=mov?'walk':'idle';
-    
-    if(P.inv>0) P.inv--;
+    if(keys['Space']&&hero.atkT===0){hero.st='attack'; hero.atkT=20;}
+    if(hero.atkT>0){hero.atkT--; if(hero.atkT===0)hero.st=mov?'walk':'idle';}
+    else hero.st=mov?'walk':'idle';
+    if(hero.inv>0) hero.inv--;
 
-    // Камера
-    let tcx = P.x - W/2;
-    if(tcx<0) tcx=0;
-    camX += (tcx-camX)*0.1;
+    // Анимация героя (переключение кадров из массива)
+    if(mov) {
+        hero.animTimer++;
+        if(hero.animTimer > 8) { hero.animFrame = (hero.animFrame + 1) % 3; hero.animTimer = 0; }
+    } else { hero.animFrame = 0; }
 
-    // Спавн новых волн
-    waveTimer++;
-    if(waveTimer > 300 && enemies.filter(e=>!e.dead).length < 2) {
-        spawnWave(); waveTimer=0;
-    }
-
+    let tcx = hero.x - W/2; if(tcx<0) tcx=0; camX += (tcx-camX)*0.1;
+    waveT++; if(waveT > 300 && enemies.filter(e=>!e.dead).length < 2) { spawnWave(); waveT=0; }
     enemies.forEach(e=>e.update());
 
-    // === РЕНДЕРИНГ ===
-    // Фон клуба
+    // РЕНДЕРИНГ
     ctx.fillStyle='#0a0510'; ctx.fillRect(0,0,W,H);
-    
-    // Параллакс стены
-    ctx.fillStyle='#150a20';
-    for(let i=0;i<15;i++){
-        let bx=(i*80-camX*0.3)%(W+80); if(bx<-80)bx+=W+80;
-        ctx.fillRect(bx, 40, 70, H);
-    }
-    
-    // Неоновые лампы на стене
-    const neonCols=['#ff0055','#00e5ff','#d500f9'];
-    for(let i=0;i<3;i++){
-        let nx=(i*200+50-camX*0.3)%(W+200); if(nx<-50)nx+=W+200;
-        ctx.fillStyle=neonCols[i]; ctx.globalAlpha=0.6+Math.sin(Date.now()*0.005+i)*0.2;
-        ctx.fillRect(nx, 50, 15, 70);
-    }
-    ctx.globalAlpha=1;
-
-    // Пол (сцена)
-    let gr=ctx.createLinearGradient(0,130,0,H);
-    gr.addColorStop(0,'#1a0b2e'); gr.addColorStop(1,'#4a148c');
-    ctx.fillStyle=gr; ctx.fillRect(0,130,W,H-130);
-    
-    // Сетка пола
-    ctx.strokeStyle='rgba(255,255,255,0.08)'; ctx.lineWidth=1; ctx.beginPath();
-    for(let i=0;i<W;i+=40){
-        let px=i-(camX%40);
-        ctx.moveTo(px,130); ctx.lineTo(px-(px-W/2)*0.7,H);
-    }
-    ctx.stroke();
-
-    // Диско-шар (мерцание)
-    ctx.fillStyle='#fff'; ctx.globalAlpha=0.1+Math.sin(Date.now()*0.01)*0.05;
-    ctx.beginPath(); ctx.arc(W/2-camX*0.1, 30, 15, 0, Math.PI*2); ctx.fill();
-    ctx.globalAlpha=1;
+    ctx.fillStyle='#150a20'; for(let i=0;i<15;i++){ let bx=(i*80-camX*0.3)%(W+80); if(bx<-80)bx+=W+80; ctx.fillRect(bx,40,70,H); }
+    const neon=['#ff0055','#00e5ff','#d500f9']; for(let i=0;i<3;i++){ let nx=(i*200+50-camX*0.3)%(W+200); if(nx<-50)nx+=W+200; ctx.fillStyle=neon[i]; ctx.globalAlpha=0.6+Math.sin(Date.now()*0.005+i)*0.2; ctx.fillRect(nx,50,15,70); } ctx.globalAlpha=1;
+    let gr=ctx.createLinearGradient(0,130,0,H); gr.addColorStop(0,'#1a0b2e'); gr.addColorStop(1,'#4a148c'); ctx.fillStyle=gr; ctx.fillRect(0,130,W,H-130);
+    ctx.strokeStyle='rgba(255,255,255,0.08)'; ctx.lineWidth=1; ctx.beginPath(); for(let i=0;i<W;i+=40){ let px=i-(camX%40); ctx.moveTo(px,130); ctx.lineTo(px-(px-W/2)*0.7,H); } ctx.stroke();
+    ctx.fillStyle='#fff'; ctx.globalAlpha=0.1+Math.sin(Date.now()*0.01)*0.05; ctx.beginPath(); ctx.arc(W/2-camX*0.1,30,15,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=1;
 
     // Z-SORTING
     let rl=[];
-    rl.push({y:P.y, draw:()=>{
-        if(P.inv>0&&Math.floor(Date.now()/40)%2===0)return;
-        drawHero(P.x-camX+W/2, P.y, P.dir, P.st, fr);
+    rl.push({y:hero.y, draw:()=>{
+        if(hero.inv>0&&Math.floor(Date.now()/40)%2===0)return;
+        let spriteKey = 'idle';
+        if(hero.st === 'walk') spriteKey = ['walk1','walk2','walk3'][hero.animFrame];
+        if(hero.st === 'attack') spriteKey = 'attack';
+        drawSpriteMap(SPRITES[spriteKey], hero.x-camX+W/2, hero.y, hero.dir, hero.st==='attack');
     }});
-    
-    enemies.forEach(e=>{if(!e.dead)rl.push({y:e.y, draw:()=>drawEnemy(e.x-camX+W/2,e.y,e.x>P.x,fr,e.fl)});});
-    
-    rl.sort((a,b)=>a.y-b.y);
-    rl.forEach(o=>o.draw());
+    enemies.forEach(e=>{if(!e.dead)rl.push({y:e.y, draw:()=>e.draw()});});
+    rl.sort((a,b)=>a.y-b.y); rl.forEach(o=>o.draw());
 
     fr++; requestAnimationFrame(loop);
 }
