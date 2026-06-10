@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>DJ SON — RAVE RESCUE</title>
+<title>DJ SON — CLUB BATTLE</title>
 
 <style>
     * {
@@ -23,7 +23,6 @@
         overflow: hidden;
     }
 
-    /* Шум */
     .noise {
         position: fixed;
         top: 0;
@@ -31,7 +30,7 @@
         width: 100%;
         height: 100%;
         background-image: url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
-        opacity: 0.05;
+        opacity: 0.04;
         mix-blend-mode: screen;
         pointer-events: none;
         z-index: 100;
@@ -41,7 +40,7 @@
         position: relative;
         z-index: 10;
         background: #000;
-        padding: 20px;
+        padding: 15px;
         border: 2px solid #ff3366;
         box-shadow: 0 0 30px rgba(255,51,102,0.2);
     }
@@ -54,11 +53,11 @@
     }
 
     .info-panel {
-        margin-top: 15px;
+        margin-top: 12px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        gap: 40px;
+        gap: 30px;
         font-size: 12px;
         letter-spacing: 2px;
         color: #ff6699;
@@ -69,7 +68,7 @@
     }
 
     #status {
-        margin-top: 12px;
+        margin-top: 10px;
         font-size: 10px;
         opacity: 0.7;
         text-align: center;
@@ -77,8 +76,8 @@
     }
 
     #restart {
-        margin-top: 15px;
-        padding: 8px 25px;
+        margin-top: 12px;
+        padding: 6px 20px;
         background: #000;
         border: 1px solid #ff3366;
         color: #ff3366;
@@ -94,11 +93,10 @@
     }
 
     .controls-hint {
-        margin-top: 10px;
+        margin-top: 8px;
         font-size: 8px;
         text-align: center;
         opacity: 0.3;
-        letter-spacing: 1px;
     }
 </style>
 </head>
@@ -107,13 +105,13 @@
 <div class="noise"></div>
 
 <div class="game-container">
-    <canvas id="gameCanvas" width="800" height="450"></canvas>
+    <canvas id="gameCanvas" width="900" height="500"></canvas>
     <div class="info-panel">
-        <div>❤️ <span id="hp">3</span></div>
+        <div>❤️ <span id="hp">5</span></div>
         <div>🎵 <span id="score">0</span></div>
-        <div>⚡ <span id="level">УРОВЕНЬ 1</span></div>
+        <div>⚡ <span id="level">КЛУБ "ХАЙХЭТ"</span></div>
     </div>
-    <div id="status">▶ ПРОЙДИ УРОВЕНЬ, СОБИРАЙ ТРЕКИ, ПОБЕДИ БОССА</div>
+    <div id="status">▶ ДОБРО ПОЖАЛОВАТЬ В КЛУБ. СОБИРАЙ ТРЕКИ, ДОБЕРИСЬ ДО БОССА</div>
     <button id="restart">RESTART</button>
     <div class="controls-hint">← → | ПРОБЕЛ — АТАКА | ↑ — ПРЫЖОК</div>
 </div>
@@ -126,164 +124,160 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         
+        // Размер мира (огромный уровень)
+        const WORLD_WIDTH = 3500;
+        const WORLD_HEIGHT = 550;
+        let cameraX = 0;
+        
         let gameRunning = true;
-        let currentLevel = 1;
-        let hp = 3;
+        let hp = 5;
         let score = 0;
         let invincibleFrames = 0;
+        let bossDefeated = false;
         
-        // Элементы UI
         const hpSpan = document.getElementById('hp');
         const scoreSpan = document.getElementById('score');
         const levelSpan = document.getElementById('level');
         const statusDiv = document.getElementById('status');
         
         // ============================================
-        // ИГРОК (платформер)
+        // ИГРОК
         // ============================================
         let player = {
-            x: 50,
+            x: 100,
             y: 0,
-            width: 24,
-            height: 28,
+            width: 28,
+            height: 36,
             vx: 0,
             vy: 0,
-            onGround: false,
-            facingRight: true
+            onGround: true,
+            facingRight: true,
+            frame: 0,
+            frameTimer: 0
         };
         
-        const GRAVITY = 0.8;
-        const JUMP_POWER = -11;
-        const WALK_SPEED = 3.5;
+        const GRAVITY = 0.7;
+        const JUMP_POWER = -10;
+        const WALK_SPEED = 4.5;
         
         // Управление
-        const keys = {
-            ArrowLeft: false,
-            ArrowRight: false,
-            ArrowUp: false,
-            Space: false
-        };
-        
+        const keys = { ArrowLeft: false, ArrowRight: false, ArrowUp: false, Space: false };
         let canJump = true;
         let attackTimer = 0;
         let attackActive = false;
-        const ATTACK_DURATION = 8;
+        const ATTACK_DURATION = 7;
         
-        // ГРУНТ (платформы)
+        // ============================================
+        // ПЛАТФОРМЫ И ДЕКОР
+        // ============================================
         let platforms = [];
+        let decorations = [];
         
-        // ============================================
-        // УРОВЕНЬ 1 — КЛУБ
-        // ============================================
-        let level1Enemies = [];
-        let level1Items = [];
-        let level1Boss = null;
-        let bossAttackTimer = 0;
-        let bossProjectiles = [];
-        
-        // Враги
-        const ENEMY_TYPES = {
-            ALKASH: { name: 'Алкаш', color1: '#8860A0', color2: '#604080', speed: 1.2, hp: 2, damage: 1, width: 20, height: 26 },
-            TUSOVSHIK: { name: 'Тусовщик', color1: '#FF69B4', color2: '#FF1493', speed: 1.8, hp: 1, damage: 1, width: 18, height: 24 },
-            PEDOVKA: { name: 'Педовка', color1: '#FFD700', color2: '#FFA500', speed: 1.0, hp: 1, damage: 1, width: 18, height: 24 }
-        };
-        
-        // ============================================
-        // ИНИЦИАЛИЗАЦИЯ УРОВНЕЙ
-        // ============================================
-        function initLevel1() {
-            currentLevel = 1;
-            levelSpan.innerText = "УРОВЕНЬ 1: КЛУБ";
+        function initWorld() {
+            // Пол
+            platforms.push({ x: 0, y: 480, width: WORLD_WIDTH, height: 40 });
             
-            // Платформы
-            platforms = [
-                { x: 0, y: 420, width: 800, height: 30 },           // земля
-                { x: 100, y: 360, width: 80, height: 20 },
-                { x: 250, y: 310, width: 70, height: 20 },
-                { x: 400, y: 260, width: 70, height: 20 },
-                { x: 550, y: 320, width: 80, height: 20 },
-                { x: 680, y: 370, width: 70, height: 20 }
-            ];
+            // Барная стойка (слева)
+            platforms.push({ x: 80, y: 430, width: 120, height: 50 });
+            // Столики и стулья (декор)
+            for (let i = 0; i < 12; i++) {
+                const tableX = 300 + i * 220;
+                if (tableX < WORLD_WIDTH - 500) {
+                    platforms.push({ x: tableX, y: 450, width: 60, height: 30 });
+                    decorations.push({ type: 'table', x: tableX, y: 440 });
+                    decorations.push({ type: 'chair', x: tableX - 25, y: 455 });
+                    decorations.push({ type: 'chair', x: tableX + 60, y: 455 });
+                }
+            }
             
-            // Враги
-            level1Enemies = [];
-            // Алкаш
-            level1Enemies.push({
-                ...ENEMY_TYPES.ALKASH,
-                x: 150, y: 394, hp: 2, direction: 1, type: 'ALKASH'
-            });
-            // Тусовщик
-            level1Enemies.push({
-                ...ENEMY_TYPES.TUSOVSHIK,
-                x: 300, y: 284, hp: 1, direction: -1, type: 'TUSOVSHIK'
-            });
-            // Педовка
-            level1Enemies.push({
-                ...ENEMY_TYPES.PEDOVKA,
-                x: 500, y: 294, hp: 1, direction: 1, type: 'PEDOVKA'
-            });
-            // Алкаш
-            level1Enemies.push({
-                ...ENEMY_TYPES.ALKASH,
-                x: 620, y: 354, hp: 2, direction: -1, type: 'ALKASH'
-            });
+            // Балконы
+            platforms.push({ x: 600, y: 380, width: 100, height: 20 });
+            platforms.push({ x: 900, y: 340, width: 100, height: 20 });
+            platforms.push({ x: 1300, y: 300, width: 100, height: 20 });
+            platforms.push({ x: 1800, y: 340, width: 100, height: 20 });
+            platforms.push({ x: 2200, y: 380, width: 100, height: 20 });
+            platforms.push({ x: 2700, y: 350, width: 100, height: 20 });
             
-            // Предметы (треки)
-            level1Items = [
-                { x: 130, y: 335, width: 10, height: 10, collected: false },
-                { x: 280, y: 285, width: 10, height: 10, collected: false },
-                { x: 430, y: 235, width: 10, height: 10, collected: false },
-                { x: 580, y: 295, width: 10, height: 10, collected: false },
-                { x: 710, y: 345, width: 10, height: 10, collected: false },
-                { x: 200, y: 395, width: 10, height: 10, collected: false }
-            ];
-            
-            // Босс
-            level1Boss = null;
-            bossAttackTimer = 0;
-            bossProjectiles = [];
-            
-            // Игрок
-            player.x = 50;
-            player.y = 0;
-            player.vx = 0;
-            player.vy = 0;
-            player.onGround = true;
-            hp = 3;
-            score = 0;
-            invincibleFrames = 0;
-            updateUI();
-            applyGravity();
+            // Сцена босса
+            platforms.push({ x: WORLD_WIDTH - 450, y: 400, width: 400, height: 80 });
+            platforms.push({ x: WORLD_WIDTH - 400, y: 350, width: 300, height: 50 });
         }
         
-        function spawnBoss() {
-            level1Boss = {
-                x: 700,
-                y: 350,
-                width: 60,
-                height: 60,
-                hp: 12,
-                maxHp: 12,
-                direction: -1,
-                vx: 1.5,
-                shootCooldown: 0
+        // ============================================
+        // ВРАГИ
+        // ============================================
+        let enemies = [];
+        
+        function initEnemies() {
+            enemies = [];
+            // Алкаши (медленные, много хп)
+            enemies.push({ type: 'alkash', x: 350, y: 450, width: 24, height: 32, hp: 3, maxHp: 3, dir: 1, speed: 1.2, frame: 0 });
+            enemies.push({ type: 'alkash', x: 1200, y: 450, width: 24, height: 32, hp: 3, maxHp: 3, dir: -1, speed: 1.2, frame: 0 });
+            enemies.push({ type: 'alkash', x: 2300, y: 350, width: 24, height: 32, hp: 3, maxHp: 3, dir: 1, speed: 1.2, frame: 0 });
+            
+            // Тусовщики (быстрые, мало хп)
+            enemies.push({ type: 'tusovshik', x: 550, y: 450, width: 22, height: 30, hp: 1, maxHp: 1, dir: -1, speed: 2.2, frame: 0 });
+            enemies.push({ type: 'tusovshik', x: 1000, y: 310, width: 22, height: 30, hp: 1, maxHp: 1, dir: 1, speed: 2.2, frame: 0 });
+            enemies.push({ type: 'tusovshik', x: 1500, y: 270, width: 22, height: 30, hp: 1, maxHp: 1, dir: -1, speed: 2.2, frame: 0 });
+            enemies.push({ type: 'tusovshik', x: 2500, y: 320, width: 22, height: 30, hp: 1, maxHp: 1, dir: 1, speed: 2.2, frame: 0 });
+            
+            // Педовки (летающие)
+            enemies.push({ type: 'pedovka', x: 750, y: 350, width: 20, height: 28, hp: 2, maxHp: 2, dir: 1, speed: 1.5, flyY: 0, flyDir: 1, frame: 0 });
+            enemies.push({ type: 'pedovka', x: 1600, y: 300, width: 20, height: 28, hp: 2, maxHp: 2, dir: -1, speed: 1.5, flyY: 0, flyDir: 1, frame: 0 });
+            enemies.push({ type: 'pedovka', x: 2800, y: 320, width: 20, height: 28, hp: 2, maxHp: 2, dir: 1, speed: 1.5, flyY: 0, flyDir: 1, frame: 0 });
+        }
+        
+        // ============================================
+        // ПРЕДМЕТЫ (ТРЕКИ)
+        // ============================================
+        let items = [];
+        
+        function initItems() {
+            items = [];
+            const itemPositions = [200, 450, 680, 950, 1150, 1380, 1650, 1920, 2150, 2420, 2680, 2950, 3200];
+            for (let i = 0; i < itemPositions.length; i++) {
+                items.push({
+                    x: itemPositions[i],
+                    y: 440,
+                    width: 12,
+                    height: 12,
+                    collected: false
+                });
+            }
+        }
+        
+        // ============================================
+        // БОСС
+        // ============================================
+        let boss = null;
+        let bossProjectiles = [];
+        
+        function initBoss() {
+            boss = {
+                x: WORLD_WIDTH - 350,
+                y: 340,
+                width: 70,
+                height: 70,
+                hp: 20,
+                maxHp: 20,
+                vx: 2,
+                dir: -1,
+                shootTimer: 0
             };
-            statusDiv.innerText = "⚠️ МЕРЗКИЙ ДИДЖЕЙ ПОЯВИЛСЯ! АТАКУЙ ПРОБЕЛОМ! ⚠️";
+            bossProjectiles = [];
         }
         
         // ============================================
         // ФИЗИКА
         // ============================================
         function applyGravity() {
-            if (!gameRunning) return;
             player.vy += GRAVITY;
             player.y += player.vy;
             
-            // Проверка платформ
             player.onGround = false;
             for (let p of platforms) {
                 if (player.vy >= 0 && 
-                    player.y + player.height <= p.y + 10 &&
+                    player.y + player.height <= p.y + 15 &&
                     player.y + player.height + player.vy >= p.y &&
                     player.x + player.width > p.x &&
                     player.x < p.x + p.width) {
@@ -294,32 +288,43 @@
                 }
             }
             
-            // Падение в бездну
-            if (player.y > canvas.height) {
+            if (player.y > WORLD_HEIGHT) {
                 if (invincibleFrames <= 0) {
                     hp--;
                     updateUI();
-                    invincibleFrames = 40;
+                    invincibleFrames = 50;
                     if (hp <= 0) gameOver();
-                    else resetPlayerPosition();
+                    else playerRespawn();
                 }
             }
             
-            // Движение по горизонтали
             player.vx = 0;
-            if (keys.ArrowLeft) player.vx = -WALK_SPEED;
-            if (keys.ArrowRight) player.vx = WALK_SPEED;
+            if (keys.ArrowLeft && player.x > 0) player.vx = -WALK_SPEED;
+            if (keys.ArrowRight && player.x < WORLD_WIDTH - player.width) player.vx = WALK_SPEED;
             player.x += player.vx;
             
-            // Границы
-            player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+            if (player.vx !== 0) {
+                player.facingRight = player.vx > 0;
+                player.frameTimer++;
+                if (player.frameTimer > 8) {
+                    player.frame = (player.frame + 1) % 4;
+                    player.frameTimer = 0;
+                }
+            } else {
+                player.frame = 0;
+            }
+            
+            // Камера
+            let targetCamera = player.x - canvas.width / 2;
+            targetCamera = Math.max(0, Math.min(WORLD_WIDTH - canvas.width, targetCamera));
+            cameraX = targetCamera;
         }
         
-        function resetPlayerPosition() {
-            player.x = 50;
+        function playerRespawn() {
+            player.x = 100;
             player.y = 0;
             player.vy = 0;
-            applyGravity();
+            player.vx = 0;
         }
         
         function jump() {
@@ -330,40 +335,36 @@
             }
         }
         
-        // ============================================
-        // АТАКА
-        // ============================================
         function attack() {
             if (attackTimer > 0) return;
             attackActive = true;
             attackTimer = ATTACK_DURATION;
             
-            // Атака по врагам
-            const attackX = player.x + (player.facingRight ? player.width : -20);
-            const attackW = 25;
+            const attackX = player.x + (player.facingRight ? player.width : -25);
+            const attackW = 30;
+            const attackY = player.y;
+            const attackH = player.height;
             
-            for (let i = 0; i < level1Enemies.length; i++) {
-                const e = level1Enemies[i];
+            for (let i = 0; i < enemies.length; i++) {
+                const e = enemies[i];
                 if (attackX < e.x + e.width && attackX + attackW > e.x &&
-                    player.y < e.y + e.height && player.y + player.height > e.y) {
+                    attackY < e.y + e.height && attackY + attackH > e.y) {
                     e.hp--;
                     if (e.hp <= 0) {
-                        level1Enemies.splice(i,1);
-                        i--;
+                        enemies.splice(i,1);
                         score += 10;
                         updateUI();
                     }
                 }
             }
             
-            // Атака по боссу
-            if (level1Boss) {
-                if (attackX < level1Boss.x + level1Boss.width && attackX + attackW > level1Boss.x &&
-                    player.y < level1Boss.y + level1Boss.height && player.y + player.height > level1Boss.y) {
-                    level1Boss.hp--;
-                    if (level1Boss.hp <= 0) {
-                        level1Boss = null;
-                        statusDiv.innerText = "✅ БОСС ПОБЕЖДЁН! УРОВЕНЬ ПРОЙДЕН!";
+            if (boss && !bossDefeated) {
+                if (attackX < boss.x + boss.width && attackX + attackW > boss.x &&
+                    attackY < boss.y + boss.height && attackY + attackH > boss.y) {
+                    boss.hp--;
+                    if (boss.hp <= 0) {
+                        bossDefeated = true;
+                        statusDiv.innerText = "✅ БОСС ПОБЕЖДЁН! КЛУБ СПАСЁН! ПЕРЕХОД...";
                         setTimeout(() => {
                             window.location.href = "final.html";
                         }, 2500);
@@ -376,21 +377,26 @@
         // ЛОГИКА ВРАГОВ
         // ============================================
         function updateEnemies() {
-            for (let e of level1Enemies) {
-                e.x += e.speed * e.direction;
-                if (e.x <= 0 || e.x + e.width >= canvas.width) {
-                    e.direction *= -1;
+            for (let e of enemies) {
+                if (e.type === 'pedovka') {
+                    e.x += e.speed * e.dir;
+                    e.flyY += e.flyDir * 2;
+                    if (e.flyY > 15 || e.flyY < -15) e.flyDir *= -1;
+                } else {
+                    e.x += e.speed * e.dir;
                 }
+                if (e.x <= 0 || e.x + e.width >= WORLD_WIDTH) e.dir *= -1;
                 
-                // Столкновение с игроком
+                e.frame = (e.frame + 0.1) % 4;
+                
                 if (player.x < e.x + e.width && player.x + player.width > e.x &&
                     player.y < e.y + e.height && player.y + player.height > e.y) {
                     if (invincibleFrames <= 0) {
                         hp--;
                         updateUI();
-                        invincibleFrames = 40;
+                        invincibleFrames = 50;
                         if (hp <= 0) gameOver();
-                        else resetPlayerPosition();
+                        else playerRespawn();
                     }
                 }
             }
@@ -400,8 +406,8 @@
         // ПРЕДМЕТЫ
         // ============================================
         function updateItems() {
-            for (let i = 0; i < level1Items.length; i++) {
-                const item = level1Items[i];
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
                 if (item.collected) continue;
                 if (player.x < item.x + item.width && player.x + player.width > item.x &&
                     player.y < item.y + item.height && player.y + player.height > item.y) {
@@ -410,50 +416,41 @@
                     updateUI();
                 }
             }
-            
-            // Спавн босса после сбора 3 предметов
-            const collectedCount = level1Items.filter(i => i.collected).length;
-            if (collectedCount >= 3 && !level1Boss && gameRunning) {
-                spawnBoss();
-            }
         }
         
         // ============================================
         // БОСС
         // ============================================
         function updateBoss() {
-            if (!level1Boss) return;
+            if (!boss || bossDefeated) return;
             
-            // Движение
-            level1Boss.x += level1Boss.vx * level1Boss.direction;
-            if (level1Boss.x <= 50 || level1Boss.x + level1Boss.width >= canvas.width - 50) {
-                level1Boss.direction *= -1;
+            boss.x += boss.vx * boss.dir;
+            if (boss.x <= WORLD_WIDTH - 550 || boss.x + boss.width >= WORLD_WIDTH - 150) {
+                boss.dir *= -1;
             }
             
-            // Стрельба
-            if (level1Boss.shootCooldown <= 0) {
+            boss.shootTimer++;
+            if (boss.shootTimer > 40) {
+                boss.shootTimer = 0;
                 bossProjectiles.push({
-                    x: level1Boss.x + level1Boss.width/2 - 8,
-                    y: level1Boss.y + level1Boss.height,
-                    width: 12,
-                    height: 12,
-                    vy: 5
+                    x: boss.x + boss.width/2 - 10,
+                    y: boss.y + boss.height,
+                    width: 16,
+                    height: 16,
+                    vy: 4,
+                    vx: (Math.random() - 0.5) * 3
                 });
-                level1Boss.shootCooldown = 45;
-            } else {
-                level1Boss.shootCooldown--;
             }
             
-            // Движение снарядов
             for (let i = 0; i < bossProjectiles.length; i++) {
+                bossProjectiles[i].x += bossProjectiles[i].vx;
                 bossProjectiles[i].y += bossProjectiles[i].vy;
-                if (bossProjectiles[i].y > canvas.height) {
+                if (bossProjectiles[i].y > WORLD_HEIGHT || bossProjectiles[i].x < -50 || bossProjectiles[i].x > WORLD_WIDTH + 50) {
                     bossProjectiles.splice(i,1);
                     i--;
                     continue;
                 }
                 
-                // Столкновение с игроком
                 if (player.x < bossProjectiles[i].x + bossProjectiles[i].width &&
                     player.x + player.width > bossProjectiles[i].x &&
                     player.y < bossProjectiles[i].y + bossProjectiles[i].height &&
@@ -462,9 +459,9 @@
                     if (invincibleFrames <= 0) {
                         hp--;
                         updateUI();
-                        invincibleFrames = 40;
+                        invincibleFrames = 50;
                         if (hp <= 0) gameOver();
-                        else resetPlayerPosition();
+                        else playerRespawn();
                     }
                     i--;
                 }
@@ -482,124 +479,189 @@
         function gameOver() {
             gameRunning = false;
             statusDiv.innerText = "💀 ПОРАЖЕНИЕ 💀 НАЖМИТЕ RESTART";
-            statusDiv.style.color = "#ff3366";
         }
         
         // ============================================
         // ОТРИСОВКА
         // ============================================
+        function drawBackground() {
+            // Стены клуба
+            ctx.fillStyle = "#1a0000";
+            ctx.fillRect(0, 0, canvas.width, 480);
+            
+            // Дискошар
+            ctx.beginPath();
+            ctx.arc(cameraX + canvas.width - 100, 80, 30, 0, Math.PI*2);
+            ctx.fillStyle = "#C0C0C0";
+            ctx.fill();
+            for (let i = 0; i < 20; i++) {
+                ctx.fillStyle = i % 2 === 0 ? "#FFD700" : "#FF69B4";
+                ctx.beginPath();
+                ctx.arc(cameraX + canvas.width - 100 + (Math.random() - 0.5)*25, 80 + (Math.random() - 0.5)*25, 3, 0, Math.PI*2);
+                ctx.fill();
+            }
+            
+            // Бар
+            ctx.fillStyle = "#8B4513";
+            ctx.fillRect(cameraX + 80, 420, 120, 60);
+            ctx.fillStyle = "#D2691E";
+            for (let i = 0; i < 5; i++) {
+                ctx.fillRect(cameraX + 90 + i*20, 430, 8, 40);
+            }
+            
+            // Столики и стулья
+            for (let d of decorations) {
+                if (d.type === 'table') {
+                    ctx.fillStyle = "#8B4513";
+                    ctx.fillRect(d.x - cameraX, d.y, 50, 10);
+                } else if (d.type === 'chair') {
+                    ctx.fillStyle = "#654321";
+                    ctx.fillRect(d.x - cameraX, d.y, 15, 20);
+                }
+            }
+        }
+        
         function drawPlayer() {
-            // Диджей Сон
+            let x = player.x - cameraX;
+            let y = player.y;
+            
+            // Олимпийка
             ctx.fillStyle = "#CC0000";
-            ctx.fillRect(player.x, player.y, player.width, player.height);
-            // Олимпийка белые полосы
+            ctx.fillRect(x, y, player.width, player.height);
             ctx.fillStyle = "#FFFFFF";
-            ctx.fillRect(player.x + 6, player.y + 8, 5, 8);
-            ctx.fillRect(player.x + 13, player.y + 8, 5, 8);
-            // Лицо
+            ctx.fillRect(x + 6, y + 10, 6, 10);
+            ctx.fillRect(x + 16, y + 10, 6, 10);
+            // Голова
             ctx.fillStyle = "#FFDAB9";
-            ctx.fillRect(player.x + 4, player.y + 4, 6, 6);
-            ctx.fillRect(player.x + 14, player.y + 4, 6, 6);
+            ctx.fillRect(x + 6, y + 2, 16, 18);
             // Наушники
             ctx.fillStyle = "#222";
-            ctx.fillRect(player.x + 2, player.y - 3, 20, 6);
+            ctx.fillRect(x + 4, y - 2, 20, 8);
             ctx.fillStyle = "#555";
-            ctx.fillRect(player.x + 4, player.y - 1, 16, 3);
+            ctx.fillRect(x + 8, y, 12, 4);
+            // Глаза
+            ctx.fillStyle = "#000";
+            ctx.fillRect(x + 10, y + 8, 3, 4);
+            ctx.fillRect(x + 18, y + 8, 3, 4);
             
             // Атака
             if (attackTimer > 0) {
-                const attackX = player.x + (player.facingRight ? player.width : -20);
+                const attackX = x + (player.facingRight ? player.width : -25);
                 ctx.fillStyle = "#FF6600";
-                ctx.fillRect(attackX, player.y, 20, player.height);
+                ctx.fillRect(attackX, y, 25, player.height);
+            }
+            
+            // Ноги (ходьба)
+            ctx.fillStyle = "#222";
+            if (player.frame % 2 === 0) {
+                ctx.fillRect(x + 5, y + player.height - 6, 8, 8);
+                ctx.fillRect(x + 15, y + player.height - 10, 8, 12);
+            } else {
+                ctx.fillRect(x + 5, y + player.height - 10, 8, 12);
+                ctx.fillRect(x + 15, y + player.height - 6, 8, 8);
             }
         }
         
         function drawEnemies() {
-            for (let e of level1Enemies) {
-                ctx.fillStyle = e.color1;
-                ctx.fillRect(e.x, e.y, e.width, e.height);
-                ctx.fillStyle = e.color2;
-                ctx.fillRect(e.x + 3, e.y + 5, e.width - 6, 8);
-                // Глаза
-                ctx.fillStyle = "#FFF";
-                ctx.fillRect(e.x + 4, e.y + 12, 5, 5);
-                ctx.fillRect(e.x + e.width - 9, e.y + 12, 5, 5);
-                ctx.fillStyle = "#000";
-                ctx.fillRect(e.x + 5, e.y + 13, 3, 3);
-                ctx.fillRect(e.x + e.width - 8, e.y + 13, 3, 3);
+            for (let e of enemies) {
+                let x = e.x - cameraX;
+                let y = e.y;
+                if (e.type === 'alkash') {
+                    ctx.fillStyle = "#8860A0";
+                    ctx.fillRect(x, y, e.width, e.height);
+                    ctx.fillStyle = "#604080";
+                    ctx.fillRect(x + 4, y + 5, e.width - 8, 8);
+                    ctx.fillStyle = "#FFF";
+                    ctx.fillRect(x + 5, y + 12, 5, 5);
+                    ctx.fillRect(x + e.width - 10, y + 12, 5, 5);
+                    ctx.fillStyle = "#000";
+                    ctx.fillRect(x + 6, y + 13, 3, 3);
+                    ctx.fillRect(x + e.width - 9, y + 13, 3, 3);
+                } else if (e.type === 'tusovshik') {
+                    ctx.fillStyle = "#FF69B4";
+                    ctx.fillRect(x, y, e.width, e.height);
+                    ctx.fillStyle = "#FF1493";
+                    ctx.fillRect(x + 4, y + 5, e.width - 8, 8);
+                    ctx.fillStyle = "#FFF";
+                    ctx.fillRect(x + 4, y + 12, 5, 5);
+                    ctx.fillRect(x + e.width - 9, y + 12, 5, 5);
+                } else if (e.type === 'pedovka') {
+                    ctx.fillStyle = "#FFD700";
+                    ctx.fillRect(x, y + e.flyY, e.width, e.height);
+                    ctx.fillStyle = "#FFA500";
+                    ctx.fillRect(x + 4, y + 5 + e.flyY, e.width - 8, 8);
+                    ctx.fillStyle = "#FFF";
+                    ctx.fillRect(x + 4, y + 12 + e.flyY, 5, 5);
+                    ctx.fillRect(x + e.width - 9, y + 12 + e.flyY, 5, 5);
+                }
+                // Полоска здоровья
+                ctx.fillStyle = "#FF0000";
+                ctx.fillRect(x, y - 6, e.width * (e.hp / e.maxHp), 3);
             }
         }
         
         function drawBoss() {
-            if (!level1Boss) return;
+            if (!boss || bossDefeated) return;
+            let x = boss.x - cameraX;
+            let y = boss.y;
             ctx.fillStyle = "#8B0000";
-            ctx.fillRect(level1Boss.x, level1Boss.y, level1Boss.width, level1Boss.height);
+            ctx.fillRect(x, y, boss.width, boss.height);
             ctx.fillStyle = "#FF4444";
-            ctx.fillRect(level1Boss.x + 10, level1Boss.y + 10, 15, 12);
-            ctx.fillRect(level1Boss.x + 35, level1Boss.y + 10, 15, 12);
+            ctx.fillRect(x + 15, y + 10, 15, 15);
+            ctx.fillRect(x + 40, y + 10, 15, 15);
             ctx.fillStyle = "#FF6666";
-            ctx.fillRect(level1Boss.x + 20, level1Boss.y + 35, 20, 15);
-            // Полоска здоровья
+            ctx.fillRect(x + 25, y + 40, 20, 15);
             ctx.fillStyle = "#FF0000";
-            ctx.fillRect(level1Boss.x, level1Boss.y - 8, level1Boss.width * (level1Boss.hp / level1Boss.maxHp), 4);
+            ctx.fillRect(x, y - 8, boss.width * (boss.hp / boss.maxHp), 4);
+            
+            // Диджейский пульт
+            ctx.fillStyle = "#333";
+            ctx.fillRect(x + 10, y + boss.height - 15, boss.width - 20, 15);
+            for (let i = 0; i < 5; i++) {
+                ctx.fillStyle = i % 2 === 0 ? "#0F0" : "#F00";
+                ctx.fillRect(x + 20 + i*8, y + boss.height - 10, 4, 8);
+            }
             
             // Пластинки
             for (let p of bossProjectiles) {
-                ctx.fillStyle = "#333";
-                ctx.fillRect(p.x, p.y, p.width, p.height);
-                ctx.fillStyle = "#888";
-                ctx.fillRect(p.x + 3, p.y + 3, p.width - 6, p.height - 6);
+                ctx.fillStyle = "#222";
+                ctx.fillRect(p.x - cameraX, p.y, p.width, p.height);
+                ctx.fillStyle = "#666";
+                ctx.fillRect(p.x - cameraX + 4, p.y + 4, p.width - 8, p.height - 8);
             }
         }
         
         function drawItems() {
-            for (let item of level1Items) {
+            for (let item of items) {
                 if (item.collected) continue;
                 ctx.fillStyle = "#FFD700";
-                ctx.fillRect(item.x, item.y, item.width, item.height);
+                ctx.fillRect(item.x - cameraX, item.y, item.width, item.height);
                 ctx.fillStyle = "#FFA500";
-                ctx.fillRect(item.x + 2, item.y + 2, item.width - 4, item.height - 4);
+                ctx.fillRect(item.x - cameraX + 3, item.y + 3, item.width - 6, item.height - 6);
             }
         }
         
         function drawPlatforms() {
-            ctx.fillStyle = "#2a2a2a";
             for (let p of platforms) {
-                ctx.fillRect(p.x, p.y, p.width, p.height);
                 ctx.fillStyle = "#3a3a3a";
-                ctx.fillRect(p.x, p.y, p.width, 3);
-                ctx.fillStyle = "#2a2a2a";
+                ctx.fillRect(p.x - cameraX, p.y, p.width, p.height);
+                ctx.fillStyle = "#5a5a5a";
+                ctx.fillRect(p.x - cameraX, p.y, p.width, 4);
             }
         }
         
         function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Фон (клуб)
-            if (currentLevel === 1) {
-                ctx.fillStyle = "#1a0000";
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                // Сетка
-                ctx.strokeStyle = "#330000";
-                for (let i = 0; i < canvas.width; i += 50) {
-                    ctx.beginPath();
-                    ctx.moveTo(i, 0);
-                    ctx.lineTo(i, canvas.height);
-                    ctx.stroke();
-                }
-            }
-            
+            drawBackground();
             drawPlatforms();
             drawItems();
             drawEnemies();
             drawBoss();
             drawPlayer();
             
-            // Индикатор неуязвимости
             if (invincibleFrames > 0) {
                 ctx.globalAlpha = 0.5;
                 ctx.fillStyle = "#FFF";
-                ctx.fillRect(player.x, player.y, player.width, player.height);
+                ctx.fillRect(player.x - cameraX, player.y, player.width, player.height);
                 ctx.globalAlpha = 1;
                 invincibleFrames--;
             }
@@ -614,11 +676,8 @@
             if (e.key === 'ArrowLeft') keys.ArrowLeft = true;
             if (e.key === 'ArrowRight') keys.ArrowRight = true;
             if (e.key === 'ArrowUp') jump();
-            if (e.key === ' ') {
-                attack();
-                e.preventDefault();
-            }
-            if (e.key === ' ' || e.key === 'ArrowUp') e.preventDefault();
+            if (e.key === ' ') { attack(); e.preventDefault(); }
+            if (e.key === 'ArrowUp') e.preventDefault();
         });
         
         window.addEventListener('keyup', (e) => {
@@ -635,10 +694,6 @@
                 updateEnemies();
                 updateItems();
                 updateBoss();
-                
-                // Обновление направления взгляда игрока
-                if (keys.ArrowRight) player.facingRight = true;
-                if (keys.ArrowLeft) player.facingRight = false;
             }
             draw();
             requestAnimationFrame(gameLoop);
@@ -648,19 +703,33 @@
         // ПЕРЕЗАПУСК
         // ============================================
         document.getElementById('restart').addEventListener('click', () => {
-            initLevel1();
             gameRunning = true;
-            statusDiv.innerText = "▶ ПРОЙДИ УРОВЕНЬ, СОБИРАЙ ТРЕКИ, ПОБЕДИ БОССА";
-            statusDiv.style.color = "#ff6699";
+            hp = 5;
+            score = 0;
+            invincibleFrames = 0;
+            bossDefeated = false;
+            updateUI();
+            initWorld();
+            initEnemies();
+            initItems();
+            initBoss();
+            player.x = 100;
+            player.y = 0;
+            player.vy = 0;
+            player.vx = 0;
+            statusDiv.innerText = "▶ ДОБРО ПОЖАЛОВАТЬ В КЛУБ. СОБИРАЙ ТРЕКИ, ДОБЕРИСЬ ДО БОССА";
         });
         
         // ============================================
         // ЗАПУСК
         // ============================================
-        initLevel1();
+        initWorld();
+        initEnemies();
+        initItems();
+        initBoss();
         gameLoop();
         
-        console.log("🎮 DJ SON — RAVE RESCUE | Famicom Style");
+        console.log("🎧 DJ SON — CLUB BATTLE | Sega Mega Drive Style");
     })();
 </script>
 
