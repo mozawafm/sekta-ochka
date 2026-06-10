@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>DJ Son — Beat the Bass</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    user-select: none;
+}
+
+body {
+    margin: 0;
+    overflow: hidden;
+    background: black;
+    color: #0f0;
+    font-family: 'Courier New', monospace;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    position: relative;
+}
+
+/* Шум */
+.noise {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("https://media.tenor.com/oEIh4sO8jKAAAAAC/static.gif");
+    opacity: 0.06;
+    mix-blend-mode: screen;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.game-container {
+    position: relative;
+    z-index: 20;
+    text-align: center;
+    background: #000;
+    padding: 15px;
+    border: 1px solid #ff3366;
+    box-shadow: 0 0 20px rgba(255,51,102,0.2);
+}
+
+canvas {
+    display: block;
+    margin: 0 auto;
+    border: 1px solid #ff3366;
+    cursor: none;
+}
+
+#info {
+    margin-top: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 30px;
+    font-size: 12px;
+    letter-spacing: 2px;
+}
+
+#level {
+    color: #ff3366;
+}
+
+#hp {
+    color: #ff3366;
+}
+
+#score {
+    color: #ff3366;
+}
+
+#status {
+    margin-top: 10px;
+    font-size: 10px;
+    opacity: 0.7;
+}
+
+#restart {
+    margin-top: 12px;
+    padding: 6px 18px;
+    background: black;
+    border: 1px solid #ff3366;
+    color: #ff3366;
+    font-family: monospace;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+#restart:hover {
+    background: #ff3366;
+    color: black;
+}
+
+.hint {
+    position: fixed;
+    bottom: 15px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 9px;
+    opacity: 0.2;
+    z-index: 20;
+    letter-spacing: 2px;
+    color: #ff3366;
+}
+
+/* Вспышка */
+.flash {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #fff8e0;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 1000;
+    transition: opacity 0.05s;
+}
+</style>
+</head>
+<body>
+
+<div class="noise"></div>
+<div class="flash" id="flash"></div>
+
+<div class="game-container">
+    <canvas id="gameCanvas" width="800" height="450"></canvas>
+    <div id="info">
+        <span id="level">УРОВЕНЬ 1: КЛУБ</span>
+        <span id="hp">❤️ 3</span>
+        <span id="score">🎵 0</span>
+    </div>
+    <div id="status">▶ ИГРА ЗАГРУЖЕНА</div>
+    <button id="restart">RESTART</button>
+</div>
+
+<div class="hint">[ ДИДЖЕЙ СОН — BEAT THE BASS ]</div>
+
+<script>
+    (function(){
+        // ============================================
+        // НАСТРОЙКИ
+        // ============================================
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const levelSpan = document.getElementById('level');
+        const hpSpan = document.getElementById('hp');
+        const scoreSpan = document.getElementById('score');
+        const statusDiv = document.getElementById('status');
+        const flashDiv = document.getElementById('flash');
+        
+        let gameRunning = true;
+        let currentLevel = 1;
+        let hp = 3;
+        let score = 0;
+        let invincibleFrames = 0;
+        
+        // Размеры игрока (Диджей Сон)
+        const PLAYER_SIZE = 24;
+        let player = { x: canvas.width / 2 - PLAYER_SIZE/2, y: canvas.height - 70 };
+        
+        // ============================================
+        // УРОВЕНЬ 1: КЛУБ
+        // ============================================
+        let level1Items = [];
+        let level1Enemies = [];
+        let level1Boss = null;
+        let bossProjectiles = [];
+        
+        // УРОВЕНЬ 2: ОПЕН-ЭЙР
+        let level2Items = [];
+        let level2Enemies = [];
+        let level2Boss = null;
+        let bossSmoke = [];
+        
+        // Общие
+        let currentItems = [];
+        let currentEnemies = [];
+        let currentBoss = null;
+        let currentProjectiles = [];
+        
+        // Управление
+        const keys = { ArrowLeft: false, ArrowRight: false, ArrowUp: false, ArrowDown: false };
+        const SPEED = 4;
+        
+        // ============================================
+        // ВСПОМОГАТЕЛЬНЫЕ
+        // ============================================
+        function doFlash() {
+            flashDiv.style.opacity = '0.3';
+            setTimeout(() => { flashDiv.style.opacity = '0'; }, 80);
+        }
+        
+        function updateUI() {
+            hpSpan.innerText = `❤️ ${hp}`;
+            scoreSpan.innerText = `🎵 ${score}`;
+        }
+        
+        // ============================================
+        // УРОВЕНЬ 1: КЛУБ (БОСС — МЕРЗКИЙ ДИДЖЕЙ)
+        // ============================================
+        function initLevel1() {
+            level1Items = [];
+            // Предметы — аудиодорожки (нужно собрать 10 для доступа к боссу)
+            for (let i = 0; i < 12; i++) {
+                level1Items.push({
+                    x: 40 + Math.random() * (canvas.width - 80),
+                    y: 40 + Math.random() * (canvas.height - 150),
+                    size: 12,
+                    collected: false,
+                    type: 'track'
+                });
+            }
+            
+            // Враги — пьяные танцоры (медленно двигаются)
+            level1Enemies = [];
+            for (let i = 0; i < 4; i++) {
+                level1Enemies.push({
+                    x: 50 + Math.random() * (canvas.width - 100),
+                    y: 50 + Math.random() * (canvas.height - 200),
+                    size: 18,
+                    vx: (Math.random() - 0.5) * 1.5,
+                    vy: (Math.random() - 0.5) * 1.5
+                });
+            }
+            
+            // Босс появляется после сбора 10 предметов
+            level1Boss = null;
+            bossProjectiles = [];
+        }
+        
+        function spawnLevel1Boss() {
+            level1Boss = {
+                x: canvas.width / 2 - 40,
+                y: 50,
+                width: 80,
+                height: 60,
+                hp: 8,
+                maxHp: 8,
+                shootTimer: 0
+            };
+            statusDiv.innerText = "⚠️ МЕРЗКИЙ ДИДЖЕЙ ПОЯВИЛСЯ! ⚠️";
+            doFlash();
+        }
+        
+        function updateLevel1Boss() {
+            if (!level1Boss) return;
+            
+            // Движение босса влево-вправо
+            if (!level1Boss.dir) level1Boss.dir = 1;
+            level1Boss.x += level1Boss.dir * 1.5;
+            if (level1Boss.x <= 50 || level1Boss.x + level1Boss.width >= canvas.width - 50) {
+                level1Boss.dir *= -1;
+            }
+            
+            // Стрельба пластинками
+            level1Boss.shootTimer++;
+            if (level1Boss.shootTimer > 45) {
+                level1Boss.shootTimer = 0;
+                bossProjectiles.push({
+                    x: level1Boss.x + level1Boss.width/2 - 10,
+                    y: level1Boss.y + level1Boss.height,
+                    size: 14,
+                    vy: 3
+                });
+            }
+            
+            // Обновление снарядов
+            for (let i = 0; i < bossProjectiles.length; i++) {
+                bossProjectiles[i].y += bossProjectiles[i].vy;
+                if (bossProjectiles[i].y > canvas.height) {
+                    bossProjectiles.splice(i,1);
+                    i--;
+                }
+            }
+            
+            // Проверка попадания по игроку
+            for (let i = 0; i < bossProjectiles.length; i++) {
+                const p = bossProjectiles[i];
+                if (player.x < p.x + p.size &&
+                    player.x + PLAYER_SIZE > p.x &&
+                    player.y < p.y + p.size &&
+                    player.y + PLAYER_SIZE > p.y) {
+                    bossProjectiles.splice(i,1);
+                    if (invincibleFrames <= 0) {
+                        hp--;
+                        updateUI();
+                        invincibleFrames = 30;
+                        doFlash();
+                        if (hp <= 0) lose();
+                    }
+                    i--;
+                }
+            }
+        }
+        
+        function drawLevel1Boss() {
+            if (!level1Boss) return;
+            // Мерзкий диджей
+            ctx.fillStyle = "#8B0000";
+            ctx.fillRect(level1Boss.x, level1Boss.y, level1Boss.width, level1Boss.height);
+            ctx.fillStyle = "#FF4444";
+            ctx.fillRect(level1Boss.x + 10, level1Boss.y + 10, 20, 15);
+            ctx.fillRect(level1Boss.x + 50, level1Boss.y + 10, 20, 15);
+            ctx.fillStyle = "#FF6666";
+            ctx.fillRect(level1Boss.x + 30, level1Boss.y + 35, 20, 10);
+            // Полоска здоровья
+            ctx.fillStyle = "#FF0000";
+            ctx.fillRect(level1Boss.x, level1Boss.y - 8, level1Boss.width * (level1Boss.hp / level1Boss.maxHp), 4);
+            
+            // Пластинки
+            for (let p of bossProjectiles) {
+                ctx.fillStyle = "#333";
+                ctx.fillRect(p.x, p.y, p.size, p.size);
+                ctx.fillStyle = "#888";
+                ctx.fillRect(p.x + 3, p.y + 3, p.size - 6, p.size - 6);
+            }
+        }
+        
+        function checkLevel1Collisions() {
+            // Сбор предметов
+            for (let i = 0; i < level1Items.length; i++) {
+                const item = level1Items[i];
+                if (item.collected) continue;
+                if (player.x < item.x + item.size &&
+                    player.x + PLAYER_SIZE > item.x &&
+                    player.y < item.y + item.size &&
+                    player.y + PLAYER_SIZE > item.y) {
+                    item.collected = true;
+                    score++;
+                    updateUI();
+                    doFlash();
+                    
+                    // Спавним босса после 10 предметов
+                    if (score >= 10 && !level1Boss) {
+                        spawnLevel1Boss();
+                    }
+                }
+            }
+            
+            // Столкновение с врагами
+            for (let i = 0; i < level1Enemies.length; i++) {
+                const e = level1Enemies[i];
+                if (player.x < e.x + e.size &&
+                    player.x + PLAYER_SIZE > e.x &&
+                    player.y < e.y + e.size &&
+                    player.y + PLAYER_SIZE > e.y) {
+                    if (invincibleFrames <= 0) {
+                        hp--;
+                        updateUI();
+                        invincibleFrames = 30;
+                        doFlash();
+                        if (hp <= 0) lose();
+                    }
+                }
+            }
+            
+            // Столкновение с боссом
+            if (level1Boss) {
+                if (player.x < level1Boss.x + level1Boss.width &&
+                    player.x + PLAYER_SIZE > level1Boss.x &&
+                    player.y < level1Boss.y + level1Boss.height &&
+                    player.y + PLAYER_SIZE > level1Boss.y) {
+                    if (invincibleFrames <= 0) {
+                        hp--;
+                        updateUI();
+                        invincibleFrames = 30;
+                        doFlash();
+                        if (hp <= 0) lose();
+                    }
+                }
+            }
+        }
+        
+        function attackBoss() {
+            if (!level1Boss) return;
+            // Атака на босса (когда игрок под ним и нажата атака)
+            if (player.y + PLAYER_SIZE > level1Boss.y && player.y < level1Boss.y + level1Boss.height) {
+                if (player.x + PLAYER_SIZE > level1Boss.x && player.x < level1Boss.x + level1Boss.width) {
+                    level1Boss.hp--;
+                    doFlash();
+                    if (level1Boss.hp <= 0) {
+                        // Победа на уровне 1
+                        level1Boss = null;
+                        statusDiv.innerText = "✅ УРОВЕНЬ 1 ПРОЙДЕН! ПЕРЕХОД...";
+                        setTimeout(() => {
+                            goToLevel2();
+                        }, 2000);
+                    }
+                }
+            }
+        }
+        
+        // ============================================
+        // УРОВЕНЬ 2: ОПЕН-ЭЙР (БОСС — СТРЕМНЫЙ НОРК)
+        // ============================================
+        function initLevel2() {
+            level2Items = [];
+            for (let i = 0; i < 10; i++) {
+                level2Items.push({
+                    x: 40 + Math.random() * (canvas.width - 80),
+                    y: 40 + Math.random() * (canvas.height - 150),
+                    size: 12,
+                    collected: false,
+                    type: 'leaf'
+                });
+            }
+            
+            level2Enemies = [];
+            for (let i = 0; i < 5; i++) {
+                level2Enemies.push({
+                    x: 50 + Math.random() * (canvas.width - 100),
+                    y: 50 + Math.random() * (canvas.height - 200),
+                    size: 16,
+                    vx: (Math.random() - 0.5) * 1.8,
+                    vy: (Math.random() - 0.5) * 1.8
+                });
+            }
+            
+            level2Boss = {
+                x: canvas.width / 2 - 50,
+                y: 40,
+                width: 100,
+                height: 70,
+                hp: 10,
+                maxHp: 10,
+                breathTimer: 0
+            };
+            bossSmoke = [];
+            statusDiv.innerText = "💨 СТРЕМНЫЙ НОРК ПОЯВИЛСЯ! 💨";
+        }
+        
+        function updateLevel2Boss() {
+            if (!level2Boss) return;
+            
+            // Движение
+            if (!level2Boss.dir) level2Boss.dir = 1;
+            level2Boss.x += level2Boss.dir * 1.2;
+            if (level2Boss.x <= 30 || level2Boss.x + level2Boss.width >= canvas.width - 30) {
+                level2Boss.dir *= -1;
+            }
+            
+            // Выдувание дыма
+            level2Boss.breathTimer++;
+            if (level2Boss.breathTimer > 60) {
+                level2Boss.breathTimer = 0;
+                // 3 струи дыма
+                for (let i = 0; i < 3; i++) {
+                    bossSmoke.push({
+                        x: level2Boss.x + 20 + i * 30,
+                        y: level2Boss.y + level2Boss.height,
+                        size: 15 + Math.random() * 10,
+                        vy: 2 + Math.random() * 2,
+                        vx: (Math.random() - 0.5) * 1.5
+                    });
+                }
+            }
+            
+            // Движение дыма
+            for (let i = 0; i < bossSmoke.length; i++) {
+                bossSmoke[i].x += bossSmoke[i].vx;
+                bossSmoke[i].y += bossSmoke[i].vy;
+                if (bossSmoke[i].y > canvas.height || bossSmoke[i].x < -50 || bossSmoke[i].x > canvas.width + 50) {
+                    bossSmoke.splice(i,1);
+                    i--;
+                }
+            }
+            
+            // Проверка попадания дыма в игрока
+            for (let i = 0; i < bossSmoke.length; i++) {
+                const s = bossSmoke[i];
+                if (player.x < s.x + s.size &&
+                    player.x + PLAYER_SIZE > s.x &&
+                    player.y < s.y + s.size &&
+                    player.y + PLAYER_SIZE > s.y) {
+                    bossSmoke.splice(i,1);
+                    if (invincibleFrames <= 0) {
+                        hp--;
+                        updateUI();
+                        invincibleFrames = 30;
+                        doFlash();
+                        if (hp <= 0) lose();
+                    }
+                    i--;
+                }
+            }
+        }
+        
+        function drawLevel2Boss() {
+            if (!level2Boss) return;
+            // Стремный Норк
+            ctx.fillStyle = "#2F4F2F";
+            ctx.fillRect(level2Boss.x, level2Boss.y, level2Boss.width, level2Boss.height);
+            ctx.fillStyle = "#556B2F";
+            ctx.fillRect(level2Boss.x + 15, level2Boss.y + 10, 20, 15);
+            ctx.fillRect(level2Boss.x + 65, level2Boss.y + 10, 20, 15);
+            ctx.fillStyle = "#8B7355";
+            ctx.fillRect(level2Boss.x + 40, level2Boss.y + 35, 20, 15);
+            // Полоска здоровья
+            ctx.fillStyle = "#FF0000";
+            ctx.fillRect(level2Boss.x, level2Boss.y - 8, level2Boss.width * (level2Boss.hp / level2Boss.maxHp), 4);
+            
+            // Дым
+            for (let s of bossSmoke) {
+                ctx.fillStyle = `rgba(100,100,100,${0.5 + Math.random()*0.3})`;
+                ctx.fillRect(s.x, s.y, s.size, s.size);
+            }
+        }
+        
+        function checkLevel2Collisions() {
+            for (let i = 0; i < level2Items.length; i++) {
+                const item = level2Items[i];
+                if (item.collected) continue;
+                if (player.x < item.x + item.size &&
+                    player.x + PLAYER_SIZE > item.x &&
+                    player.y < item.y + item.size &&
+                    player.y + PLAYER_SIZE > item.y) {
+                    item.collected = true;
+                    score++;
+                    updateUI();
+                    doFlash();
+                }
+            }
+            
+            for (let i = 0; i < level2Enemies.length; i++) {
+                const e = level2Enemies[i];
+                if (player.x < e.x + e.size &&
+                    player.x + PLAYER_SIZE > e.x &&
+                    player.y < e.y + e.size &&
+                    player.y + PLAYER_SIZE > e.y) {
+                    if (invincibleFrames <= 0) {
+                        hp--;
+                        updateUI();
+                        invincibleFrames = 30;
+                        doFlash();
+                        if (hp <= 0) lose();
+                    }
+                }
+                // Движение врагов
+                e.x += e.vx;
+                e.y += e.vy;
+                if (e.x <= 0 || e.x + e.size >= canvas.width) e.vx *= -1;
+                if (e.y <= 0 || e.y + e.size >= canvas.height) e.vy *= -1;
+            }
+            
+            // Столкновение с боссом
+            if (level2Boss) {
+                if (player.x < level2Boss.x + level2Boss.width &&
+                    player.x + PLAYER_SIZE > level2Boss.x &&
+                    player.y < level2Boss.y + level2Boss.height &&
+                    player.y + PLAYER_SIZE > level2Boss.y) {
+                    if (invincibleFrames <= 0) {
+                        hp--;
+                        updateUI();
+                        invincibleFrames = 30;
+                        doFlash();
+                        if (hp <= 0) lose();
+                    }
+                }
+            }
+        }
+        
+        function attackLevel2Boss() {
+            if (!level2Boss) return;
+            if (player.y + PLAYER_SIZE > level2Boss.y && player.y < level2Boss.y + level2Boss.height) {
+                if (player.x + PLAYER_SIZE > level2Boss.x && player.x < level2Boss.x + level2Boss.width) {
+                    level2Boss.hp--;
+                    doFlash();
+                    if (level2Boss.hp <= 0) {
+                        level2Boss = null;
+                        statusDiv.innerText = "🏆 ИГРА ПРОЙДЕНА! ПОБЕДА! 🏆";
+                        setTimeout(() => {
+                            window.location.href = "final.html";
+                        }, 2500);
+                    }
+                }
+            }
+        }
+        
+        // ============================================
+        // ПЕРЕХОД МЕЖДУ УРОВНЯМИ
+        // ============================================
+        function goToLevel2() {
+            currentLevel = 2;
+            levelSpan.innerText = "УРОВЕНЬ 2: ОПЕН-ЭЙР";
+            hp = 3;
+            score = 0;
+            updateUI();
+            invincibleFrames = 0;
+            player = { x: canvas.width / 2 - PLAYER_SIZE/2, y: canvas.height - 70 };
+            initLevel2();
+            statusDiv.innerText = "🎧 УРОВЕНЬ 2 — РЕЙВ В ЛЕСУ 🎧";
+            doFlash();
+        }
+        
+        // ============================================
+        // ПОРАЖЕНИЕ
+        // ============================================
+        function lose() {
+            gameRunning = false;
+            statusDiv.innerText = "💀 ПОРАЖЕНИЕ 💀 НАЖМИТЕ RESTART";
+            statusDiv.style.color = "#ff3366";
+        }
+        
+        // ============================================
+        // УПРАВЛЕНИЕ
+        // ============================================
+        window.addEventListener('keydown', (e) => {
+            if (keys.hasOwnProperty(e.key)) {
+                keys[e.key] = true;
+                e.preventDefault();
+            }
+            // Атака (пробел)
+            if (e.key === ' ' && gameRunning) {
+                if (currentLevel === 1) attackBoss();
+                if (currentLevel === 2) attackLevel2Boss();
+                e.preventDefault();
+            }
+        });
+        
+        window.addEventListener('keyup', (e) => {
+            if (keys.hasOwnProperty(e.key)) {
+                keys[e.key] = false;
+                e.preventDefault();
+            }
+        });
+        
+        function movePlayer() {
+            if (!gameRunning) return;
+            
+            let newX = player.x;
+            let newY = player.y;
+            
+            if (keys.ArrowLeft) newX -= SPEED;
+            if (keys.ArrowRight) newX += SPEED;
+            if (keys.ArrowUp) newY -= SPEED;
+            if (keys.ArrowDown) newY += SPEED;
+            
+            newX = Math.max(2, Math.min(canvas.width - PLAYER_SIZE - 2, newX));
+            newY = Math.max(2, Math.min(canvas.height - PLAYER_SIZE - 2, newY));
+            
+            player.x = newX;
+            player.y = newY;
+        }
+        
+        // ============================================
+        // ОТРИСОВКА
+        // ============================================
+        function drawPlayer() {
+            // Диджей Сон — красная олимпийка, наушники
+            ctx.fillStyle = "#CC0000";
+            ctx.fillRect(player.x, player.y, PLAYER_SIZE, PLAYER_SIZE);
+            ctx.fillStyle = "#FFFFFF";
+            ctx.fillRect(player.x + 4, player.y + 6, 6, 8);
+            ctx.fillRect(player.x + 14, player.y + 6, 6, 8);
+            // Наушники
+            ctx.fillStyle = "#222";
+            ctx.fillRect(player.x + 2, player.y - 4, 20, 8);
+            ctx.fillStyle = "#555";
+            ctx.fillRect(player.x + 4, player.y - 2, 16, 4);
+            // Полоски олимпийки
+            ctx.fillStyle = "#000";
+            ctx.fillRect(player.x + 10, player.y + 15, 4, 8);
+        }
+        
+        function drawItems() {
+            const items = currentLevel === 1 ? level1Items : level2Items;
+            for (let item of items) {
+                if (item.collected) continue;
+                if (currentLevel === 1) {
+                    ctx.fillStyle = "#FFD700";
+                    ctx.fillRect(item.x, item.y, item.size, item.size);
+                    ctx.fillStyle = "#FFA500";
+                    ctx.fillRect(item.x + 3, item.y + 3, item.size - 6, item.size - 6);
+                } else {
+                    ctx.fillStyle = "#32CD32";
+                    ctx.fillRect(item.x, item.y, item.size, item.size);
+                    ctx.fillStyle = "#228B22";
+                    ctx.fillRect(item.x + 3, item.y + 3, item.size - 6, item.size - 6);
+                }
+            }
+        }
+        
+        function drawEnemies() {
+            const enemies = currentLevel === 1 ? level1Enemies : level2Enemies;
+            for (let e of enemies) {
+                if (currentLevel === 1) {
+                    ctx.fillStyle = "#8B00FF";
+                    ctx.fillRect(e.x, e.y, e.size, e.size);
+                    ctx.fillStyle = "#AA44FF";
+                    ctx.fillRect(e.x + 4, e.y + 4, e.size - 8, e.size - 8);
+                } else {
+                    ctx.fillStyle = "#006400";
+                    ctx.fillRect(e.x, e.y, e.size, e.size);
+                    ctx.fillStyle = "#008000";
+                    ctx.fillRect(e.x + 4, e.y + 4, e.size - 8, e.size - 8);
+                }
+            }
+        }
+        
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Фон
+            if (currentLevel === 1) {
+                ctx.fillStyle = "#1a0000";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                // Клубная сетка
+                ctx.strokeStyle = "#330000";
+                for (let i = 0; i < canvas.width; i += 50) {
+                    ctx.beginPath();
+                    ctx.moveTo(i, 0);
+                    ctx.lineTo(i, canvas.height);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(0, i);
+                    ctx.lineTo(canvas.width, i);
+                    ctx.stroke();
+                }
+            } else {
+                ctx.fillStyle = "#001a00";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.strokeStyle = "#003300";
+                for (let i = 0; i < canvas.width; i += 60) {
+                    ctx.beginPath();
+                    ctx.moveTo(i, 0);
+                    ctx.lineTo(i, canvas.height);
+                    ctx.stroke();
+                }
+            }
+            
+            drawItems();
+            drawEnemies();
+            
+            if (currentLevel === 1) {
+                drawLevel1Boss();
+            } else {
+                drawLevel2Boss();
+            }
+            
+            drawPlayer();
+            
+            // Индикатор неуязвимости
+            if (invincibleFrames > 0) {
+                ctx.globalAlpha = 0.5;
+                ctx.fillStyle = "#fff";
+                ctx.fillRect(player.x, player.y, PLAYER_SIZE, PLAYER_SIZE);
+                ctx.globalAlpha = 1;
+                invincibleFrames--;
+            }
+            
+            // Подсказка по атаке
+            ctx.fillStyle = "#ff3366";
+            ctx.font = "10px monospace";
+            ctx.fillText("ПРОБЕЛ — АТАКА БЛИЗКО", canvas.width - 130, 20);
+        }
+        
+        // ============================================
+        // ИГРОВОЙ ЦИКЛ
+        // ============================================
+        function gameLoop() {
+            if (gameRunning) {
+                movePlayer();
+                
+                if (currentLevel === 1) {
+                    updateLevel1Boss();
+                    checkLevel1Collisions();
+                } else {
+                    updateLevel2Boss();
+                    checkLevel2Collisions();
+                }
+                
+                // Проверка победы на 2 уровне
+                if (currentLevel === 2 && level2Boss && level2Boss.hp <= 0) {
+                    level2Boss = null;
+                    gameRunning = false;
+                    statusDiv.innerText = "🏆 ПОБЕДА! ПЕРЕХОД В ФИНАЛ... 🏆";
+                    setTimeout(() => {
+                        window.location.href = "final.html";
+                    }, 2500);
+                }
+            }
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // ============================================
+        // ПЕРЕЗАПУСК
+        // ============================================
+        document.getElementById('restart').addEventListener('click', () => {
+            window.location.reload();
+        });
+        
+        // ============================================
+        // ЗАПУСК
+        // ============================================
+        initLevel1();
+        gameLoop();
+        
+        console.log("🎧 DJ SON — BEAT THE BASS | УРОВЕНЬ 1: КЛУБ");
+    })();
+</script>
+
+</body>
+</html>
