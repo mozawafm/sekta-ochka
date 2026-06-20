@@ -2,273 +2,71 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sega Style 16-Bit Racing</title>
+    <title>DJ-микшер DeckLab</title>
     <style>
         body {
             margin: 0;
-            padding: 0;
-            background-color: #050515;
+            padding: 20px;
+            background: #1a1a1a;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+        #decklab-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #121212;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #e0e0e0;
+            margin-top: 0;
+        }
+        p {
+            text-align: center;
+            color: #aaa;
+            margin-bottom: 20px;
+        }
+        #game-area {
+            width: 100%;
+            height: 600px;
+            background: #000;
+            border: 2px solid #333;
+            border-radius: 8px;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
             color: #fff;
-            font-family: 'Courier New', Courier, monospace;
-            overflow: hidden;
-        }
-        #gameContainer {
-            position: relative;
-            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
-        }
-        canvas {
-            border: 4px solid #3a3a50;
-            background: #000;
-            image-rendering: pixelated;
-        }
-        .hud {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            right: 10px;
-            display: flex;
-            justify-content: space-between;
-            font-size: 16px;
-            color: #fff;
-            text-shadow: 2px 2px 0px #000;
-            font-weight: bold;
-            pointer-events: none;
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
-
-    <div id="gameContainer">
-        <canvas id="segaCanvas" width="320" height="224"></canvas>
-        <div class="hud">
-            <div>SCORE: <span id="score">000000</span></div>
-            <div>SPD: <span id="speedUi">0</span> KM/H</div>
-        </div>
-    </div>
-    <div style="margin-top: 15px; text-align: center; color: #8a8ab0; font-size: 13px;">
-        Управление: ◄ ► (Стрелки) — Руль | ▲ (Вверх) — Газ | ▼ (Вниз) — Тормоз
+    <div id="decklab-container">
+        <h1>DJ-микшер DeckLab</h1>
+        <p>Интерактивный DJ-инструмент для вашего сайта</p>
+        <div id="game-area">Загрузка...</div>
     </div>
 
     <script>
-        const canvas = document.getElementById('segaCanvas');
-        const ctx = canvas.getContext('2d');
-        ctx.imageSmoothingEnabled = false;
+        document.addEventListener('DOMContentLoaded', function() {
+            const gameArea = document.getElementById('game-area');
 
-        // Состояние игры
-        let playerX = 0; 
-        let position = 0; 
-        let speed = 0;
-        const maxSpeed = 160;
-        let score = 0;
-        let gameOver = false;
-        let skyOffset = 0; 
-
-        // Настройки псевдо-3D дороги
-        const roadWidth = 2000;
-        const segmentLength = 200;
-        const cameraHeight = 1000;
-        const drawDistance = 40; 
-        
-        // Генерация геометрии трассы
-        const segments = [];
-        for (let i = 0; i < 500; i++) {
-            segments.push({
-                curve: Math.sin(i / 12) * 2.5 * (i > 30 ? 1 : 0), 
-                sprite: Math.random() > 0.75 ? (Math.random() > 0.5 ? 1 : -1) : 0 
-            });
-        }
-
-        // Встречные машины
-        const cars = [
-            { pos: 1500, x: -0.4, speed: 50, color: '#e69100' },
-            { pos: 4000, x: 0.4, speed: 65, color: '#0094e6' },
-            { pos: 7000, x: -0.1, speed: 55, color: '#11a300' }
-        ];
-
-        // Управление
-        const keys = { ArrowLeft: false, ArrowRight: false, ArrowUp: false, ArrowDown: false };
-        window.addEventListener('keydown', e => { if (e.key in keys) keys[e.key] = true; });
-        window.addEventListener('keyup', e => { if (e.key in keys) keys[e.key] = false; });
-
-        // Математика проекции 3D в 2D
-        function project(p, cameraX, cameraZ, width, height) {
-            const scale = cameraHeight / (p.z - cameraZ);
-            const x = Math.round((width / 2) + (scale * (p.x - cameraX) * width / 2));
-            const y = Math.round((height / 2) - (scale * p.y * height / 2));
-            const w = Math.round(scale * roadWidth * width / 2);
-            return { x, y, w, scale };
-        }
-
-        // Отрисовка 16-битных пальм
-        function drawPalm(ctx, x, y, scale) {
-            const w = 45 * scale;
-            const h = 85 * scale;
-            if (w < 4 || h < 4) return;
-            
-            ctx.save();
-            ctx.translate(x - w / 2, y - h);
-            // Ствол
-            ctx.fillStyle = '#542b0c';
-            ctx.fillRect(w * 0.43, h * 0.2, w * 0.14, h * 0.8);
-            // Листья (ретро-слои)
-            ctx.fillStyle = '#004a14';
-            ctx.fillRect(w * 0.05, h * 0.05, w * 0.9, h * 0.3);
-            ctx.fillStyle = '#008c23';
-            ctx.fillRect(w * 0.15, h * 0.1, w * 0.7, h * 0.2);
-            ctx.fillStyle = '#2be65f';
-            ctx.fillRect(w * 0.3, h * 0.13, w * 0.4, h * 0.1);
-            ctx.restore();
-        }
-
-        // Отрисовка спрайта машины
-        function drawCarSprite(ctx, x, y, scale, color, isPlayer = false) {
-            const w = 60 * scale;
-            const h = 32 * scale;
-            if (w < 5 || h < 3) return;
-
-            ctx.save();
-            ctx.translate(x - w / 2, y - h);
-
-            // Тень
-            ctx.fillStyle = 'rgba(0,0,0,0.35)';
-            ctx.fillRect(-w * 0.05, h * 0.85, w * 1.1, h * 0.2);
-
-            // Корпус машины
-            ctx.fillStyle = color;
-            ctx.fillRect(0, h * 0.4, w, h * 0.45); 
-            ctx.fillRect(w * 0.12, h * 0.18, w * 0.76, h * 0.25); 
-
-            // Стекла
-            ctx.fillStyle = '#5ce1e6'; 
-            ctx.fillRect(w * 0.18, h * 0.22, w * 0.64, h * 0.16);
-
-            // Колеса
-            ctx.fillStyle = '#1a1a24'; 
-            ctx.fillRect(w * 0.02, h * 0.65, w * 0.16, h * 0.3);
-            ctx.fillRect(w * 0.82, h * 0.65, w * 0.16, h * 0.3);
-
-            // Спойлер
-            ctx.fillStyle = '#111';
-            ctx.fillRect(-w * 0.04, h * 0.28, w * 1.08, h * 0.08);
-
-            // Фары
-            ctx.fillStyle = isPlayer ? '#ff2200' : '#ffea00'; 
-            ctx.fillRect(w * 0.05, h * 0.46, w * 0.14, h * 0.12);
-            ctx.fillRect(w * 0.81, h * 0.46, w * 0.14, h * 0.12);
-
-            ctx.restore();
-        }
-
-        // Обновление состояния
-        function update() {
-            if (gameOver) return;
-
-            // Управление скоростью
-            if (keys.ArrowUp) speed = Math.min(speed + 1.5, maxSpeed);
-            else if (keys.ArrowDown) speed = Math.max(speed - 3, 0);
-            else speed = Math.max(speed - 0.5, 0);
-
-            // Поворот руля
-            const currentSegment = segments[Math.floor(position / segmentLength) % segments.length];
-            if (keys.ArrowLeft && speed > 0) {
-                playerX -= 0.035 * (speed / maxSpeed);
-                skyOffset += 1.5;
-            }
-            if (keys.ArrowRight && speed > 0) {
-                playerX += 0.035 * (speed / maxSpeed);
-                skyOffset -= 1.5;
-            }
-
-            // Физика центробежной силы в повороте
-            playerX -= (speed / maxSpeed) * currentSegment.curve * 0.012;
-
-            // Движение вперед по трассе
-            position += speed;
-            
-            if (speed > 0) {
-                score += Math.round(speed / 15);
-                document.getElementById('score').innerText = String(score).padStart(6, '0');
-            }
-            document.getElementById('speedUi').innerText = Math.round(speed);
-
-            // Замедление на обочине
-            if (playerX < -1 || playerX > 1) {
-                if (speed > 40) speed -= 2;
-            }
-
-            // Логика машин ИИ
-            cars.forEach(car => {
-                car.pos += car.speed;
-                if (car.pos > position + 15000) car.pos -= 20000;
-                if (car.pos < position - 2000) car.pos += 20000;
-
-                // Проверка аварии (коллизия)
-                if (Math.abs(position - car.pos) < 160 && Math.abs(playerX - car.x) < 0.38) {
-                    gameOver = true;
-                }
-            });
-
-            render();
-            requestAnimationFrame(update);
-        }
-
-        // Рендеринг графики
-        function render() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // 1. ЗАДНИЙ ПЛАН (Параллакс Небо и Горы)
-            skyOffset = skyOffset % canvas.width;
-            ctx.fillStyle = '#0a0014'; 
-            ctx.fillRect(0, 0, canvas.width, canvas.height / 2);
-            
-            // Розово-фиолетовый закат Sega Киберпанк
-            ctx.fillStyle = '#2b004a';
-            ctx.fillRect(0, canvas.height * 0.23, canvas.width, canvas.height * 0.15);
-            ctx.fillStyle = '#67008a';
-            ctx.fillRect(0, canvas.height * 0.35, canvas.width, canvas.height * 0.08);
-
-            // Горы
-            ctx.fillStyle = '#140026';
-            for (let i = -2; i < 4; i++) {
-                let gx = (i * 140) + (skyOffset * 0.4);
-                ctx.beginPath();
-                ctx.moveTo(gx, canvas.height / 2);
-                ctx.lineTo(gx + 70, canvas.height / 2 - 25);
-                ctx.lineTo(gx + 140, canvas.height / 2);
-                ctx.fill();
-            }
-
-            // 2. ДОРОГА И СПРАЙТЫ ОКРУЖЕНИЯ
-            const startSegment = Math.floor(position / segmentLength);
-            let percent = (position % segmentLength) / segmentLength;
-            
-            let dx = -(segments[startSegment].curve * percent);
-            let sumX = 0;
-
-            const spritesToDraw = [];
-
-            for (let n = 0; n < drawDistance; n++) {
-                const i = (startSegment + n) % segments.length;
-                const segment = segments[i];
-                
-                const p1 = { x: sumX, y: 0, z: (startSegment + n) * segmentLength };
-                const p2 = { x: sumX + segment.curve, y: 0, z: (startSegment + n + 1) * segmentLength };
-                
-                sumX += segment.curve;
-
-                const proj1 = project(p1, playerX * roadWidth - dx * roadWidth, position, canvas.width, canvas.height);
-                const proj2 = project(p2, playerX * roadWidth - (dx + segment.curve) * roadWidth, position, canvas.width, canvas.height);
-                
-                dx += segment.curve;
-
-                if (proj1.y >= canvas.height || proj2.y >= proj1.y || proj2.y < canvas.height / 2) continue;
-
-                const isEven = Math.floor((startSegment + n) / 3) % 2 === 0;
-                const grassColor = isEven ? '#0a6324' : '#044217';
-                const roadColor  = isEven ? '#424254' : '#353542';
+            // Имитация работы DJ-интерфейса
+            gameArea.innerHTML = `
+                <div style="text-align: center; padding: 30px;">
+                    <h2>DJ DeckLab</h2>
+                    <p>Игра загружена и готова к работе!</p>
+                    <div style="margin: 20px 0; display: flex; gap: 20px; justify-content: center;">
+                        <button style="padding: 10px 20px; background: #4a4a4a; color: white; border: none; border-radius: 6px; cursor: pointer;">Play Track 1</button>
+                        <button style="padding: 10px 20px; background: #4a4a4a; color: white; border: none; border-radius: 6px; cursor: pointer;">Play Track 2</button>
+                    </div>
+                    <p style="font-size: 12px; color: #aaa;">Перемещайте треки и настраивайте звук — интерфейс готов!</p>
+                </div>
+            `;
+        });
+    </script>
+</body>
+</html>
